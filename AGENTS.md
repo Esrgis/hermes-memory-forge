@@ -12,6 +12,8 @@ Read these files first when operating in this directory, when present:
 - `docs/architecture/COGNITIVE_ARCHITECTURE.md`
 - `docs/REPO_BOUNDARIES.md`
 - `HERMES_USER_CONFIG.md` for private local activation preferences, when present; do not quote or expose secrets from it.
+- `skills/dangerous-operation-guard/SKILL.md` before destructive filesystem/git/path/junction/memory/cron operations.
+- `skills/obsidian-rag-check/SKILL.md` for cross-session recall, project memory lookup, or checking prior constraints before acting.
 
 Operating rules:
 
@@ -27,7 +29,9 @@ Operating rules:
 - Keep runtime state outside Obsidian unless it has been summarized.
 - Treat memory as semantic compression, not raw storage.
 - Ask before enabling delegation, MoA, worktrees, destructive commands, or broad search.
+- Before any destructive or path-sensitive operation, use `skills/dangerous-operation-guard/SKILL.md`; inspect `LinkType`, `Target`, and `Attributes` before removing or renaming Windows paths.
 - For routine requests, consult `docs/core/HERMES_ROUTER.md` and use known routes directly.
+- For recall/memory questions or when prior constraints matter, use `skills/obsidian-rag-check/SKILL.md` and search Obsidian FTS before relying on hot memory.
 - Do not load broad skills or inspect databases for simple messaging, greetings, note routing, or status checks.
 - For Telegram requests, use `scripts/send-telegram-home.ps1`; do not use cron or gateway fallback without explicit approval.
 

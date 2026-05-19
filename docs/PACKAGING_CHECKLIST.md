@@ -67,3 +67,11 @@ Do not present multi-agent behavior as stable until these contracts exist:
 - Runtime index is outside the vault.
 - Recall jobs are report-only unless mutation is explicitly approved.
 - Auxiliary `session_search` provider/model is configured to a fast reliable summarizer, or summaries are treated as optional.
+- `skills/obsidian-rag-check/SKILL.md` is referenced from `AGENTS.md`.
+
+## Dangerous Operation Readiness
+
+- `skills/dangerous-operation-guard/SKILL.md` exists.
+- Workspace agents are instructed to use it before destructive filesystem, git, junction/symlink, rename, cron/gateway, or memory-mutation operations.
+- Windows path removal is guarded by checking `LinkType`, `Target`, and `Attributes` immediately before mutation.
+- Stale commands from an earlier filesystem state are not reused after rename/junction changes.

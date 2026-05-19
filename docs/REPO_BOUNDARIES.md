@@ -15,6 +15,7 @@ Examples:
 - `docs/core/MEMORY_PIPELINE.md`
 - `*.template.md`
 - `templates/`
+- `skills/`
 - setup and scaffold scripts with clear parameters
 
 Rules:
@@ -22,6 +23,7 @@ Rules:
 - Use parameters instead of hardcoded local paths.
 - Provide dry-run behavior for scripts that can affect local state.
 - Do not assume secrets, Telegram, cron jobs, gateway state, or one user's vault layout.
+- Skills in `skills/` are repo-level procedures that future agents should read when their trigger matches, especially `dangerous-operation-guard` and `obsidian-rag-check`.
 
 ## 2. Local Runtime
 
