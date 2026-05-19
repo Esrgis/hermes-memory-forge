@@ -28,6 +28,7 @@ Current state:
 - `set-hermes-profile.ps1` exists.
 - `doctor.ps1` does not exist yet.
 - `repair.ps1` does not exist yet.
+- `obsidian-memory-index.py` exists as a local FTS5 recall MVP.
 
 ## Hermes Behavior
 
@@ -58,3 +59,11 @@ Do not present multi-agent behavior as stable until these contracts exist:
 - deterministic smoke test
 - rollback/failure handling
 - clear boundary between Hermes coordinator and worker execution
+
+## Recall/RAG Readiness
+
+- Obsidian FTS index can build from a vault path.
+- Search returns snippets and note paths without dumping the vault.
+- Runtime index is outside the vault.
+- Recall jobs are report-only unless mutation is explicitly approved.
+- Auxiliary `session_search` provider/model is configured to a fast reliable summarizer, or summaries are treated as optional.

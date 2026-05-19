@@ -54,6 +54,13 @@ Route:
 - Do not write raw chat logs.
 - Write only distilled markdown.
 
+For recall-style questions such as "hôm qua", "lần trước", "nhớ", "vụ X", or "đã làm gì":
+
+- Search durable memory with the local Obsidian FTS index when available.
+- Use `session_search` only for session history.
+- Do not answer from hot memory alone when the user asks for cross-session recall.
+- Report findings first; do not mutate memory or blackboard state unless the user explicitly approved the mutation.
+
 ## Workspace
 
 Triggers:

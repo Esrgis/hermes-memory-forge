@@ -33,6 +33,7 @@ Stable reference files read on demand.
 - Store environment facts, operational context, known failure patterns, and durable workflow rules.
 - Keep them organized by topic, not by conversation.
 - Update them when a pattern becomes stable across multiple sessions.
+- Retrieve them through bounded file reads or the local Obsidian FTS index before considering vector RAG.
 
 ### Tier 3: Daily Notes
 
@@ -111,6 +112,42 @@ When the user says "log it" or "save it", route by type:
 - Unknown incoming material -> `Inbox/` until classified
 
 Do not write raw chat transcripts into the vault.
+
+## Recall And RAG MVP
+
+The first retrieval layer for Obsidian should be local SQLite FTS5, not embeddings.
+
+Flow:
+
+```text
+Obsidian markdown
+-> heading/file chunks
+-> SQLite FTS5 index outside the vault
+-> snippet/path results
+-> selective file read
+-> optional Hermes reasoning
+```
+
+Rules:
+
+- Keep the index outside Obsidian, such as `%LOCALAPPDATA%\hermes\blackboard\obsidian_memory_index.sqlite`.
+- Do not index secrets, auth files, `.obsidian`, generated folders, or raw chat logs.
+- Return snippets and paths first; read full notes only when needed.
+- Use vector embeddings later only if FTS recall is not good enough.
+
+Current script:
+
+```powershell
+python .\scripts\obsidian-memory-index.py build --vault-path D:\Path\To\MemoryCore
+python .\scripts\obsidian-memory-index.py search "query"
+
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\build-obsidian-memory-index.ps1 -VaultPath D:\Path\To\MemoryCore
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\search-obsidian-memory.ps1 -Query "query"
+```
+
+## Mutation Guard
+
+Investigation or recall jobs may report findings, create suggestions, or add memory candidates. They must not delete hot memory, delete blackboard tasks, rewrite durable memory, or modify cron/gateway state unless the user explicitly approved that mutation.
 
 ## Open Problems
 
