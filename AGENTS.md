@@ -7,9 +7,11 @@ Read these files first when operating in this directory, when present:
 - `PROJECT_CONTEXT.md`
 - `TASKS.md`
 - `HERMES_MAP.md`
-- `MEMORY_PIPELINE.md`
-- `HERMES_ROUTER.md`
-- `COGNITIVE_ARCHITECTURE.md`
+- `docs/core/MEMORY_PIPELINE.md`
+- `docs/core/HERMES_ROUTER.md`
+- `docs/architecture/COGNITIVE_ARCHITECTURE.md`
+- `docs/REPO_BOUNDARIES.md`
+- `HERMES_USER_CONFIG.md` for private local activation preferences, when present; do not quote or expose secrets from it.
 
 Operating rules:
 
@@ -25,7 +27,7 @@ Operating rules:
 - Keep runtime state outside Obsidian unless it has been summarized.
 - Treat memory as semantic compression, not raw storage.
 - Ask before enabling delegation, MoA, worktrees, destructive commands, or broad search.
-- For routine requests, consult `HERMES_ROUTER.md` and use known routes directly.
+- For routine requests, consult `docs/core/HERMES_ROUTER.md` and use known routes directly.
 - Do not load broad skills or inspect databases for simple messaging, greetings, note routing, or status checks.
 - For Telegram requests, use `scripts/send-telegram-home.ps1`; do not use cron or gateway fallback without explicit approval.
 

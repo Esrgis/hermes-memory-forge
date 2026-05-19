@@ -48,7 +48,7 @@ Triggers:
 
 Route:
 
-- Vault path: `D:\HermesVault\MemoryCore`
+- Vault path: read the local value from `HERMES_MAP.md`.
 - Prefer direct note paths under the vault.
 - Do not search outside the vault.
 - Do not write raw chat logs.

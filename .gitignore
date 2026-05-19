@@ -1,10 +1,12 @@
 _hermes/
 _runtime/
 _obsidian_vault
+.hermes.md
 HERMES_MAP.md
 PROJECT_CONTEXT.md
 TASKS.md
 vibe.md
+HERMES_USER_CONFIG.md
 *.log
 *.tmp
 *.bak

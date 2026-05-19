@@ -15,7 +15,7 @@ conversation
 
 ## Three-Tier Memory
 
-Memory is semantic compression, not raw storage. See `COGNITIVE_ARCHITECTURE.md` for the broader direction.
+Memory is semantic compression, not raw storage. See `docs/architecture/COGNITIVE_ARCHITECTURE.md` for the broader direction.
 
 ### Tier 1: Hot Memory
 
