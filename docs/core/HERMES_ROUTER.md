@@ -56,8 +56,12 @@ Route:
 
 For recall-style questions such as "hôm qua", "lần trước", "nhớ", "vụ X", or "đã làm gì":
 
+- Follow `D:\HermesGuildCore\_obsidian_vault\Specs\Memory Query Protocol Spec.md`.
 - Search durable memory with the local Obsidian FTS index when available.
+- Use query variants before escalating: original wording, unaccented Vietnamese if relevant, English equivalents, and project/model names.
 - Use `session_search` only for session history.
+- If the user mentions a prior model, session, handoff, or "vừa nãy/trưa nay/chiều nay" and FTS does not contain the decisive keyword, perform a bounded session-history lookup rather than guessing from vault memory.
+- If session lookup finds a durable fact that the vault missed, treat it as a memory-schema gap and distill it into the proper vault note only when memory repair is explicitly requested.
 - Do not answer from hot memory alone when the user asks for cross-session recall.
 - Report findings first; do not mutate memory or blackboard state unless the user explicitly approved the mutation.
 
@@ -75,6 +79,7 @@ Route:
 
 - Use the current workspace root.
 - Read `AGENTS.md`, `PROJECT_CONTEXT.md`, `TASKS.md`, `HERMES_MAP.md`, and this file when present.
+- For filename/path discovery, use `scripts/search-files.ps1`; it tries Everything ES first and falls back to scoped `fd`/PowerShell if ES fails.
 - Avoid broad search.
 
 ## Coding

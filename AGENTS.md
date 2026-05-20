@@ -4,6 +4,8 @@ This workspace is for building a local-first, memory-aware AI assistant around H
 
 Read these files first when operating in this directory, when present:
 
+- `START_HERE.md`
+- `AGENT_ONBOARDING.md` when evaluating or introducing a new agent
 - `PROJECT_CONTEXT.md`
 - `TASKS.md`
 - `HERMES_MAP.md`
@@ -20,8 +22,8 @@ Operating rules:
 - Prefer markdown-first workflow.
 - Prefer small reversible steps.
 - Do not recursively crawl the filesystem.
-- Use Everything ES for bounded discovery when it is running.
-- If Everything ES is not available, use shallow known-path inspection only.
+- Use `scripts/search-files.ps1` for bounded filename/path discovery. It tries Everything ES first and immediately falls back to scoped `fd`/PowerShell when ES or IPC is unavailable.
+- If file discovery still fails, use shallow known-path inspection only.
 - Avoid `node_modules`, virtual environments, caches, and generated folders unless explicitly needed.
 - Do not read or expose secrets from `.env`, auth files, tokens, or browser profiles.
 - Do not write raw chat logs into Obsidian.
@@ -32,6 +34,7 @@ Operating rules:
 - Before any destructive or path-sensitive operation, use `skills/dangerous-operation-guard/SKILL.md`; inspect `LinkType`, `Target`, and `Attributes` before removing or renaming Windows paths.
 - For routine requests, consult `docs/core/HERMES_ROUTER.md` and use known routes directly.
 - For recall/memory questions or when prior constraints matter, use `skills/obsidian-rag-check/SKILL.md` and search Obsidian FTS before relying on hot memory.
+- For non-trivial memory lookup, follow `_obsidian_vault/Specs/Memory Query Protocol Spec.md`: classify the request, use a query packet, search source tiers in order, and treat session-history fallback as a repair signal.
 - Do not load broad skills or inspect databases for simple messaging, greetings, note routing, or status checks.
 - For Telegram requests, use `scripts/send-telegram-home.ps1`; do not use cron or gateway fallback without explicit approval.
 

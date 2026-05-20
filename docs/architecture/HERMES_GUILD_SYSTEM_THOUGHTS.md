@@ -10,6 +10,20 @@ This document exists to capture:
 This is NOT a final architecture document.
 This is a mindset and design reasoning document.
 
+Hard v0 line for future agents:
+
+```text
+Guild Runtime v0 =
+human-approved DAG
++ artifact blackboard
++ automatic claim
++ join review
++ bounded fix loops
+```
+
+This means the first real guild should not be a free-for-all task board.
+Hermes drafts a DAG, the plan is reviewed before opening queues, workers claim only dependency-ready `open` tasks, and integration happens through artifacts rather than private worker chat.
+
 ---
 
 # THE GUILD METAPHOR
@@ -171,6 +185,52 @@ Dashboard should visually show:
 - locked tasks
 - dependency chains
 - blocked quests
+
+---
+
+# RANKED ADVENTURER CLAIMING
+
+The user's preferred mental model for worker contention is:
+
+"adventurers have ranks; high-rank adventurers take high-rank quests first."
+
+This should guide the task claiming contract.
+
+Worker agents should have:
+- `agent_id`
+- `rank`
+- `specialties`
+- `status`
+
+Tasks should have:
+- `task_id`
+- `required_rank`
+- `linked_tasks`
+- `status`
+- `assignee_id`
+
+Rank rules:
+- A worker may only claim tasks at or below its rank.
+- Higher-rank workers are preferred for higher-rank tasks.
+- Hermes is not a normal queue worker; Hermes is manager / S-rank cognition / PM.
+- Low-rank daily support staff should not claim high-risk project tasks.
+
+Linked task rules:
+- Some tasks belong to a linked quest chain.
+- Claiming one linked task may reserve or prioritize the remaining linked tasks for the same worker.
+- A linked chain should make dependencies explicit rather than relying on chat memory.
+- The dashboard should show linked quests as a group, not as unrelated loose tasks.
+
+This keeps contention understandable without inventing a complicated lockfile culture.
+The fantasy model becomes the product model:
+
+```text
+Quest rank + adventurer rank + linked quest chain
+-> eligible workers
+-> ordered claiming
+-> durable claim / lease
+-> result returned to Hermes
+```
 
 ---
 

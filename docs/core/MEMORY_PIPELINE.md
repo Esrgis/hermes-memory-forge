@@ -117,6 +117,14 @@ Do not write raw chat transcripts into the vault.
 
 The first retrieval layer for Obsidian should be local SQLite FTS5, not embeddings.
 
+Canonical retrieval protocol:
+
+```text
+D:\HermesGuildCore\_obsidian_vault\Specs\Memory Query Protocol Spec.md
+```
+
+Use that spec for source tiers, query packets, session-history fallback, metadata repair, and cleanup rules.
+
 Flow:
 
 ```text
@@ -133,6 +141,8 @@ Rules:
 - Keep the index outside Obsidian, such as `%LOCALAPPDATA%\hermes\blackboard\obsidian_memory_index.sqlite`.
 - Do not index secrets, auth files, `.obsidian`, generated folders, or raw chat logs.
 - Return snippets and paths first; read full notes only when needed.
+- Treat session history as fallback evidence, not the durable memory layer.
+- If recall succeeds only after session-history search, repair the durable note metadata or aliases when memory repair is allowed.
 - Use vector embeddings later only if FTS recall is not good enough.
 
 Current script:

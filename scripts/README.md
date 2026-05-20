@@ -11,6 +11,7 @@ These are intended to be reusable with parameters:
 - `new-daily-note.ps1`
 - `set-hermes-profile.ps1`
 - `send-telegram-home.ps1`
+- `search-files.ps1`
 
 ## Incubator / Local Automation
 
@@ -42,3 +43,25 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\search-obsidian-me
 ```
 
 This is RAG plumbing, not full vector RAG. It returns file paths, headings, and snippets so Hermes or another agent can decide what to read next.
+
+## File Discovery
+
+`search-files.ps1` is the standard bounded file-discovery route on Windows.
+
+Flow:
+
+```text
+Everything ES
+-> fd scoped to -Root
+-> scoped PowerShell fallback
+```
+
+Example:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\search-files.ps1 -Query "AGENTS.md" -Root D:\HermesGuildCore -Limit 20
+```
+
+Everything ES is option 1 when the Everything IPC service is running. If ES fails, the script immediately falls back to scoped local search.
+
+Inside the Codex sandbox, Everything IPC may be blocked even when the Everything service is healthy for the normal user session. Treat that as an expected fast-path failure and let the script fall back.

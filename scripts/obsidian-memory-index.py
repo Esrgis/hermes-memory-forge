@@ -178,9 +178,9 @@ def rebuild_index(vault_path: Path, index_path: Path, max_chars: int) -> dict:
 def search_index(index_path: Path, query: str, limit: int) -> list[dict]:
     if not index_path.exists():
         raise FileNotFoundError(f"Index not found: {index_path}")
-    with connect(index_path) as con:
-        init_db(con)
-        rows = con.execute(
+
+    def run_search(con: sqlite3.Connection, fts_query: str) -> list[sqlite3.Row]:
+        return con.execute(
             """
             select
                 path,
@@ -192,8 +192,25 @@ def search_index(index_path: Path, query: str, limit: int) -> list[dict]:
             order by score
             limit ?
             """,
-            (query, limit),
+            (fts_query, limit),
         ).fetchall()
+
+    def fallback_query(raw_query: str) -> str:
+        tokens = re.findall(r"[\w-]+", raw_query, flags=re.UNICODE)
+        tokens = [token.strip("-_") for token in tokens]
+        tokens = [token for token in tokens if token]
+        if not tokens:
+            return raw_query
+        return " OR ".join(f'"{token}"' for token in tokens)
+
+    with connect(index_path) as con:
+        init_db(con)
+        try:
+            rows = run_search(con, query)
+        except sqlite3.OperationalError:
+            rows = []
+        if not rows:
+            rows = run_search(con, fallback_query(query))
     return [dict(row) for row in rows]
 
 
