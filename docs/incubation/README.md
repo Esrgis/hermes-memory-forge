@@ -13,6 +13,22 @@ Current incubator areas:
 - Flock or other worker orchestration
 - dashboard/quest-board experiments
 
+## Guild Dashboard UI
+
+Open the static dashboard:
+
+```powershell
+Start-Process .\docs\incubation\guild-dashboard.html
+```
+
+Export the current Worker Team blackboard for a chain:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\export-guild-dashboard.ps1 -QuestChainId demo-even-random-app -IncludeArtifacts
+```
+
+Then load `_runtime\dashboard\guild-dashboard.json` from the page with **Load JSON**, or paste dashboard JSON directly into the textarea and click **Render Paste**.
+
 Promotion rule:
 
 Do not call a workflow stable until it has:

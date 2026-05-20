@@ -1,0 +1,391 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Guild Dashboard</title>
+  <style>
+    :root {
+      --paper: #f5efe1;
+      --ink: #231f18;
+      --muted: #766d5d;
+      --line: #d4c3a4;
+      --amber: #d98b2b;
+      --green: #43745b;
+      --red: #b2483b;
+      --blue: #3d647d;
+      --card: rgba(255, 252, 244, 0.86);
+      --shadow: 0 22px 60px rgba(62, 45, 21, 0.16);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      font-family: Georgia, "Times New Roman", serif;
+      background:
+        radial-gradient(circle at top left, rgba(217, 139, 43, 0.22), transparent 32rem),
+        radial-gradient(circle at bottom right, rgba(61, 100, 125, 0.18), transparent 34rem),
+        linear-gradient(135deg, #f8f0dc, #eee0c1);
+      min-height: 100vh;
+    }
+
+    .shell {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 42px 22px;
+    }
+
+    header {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 22px;
+      align-items: end;
+      margin-bottom: 28px;
+    }
+
+    h1 {
+      font-size: clamp(2.4rem, 7vw, 5.7rem);
+      line-height: 0.9;
+      margin: 0;
+      letter-spacing: -0.07em;
+    }
+
+    .subhead {
+      max-width: 680px;
+      color: var(--muted);
+      font-size: 1.05rem;
+      margin-top: 14px;
+    }
+
+    .toolbar {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    button, .file-label {
+      border: 1px solid var(--ink);
+      background: var(--ink);
+      color: var(--paper);
+      border-radius: 999px;
+      padding: 11px 16px;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+      font-size: 0.86rem;
+      transition: transform 160ms ease, box-shadow 160ms ease;
+      box-shadow: 0 8px 0 rgba(35, 31, 24, 0.12);
+    }
+
+    button.secondary, .file-label {
+      background: transparent;
+      color: var(--ink);
+    }
+
+    button:hover, .file-label:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 11px 0 rgba(35, 31, 24, 0.12);
+    }
+
+    input[type="file"] { display: none; }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 0.9fr 1.5fr;
+      gap: 18px;
+    }
+
+    .panel {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 28px;
+      padding: 22px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+    }
+
+    .panel h2 {
+      margin: 0 0 16px;
+      font-size: 1.3rem;
+      letter-spacing: -0.03em;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .stat {
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      padding: 16px;
+      background: rgba(255, 255, 255, 0.36);
+    }
+
+    .stat .value {
+      display: block;
+      font-size: 2rem;
+      font-weight: 800;
+      line-height: 1;
+    }
+
+    .stat .label {
+      color: var(--muted);
+      font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+      font-size: 0.78rem;
+      text-transform: uppercase;
+    }
+
+    .chain-card {
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      padding: 16px;
+      margin-top: 12px;
+      background: rgba(255, 252, 244, 0.58);
+    }
+
+    .chain-title {
+      font-weight: 900;
+      margin-bottom: 10px;
+      overflow-wrap: anywhere;
+    }
+
+    .pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .pill {
+      border-radius: 999px;
+      padding: 6px 10px;
+      font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+      font-size: 0.78rem;
+      background: #eadbbd;
+    }
+
+    .pill.done { background: rgba(67, 116, 91, 0.18); color: var(--green); }
+    .pill.open { background: rgba(217, 139, 43, 0.2); color: #8b4f0e; }
+    .pill.blocked { background: rgba(178, 72, 59, 0.16); color: var(--red); }
+
+    .tasks {
+      display: grid;
+      gap: 12px;
+    }
+
+    .task {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 14px;
+      align-items: center;
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      padding: 14px;
+      background: rgba(255, 252, 244, 0.72);
+      animation: rise 420ms ease both;
+    }
+
+    .seq {
+      width: 42px;
+      height: 42px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      background: var(--ink);
+      color: var(--paper);
+      font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+      font-weight: 800;
+    }
+
+    .task h3 {
+      margin: 0 0 5px;
+      font-size: 1.05rem;
+      letter-spacing: -0.02em;
+    }
+
+    .meta {
+      color: var(--muted);
+      font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+      font-size: 0.78rem;
+      overflow-wrap: anywhere;
+    }
+
+    .status {
+      border-radius: 999px;
+      padding: 8px 12px;
+      font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+      font-weight: 800;
+      font-size: 0.78rem;
+      text-transform: uppercase;
+    }
+
+    .status.done { color: var(--green); background: rgba(67, 116, 91, 0.16); }
+    .status.open { color: #8b4f0e; background: rgba(217, 139, 43, 0.2); }
+    .status.blocked { color: var(--red); background: rgba(178, 72, 59, 0.16); }
+
+    .json-box {
+      width: 100%;
+      min-height: 190px;
+      resize: vertical;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 14px;
+      background: rgba(255, 252, 244, 0.78);
+      color: var(--ink);
+      font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+    }
+
+    .hint {
+      color: var(--muted);
+      font-size: 0.92rem;
+      line-height: 1.45;
+    }
+
+    @keyframes rise {
+      from { transform: translateY(10px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    @media (max-width: 860px) {
+      header, .grid { grid-template-columns: 1fr; }
+      .toolbar { justify-content: flex-start; }
+      .task { grid-template-columns: auto 1fr; }
+      .status { grid-column: 1 / -1; justify-self: start; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header>
+      <div>
+        <h1>Guild Dashboard</h1>
+        <p class="subhead">A human-readable view of the Worker Team blackboard: what is done, what is open, and what is blocked.</p>
+      </div>
+      <div class="toolbar">
+        <label class="file-label" for="fileInput">Load JSON</label>
+        <input id="fileInput" type="file" accept="application/json,.json">
+        <button id="sampleButton" class="secondary">Demo Chain</button>
+        <button id="pasteButton">Render Paste</button>
+      </div>
+    </header>
+
+    <section class="grid">
+      <aside class="panel">
+        <h2>Snapshot</h2>
+        <div class="stats">
+          <div class="stat"><span id="taskCount" class="value">0</span><span class="label">tasks</span></div>
+          <div class="stat"><span id="artifactCount" class="value">0</span><span class="label">artifacts</span></div>
+        </div>
+        <div id="chains"></div>
+      </aside>
+
+      <section class="panel">
+        <h2>Task Board</h2>
+        <div id="tasks" class="tasks"></div>
+      </section>
+    </section>
+
+    <section class="panel" style="margin-top: 18px;">
+      <h2>Paste Dashboard JSON</h2>
+      <p class="hint">Run the dashboard command with JSON output, paste it here, then click Render Paste.</p>
+      <textarea id="jsonInput" class="json-box" spellcheck="false"></textarea>
+    </section>
+  </main>
+
+  <script>
+    const sample = {
+      schema_version: "guild_dashboard_read_v0",
+      task_count: 5,
+      artifact_count: 0,
+      status_counts: { done: 1, open: 2, blocked: 2 },
+      type_counts: { contract: 1, execution: 3, join_review: 1 },
+      chains: [{
+        quest_chain_id: "demo-even-random-app",
+        task_count: 5,
+        status_counts: { done: 1, open: 2, blocked: 2 },
+        next_open_tasks: [
+          { task_id: "demo-even-app-logic", title: "Build random even number logic", required_rank: "C", required_skill: "app_logic" },
+          { task_id: "demo-even-ui", title: "Design simple button UI", required_rank: "C", required_skill: "ui" }
+        ],
+        blocked_review_tasks: []
+      }],
+      tasks: [
+        { sequence_no: 1, task_id: "demo-even-spec", title: "Spec random even app", status: "done", plan_review_status: "not_required", task_type: "contract", required_rank: "C", required_skill: "planning" },
+        { sequence_no: 2, task_id: "demo-even-app-logic", title: "Build random even number logic", status: "open", plan_review_status: "approved", task_type: "execution", required_rank: "C", required_skill: "app_logic" },
+        { sequence_no: 3, task_id: "demo-even-ui", title: "Design simple button UI", status: "open", plan_review_status: "approved", task_type: "execution", required_rank: "C", required_skill: "ui" },
+        { sequence_no: 4, task_id: "demo-even-tester", title: "Test random even app", status: "blocked", plan_review_status: "approved", task_type: "execution", required_rank: "B", required_skill: "testing" },
+        { sequence_no: 5, task_id: "demo-even-join-review", title: "Review app UI test integration", status: "blocked", plan_review_status: "approved", task_type: "join_review", required_rank: "B", required_skill: "integration_review" }
+      ],
+      artifacts: []
+    };
+
+    const el = (id) => document.getElementById(id);
+
+    function pill(name, value) {
+      return `<span class="pill ${name}">${name}: ${value}</span>`;
+    }
+
+    function render(data) {
+      el("taskCount").textContent = data.task_count ?? 0;
+      el("artifactCount").textContent = data.artifact_count ?? 0;
+
+      const chains = Array.isArray(data.chains) ? data.chains : [];
+      el("chains").innerHTML = chains.map((chain) => {
+        const counts = chain.status_counts || {};
+        const open = (chain.next_open_tasks || []).map((task) =>
+          `<div class="meta">open: ${task.task_id} [${task.required_rank}/${task.required_skill}]</div>`
+        ).join("");
+        const blocked = (chain.blocked_review_tasks || []).map((task) =>
+          `<div class="meta">blocked: ${task.task_id} [${task.task_type}]</div>`
+        ).join("");
+        return `
+          <article class="chain-card">
+            <div class="chain-title">${chain.quest_chain_id}</div>
+            <div class="pills">
+              ${Object.entries(counts).map(([key, value]) => pill(key, value)).join("")}
+            </div>
+            <div style="margin-top: 12px;">${open}${blocked}</div>
+          </article>
+        `;
+      }).join("");
+
+      const tasks = Array.isArray(data.tasks) ? data.tasks : [];
+      el("tasks").innerHTML = tasks.map((task, index) => `
+        <article class="task" style="animation-delay: ${index * 45}ms">
+          <div class="seq">${task.sequence_no ?? index + 1}</div>
+          <div>
+            <h3>${task.title || task.task_id}</h3>
+            <div class="meta">${task.task_id} | ${task.task_type} | ${task.required_rank || "-"} / ${task.required_skill || "-"}</div>
+            <div class="meta">plan: ${task.plan_review_status || "-"}</div>
+          </div>
+          <div class="status ${task.status || ""}">${task.status || "unknown"}</div>
+        </article>
+      `).join("");
+    }
+
+    el("sampleButton").addEventListener("click", () => {
+      el("jsonInput").value = JSON.stringify(sample, null, 2);
+      render(sample);
+    });
+
+    el("pasteButton").addEventListener("click", () => {
+      render(JSON.parse(el("jsonInput").value));
+    });
+
+    el("fileInput").addEventListener("change", async (event) => {
+      const file = event.target.files[0];
+      if (!file) return;
+      const data = JSON.parse(await file.text());
+      el("jsonInput").value = JSON.stringify(data, null, 2);
+      render(data);
+    });
+
+    el("jsonInput").value = JSON.stringify(sample, null, 2);
+    render(sample);
+  </script>
+</body>
+</html>
