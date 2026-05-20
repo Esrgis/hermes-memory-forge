@@ -10,6 +10,7 @@ This is not a chatbot wrapper. It is a small reproducible setup for:
 - Hermes hot memory and sessions as runtime context
 - quota-aware daily assistant workflows
 - optional blackboard and orchestration experiments
+- an incubating Guild Worker Team CLI contract for durable task/artifact queues
 
 ## What This Gives You
 
@@ -132,6 +133,16 @@ Keep these layers separate:
 - Incubator: blackboard, daily automation, health checks, and future orchestration experiments.
 
 Local runtime files should not be committed. Optional incubator scripts should be treated as examples until they have stable inputs, outputs, dry-run behavior, and tests.
+
+## Guild Worker Team Incubator
+
+The tracked CLI entrypoint is:
+
+```powershell
+_runtime\research\flock\.venv\Scripts\python.exe .\scripts\guild-worker-team.py dashboard --quest-chain-id smoke-join-chain --include-tasks --include-artifacts --format text
+```
+
+This launcher delegates to the current runtime prototype under `_runtime/flock/`. It currently provides a durable SQLite-backed task/artifact queue, DAG unlock, rank-based claim/leases, join review, bounded fix task generation, and a dashboard read model. Flock source checkouts and transient state remain under `_runtime/`.
 
 ## Repository Hygiene
 
