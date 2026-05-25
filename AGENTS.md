@@ -22,7 +22,13 @@ Operating rules:
 - Prefer markdown-first workflow.
 - Prefer small reversible steps.
 - Do not recursively crawl the filesystem.
+- Treat the filesystem as a searchable space, not a folder tree to crawl.
 - Use `scripts/search-files.ps1` for bounded filename/path discovery. It tries Everything ES first and immediately falls back to scoped `fd`/PowerShell when ES or IPC is unavailable.
+- Use `scripts/search-content.ps1` for bounded text search. It uses `rg` first and falls back to scoped PowerShell only when needed.
+- Use `scripts/preview-file.ps1` for bounded file previews. It uses `bat` when available and falls back to `Get-Content -TotalCount`.
+- Use `scripts/inspect-workspace.ps1` for a small tooling/top-level snapshot. It uses `eza` when available.
+- Treat `zoxide` as human navigation state only; agents should not depend on it for automation.
+- Do not use ad hoc recursive PowerShell discovery when a standard search script exists.
 - If file discovery still fails, use shallow known-path inspection only.
 - Avoid `node_modules`, virtual environments, caches, and generated folders unless explicitly needed.
 - Do not read or expose secrets from `.env`, auth files, tokens, or browser profiles.

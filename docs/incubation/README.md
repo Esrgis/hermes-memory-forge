@@ -15,7 +15,27 @@ Current incubator areas:
 
 ## Guild Dashboard UI
 
-Open the static dashboard:
+One-command launch:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\open-guild-dashboard.ps1 -QuestChainId demo-even-random-app
+```
+
+This exports `_runtime\dashboard\guild-dashboard.json`, starts a tiny local HTTP server if needed, and opens the dashboard URL. The page auto-loads the exported JSON when served over HTTP.
+
+Reset the demo chain before opening:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\open-guild-dashboard.ps1 -QuestChainId demo-even-random-app -Reset
+```
+
+Advance one fake-worker tick and export dashboard JSON:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\tick-guild-dashboard.ps1 -QuestChainId demo-even-random-app -MaxSteps 1
+```
+
+Open the static dashboard manually:
 
 ```powershell
 Start-Process .\docs\incubation\guild-dashboard.html

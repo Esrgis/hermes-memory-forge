@@ -67,6 +67,14 @@ Set Hermes to a lean daily profile:
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\set-hermes-profile.ps1 -Profile codex-today
 ```
 
+Enable the searchable-workspace runtime manifest:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\enable-searchable-workspace.ps1
+```
+
+This records the standard routes for `Everything`, `fd`, `rg`, `bat`, `eza`, and `zoxide` in `_runtime/searchable-workspace/manifest.json` and points `HERMES_SEARCHABLE_WORKSPACE` at it. Tool installation is opt-in with `-InstallMissing`.
+
 ## Profiles
 
 `codex-today`

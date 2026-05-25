@@ -3,298 +3,728 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Guild Dashboard</title>
+  <title>Hermes Guild Blackboard</title>
   <style>
     :root {
-      --paper: #f5efe1;
-      --ink: #231f18;
-      --muted: #766d5d;
-      --line: #d4c3a4;
-      --amber: #d98b2b;
-      --green: #43745b;
-      --red: #b2483b;
-      --blue: #3d647d;
-      --card: rgba(255, 252, 244, 0.86);
-      --shadow: 0 22px 60px rgba(62, 45, 21, 0.16);
+      --nav: #151725;
+      --nav-2: #20243a;
+      --glass: rgba(21, 31, 48, 0.76);
+      --glass-2: rgba(14, 20, 33, 0.72);
+      --card: #fffdf8;
+      --ink: #202027;
+      --muted: #6d7280;
+      --line: rgba(255, 255, 255, 0.18);
+      --line-dark: #e3e0d8;
+      --ready: #f2b632;
+      --claimed: #7c8cff;
+      --blocked: #ef5b4c;
+      --done: #2fb47c;
+      --accent: #ee2b74;
+      --blue: #1168b4;
+      --shadow: 0 18px 40px rgba(0, 0, 0, 0.22);
+      --card-shadow: 0 10px 26px rgba(0, 0, 0, 0.18);
+      --mono: ui-monospace, "Cascadia Mono", Consolas, monospace;
+      --sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     }
 
     * { box-sizing: border-box; }
 
     body {
       margin: 0;
-      color: var(--ink);
-      font-family: Georgia, "Times New Roman", serif;
-      background:
-        radial-gradient(circle at top left, rgba(217, 139, 43, 0.22), transparent 32rem),
-        radial-gradient(circle at bottom right, rgba(61, 100, 125, 0.18), transparent 34rem),
-        linear-gradient(135deg, #f8f0dc, #eee0c1);
       min-height: 100vh;
+      color: #f7f8fb;
+      font-family: var(--sans);
+      background:
+        linear-gradient(90deg, rgba(13, 23, 38, 0.28) 0 8px, transparent 8px 92px),
+        linear-gradient(0deg, rgba(255, 255, 255, 0.08) 0 2px, transparent 2px 118px),
+        linear-gradient(135deg, #0d4b8d 0%, #1576c9 38%, #10213e 100%);
+      overflow: hidden;
     }
 
-    .shell {
-      max-width: 1180px;
-      margin: 0 auto;
-      padding: 42px 22px;
-    }
-
-    header {
-      display: grid;
-      grid-template-columns: 1fr auto;
-      gap: 22px;
-      align-items: end;
-      margin-bottom: 28px;
-    }
-
-    h1 {
-      font-size: clamp(2.4rem, 7vw, 5.7rem);
-      line-height: 0.9;
-      margin: 0;
-      letter-spacing: -0.07em;
-    }
-
-    .subhead {
-      max-width: 680px;
-      color: var(--muted);
-      font-size: 1.05rem;
-      margin-top: 14px;
-    }
-
-    .toolbar {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      justify-content: flex-end;
-    }
-
-    button, .file-label {
-      border: 1px solid var(--ink);
-      background: var(--ink);
-      color: var(--paper);
-      border-radius: 999px;
-      padding: 11px 16px;
-      font-weight: 700;
+    button,
+    .file-label {
+      border: 1px solid rgba(255, 255, 255, 0.24);
+      background: rgba(255, 255, 255, 0.1);
+      color: #fff;
+      border-radius: 8px;
+      min-height: 38px;
+      padding: 0 12px;
+      font: 700 0.78rem var(--mono);
       cursor: pointer;
-      font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
-      font-size: 0.86rem;
-      transition: transform 160ms ease, box-shadow 160ms ease;
-      box-shadow: 0 8px 0 rgba(35, 31, 24, 0.12);
     }
 
-    button.secondary, .file-label {
-      background: transparent;
-      color: var(--ink);
-    }
-
-    button:hover, .file-label:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 11px 0 rgba(35, 31, 24, 0.12);
+    button:hover,
+    .file-label:hover {
+      background: rgba(255, 255, 255, 0.18);
     }
 
     input[type="file"] { display: none; }
 
-    .grid {
+    .app {
       display: grid;
-      grid-template-columns: 0.9fr 1.5fr;
-      gap: 18px;
+      grid-template-columns: 72px minmax(0, 1fr);
+      grid-template-rows: 56px 52px auto minmax(0, 1fr);
+      min-height: 100vh;
     }
 
-    .panel {
-      background: var(--card);
-      border: 1px solid var(--line);
-      border-radius: 28px;
-      padding: 22px;
-      box-shadow: var(--shadow);
-      backdrop-filter: blur(10px);
-    }
-
-    .panel h2 {
-      margin: 0 0 16px;
+    .brand {
+      grid-column: 1;
+      grid-row: 1;
+      display: grid;
+      place-items: center;
+      background: var(--accent);
       font-size: 1.3rem;
-      letter-spacing: -0.03em;
-    }
-
-    .stats {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 12px;
-    }
-
-    .stat {
-      border: 1px solid var(--line);
-      border-radius: 22px;
-      padding: 16px;
-      background: rgba(255, 255, 255, 0.36);
-    }
-
-    .stat .value {
-      display: block;
-      font-size: 2rem;
-      font-weight: 800;
-      line-height: 1;
-    }
-
-    .stat .label {
-      color: var(--muted);
-      font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
-      font-size: 0.78rem;
-      text-transform: uppercase;
-    }
-
-    .chain-card {
-      border: 1px solid var(--line);
-      border-radius: 22px;
-      padding: 16px;
-      margin-top: 12px;
-      background: rgba(255, 252, 244, 0.58);
-    }
-
-    .chain-title {
       font-weight: 900;
-      margin-bottom: 10px;
-      overflow-wrap: anywhere;
     }
 
-    .pills {
+    .topbar {
+      grid-column: 2;
+      grid-row: 1;
       display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-    }
-
-    .pill {
-      border-radius: 999px;
-      padding: 6px 10px;
-      font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
-      font-size: 0.78rem;
-      background: #eadbbd;
-    }
-
-    .pill.done { background: rgba(67, 116, 91, 0.18); color: var(--green); }
-    .pill.open { background: rgba(217, 139, 43, 0.2); color: #8b4f0e; }
-    .pill.blocked { background: rgba(178, 72, 59, 0.16); color: var(--red); }
-
-    .tasks {
-      display: grid;
-      gap: 12px;
-    }
-
-    .task {
-      display: grid;
-      grid-template-columns: auto 1fr auto;
-      gap: 14px;
       align-items: center;
-      border: 1px solid var(--line);
-      border-radius: 24px;
-      padding: 14px;
-      background: rgba(255, 252, 244, 0.72);
-      animation: rise 420ms ease both;
+      justify-content: space-between;
+      gap: 18px;
+      min-width: 0;
+      padding: 0 22px;
+      background: rgba(8, 13, 26, 0.86);
+      box-shadow: 0 2px 24px rgba(0, 0, 0, 0.22);
     }
 
-    .seq {
-      width: 42px;
-      height: 42px;
+    .tabs {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+      overflow: hidden;
+    }
+
+    .tab {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      height: 64px;
+      padding: 0 16px;
+      color: rgba(255, 255, 255, 0.76);
+      font-weight: 800;
+      white-space: nowrap;
+      border-bottom: 3px solid transparent;
+    }
+
+    .tab.active {
+      color: #fff;
+      border-color: #fff;
+    }
+
+    .icon {
+      width: 18px;
+      height: 18px;
+      display: grid;
+      place-items: center;
+      border-radius: 5px;
+      background: rgba(255, 255, 255, 0.18);
+      font: 900 0.72rem var(--mono);
+    }
+
+    .actions {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 10px;
+      min-width: fit-content;
+    }
+
+    .sidebar {
+      grid-column: 1;
+      grid-row: 2 / 4;
+      background: rgba(17, 18, 31, 0.92);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 26px;
+      padding-top: 32px;
+    }
+
+    .side-item {
+      width: 52px;
+      min-height: 56px;
+      display: grid;
+      place-items: center;
+      color: rgba(255, 255, 255, 0.42);
+      font: 800 0.68rem var(--mono);
+      text-align: center;
+    }
+
+    .side-item.active { color: #fff; }
+
+    .subbar {
+      grid-column: 2;
+      grid-row: 2;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      min-width: 0;
+      padding: 0 24px;
+      background: rgba(17, 47, 90, 0.84);
+      backdrop-filter: blur(14px);
+    }
+
+    .board-title {
+      min-width: 0;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      font-weight: 900;
+    }
+
+    .board-title span {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .count-strip {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: rgba(255, 255, 255, 0.82);
+      font: 800 0.78rem var(--mono);
+      white-space: nowrap;
+    }
+
+    .avatars {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      min-width: fit-content;
+    }
+
+    .avatar {
+      width: 34px;
+      height: 34px;
       display: grid;
       place-items: center;
       border-radius: 50%;
-      background: var(--ink);
-      color: var(--paper);
-      font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
-      font-weight: 800;
+      background: #fff;
+      color: var(--ink);
+      border: 2px solid rgba(255, 255, 255, 0.55);
+      font: 900 0.72rem var(--mono);
     }
 
-    .task h3 {
-      margin: 0 0 5px;
-      font-size: 1.05rem;
-      letter-spacing: -0.02em;
+    .avatar.accent {
+      background: var(--accent);
+      color: #fff;
     }
 
-    .meta {
-      color: var(--muted);
-      font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
-      font-size: 0.78rem;
-      overflow-wrap: anywhere;
+    .avatar.live {
+      box-shadow: 0 0 0 3px rgba(47, 180, 124, 0.28);
     }
 
-    .status {
-      border-radius: 999px;
-      padding: 8px 12px;
-      font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
-      font-weight: 800;
-      font-size: 0.78rem;
+    .board {
+      grid-column: 2;
+      grid-row: 4;
+      min-width: 0;
+      min-height: 0;
+      overflow: auto;
+      padding: 14px 18px 28px;
+    }
+
+    .quest-panel {
+      grid-column: 2;
+      grid-row: 3;
+      display: grid;
+      grid-template-columns: minmax(360px, 1.25fr) minmax(280px, 0.75fr);
+      gap: 10px;
+      padding: 10px 18px 0;
+      background: rgba(12, 23, 42, 0.62);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+    }
+
+    .quest-form,
+    .hermes-log {
+      min-width: 0;
+      border-radius: 8px;
+      border: 1px solid var(--line);
+      background: rgba(8, 13, 26, 0.72);
+      padding: 10px;
+    }
+
+    .quest-grid {
+      display: grid;
+      grid-template-columns: 1fr 140px 140px;
+      gap: 8px;
+    }
+
+    .quest-field {
+      display: grid;
+      gap: 6px;
+      min-width: 0;
+    }
+
+    .quest-field.wide { grid-column: 1 / -1; }
+
+    .quest-field label,
+    .hermes-log-title {
+      color: rgba(255, 255, 255, 0.76);
+      font: 800 0.68rem var(--mono);
       text-transform: uppercase;
     }
 
-    .status.done { color: var(--green); background: rgba(67, 116, 91, 0.16); }
-    .status.open { color: #8b4f0e; background: rgba(217, 139, 43, 0.2); }
-    .status.blocked { color: var(--red); background: rgba(178, 72, 59, 0.16); }
-
-    .json-box {
+    .quest-field input,
+    .quest-field select,
+    .quest-field textarea {
       width: 100%;
-      min-height: 190px;
-      resize: vertical;
-      border: 1px solid var(--line);
-      border-radius: 18px;
-      padding: 14px;
-      background: rgba(255, 252, 244, 0.78);
-      color: var(--ink);
-      font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+      min-height: 32px;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      border-radius: 7px;
+      padding: 8px 10px;
+      background: rgba(255, 255, 255, 0.08);
+      color: #fff;
+      font: 0.78rem var(--mono);
     }
 
-    .hint {
+    .quest-field textarea {
+      min-height: 46px;
+      resize: vertical;
+    }
+
+    #questRequest {
+      min-height: 132px;
+    }
+
+    .quest-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 8px;
+    }
+
+    .hermes-log {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      min-height: 116px;
+    }
+
+    .hermes-lines {
+      display: grid;
+      gap: 6px;
+      max-height: 94px;
+      overflow: auto;
+      color: rgba(255, 255, 255, 0.82);
+      font: 0.75rem var(--mono);
+    }
+
+    .hermes-line {
+      padding-left: 10px;
+      border-left: 3px solid rgba(47, 180, 124, 0.8);
+    }
+
+    .columns {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(270px, 1fr));
+      gap: 18px;
+      min-width: 1120px;
+      align-items: start;
+    }
+
+    .column {
+      min-height: calc(100vh - 188px);
+      display: flex;
+      flex-direction: column;
+      border-radius: 8px;
+      background: var(--glass);
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(16px);
+      overflow: hidden;
+    }
+
+    .column-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 18px 18px 8px;
+    }
+
+    .column-name {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      min-width: 0;
+      font-size: 1.1rem;
+      font-weight: 900;
+    }
+
+    .dot {
+      width: 12px;
+      height: 12px;
+      flex: 0 0 auto;
+      border-radius: 50%;
+      border: 2px solid rgba(255, 255, 255, 0.72);
+      background: var(--ready);
+    }
+
+    .column.claimed .dot { background: var(--claimed); }
+    .column.blocked .dot { background: var(--blocked); }
+    .column.done .dot { background: var(--done); }
+
+    .column-count {
+      min-width: 30px;
+      height: 24px;
+      display: grid;
+      place-items: center;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.14);
+      font: 900 0.72rem var(--mono);
+    }
+
+    .lane {
+      display: grid;
+      gap: 12px;
+      padding: 14px;
+    }
+
+    .task-card {
+      min-height: 138px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding: 16px;
+      border-radius: 7px;
+      background: var(--card);
+      color: var(--ink);
+      box-shadow: var(--card-shadow);
+      border: 1px solid rgba(255, 255, 255, 0.68);
+      animation: rise 280ms ease both;
+    }
+
+    .card-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: start;
+    }
+
+    .task-title {
+      margin: 0;
+      font-size: 1.02rem;
+      line-height: 1.22;
+      font-weight: 900;
+      overflow-wrap: anywhere;
+    }
+
+    .rank {
+      min-width: 32px;
+      height: 28px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      background: #1d2234;
+      color: #fff;
+      font: 900 0.75rem var(--mono);
+    }
+
+    .meta-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
       color: var(--muted);
-      font-size: 0.92rem;
-      line-height: 1.45;
+      font: 800 0.72rem var(--mono);
+    }
+
+    .hold-meter {
+      height: 4px;
+      overflow: hidden;
+      border-radius: 999px;
+      background: #e7e4dd;
+    }
+
+    .hold-bar {
+      width: var(--hold, 0%);
+      height: 100%;
+      border-radius: inherit;
+      background: var(--ready);
+    }
+
+    .claimed .hold-bar,
+    .running .hold-bar { background: var(--claimed); }
+    .blocked .hold-bar { background: var(--blocked); }
+    .done .hold-bar { background: var(--done); }
+
+    .tag {
+      max-width: 100%;
+      min-height: 22px;
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      padding: 0 8px;
+      background: #ece8df;
+      color: #4d5360;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .tag.hot {
+      background: #1d2234;
+      color: #fff;
+    }
+
+    .tag.warn {
+      background: #fee4df;
+      color: #9c2418;
+    }
+
+    .tag.good {
+      background: #dcf7ea;
+      color: #176b45;
+    }
+
+    .card-foot {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-top: auto;
+    }
+
+    .task-id {
+      color: var(--muted);
+      font: 800 0.68rem var(--mono);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      min-width: 0;
+    }
+
+    .mini-avatar {
+      width: 30px;
+      height: 30px;
+      display: grid;
+      place-items: center;
+      flex: 0 0 auto;
+      border-radius: 50%;
+      color: #fff;
+      background: var(--accent);
+      font: 900 0.66rem var(--mono);
+    }
+
+    .empty {
+      min-height: 118px;
+      display: grid;
+      place-items: center;
+      border: 1px dashed rgba(255, 255, 255, 0.24);
+      border-radius: 8px;
+      color: rgba(255, 255, 255, 0.58);
+      font: 800 0.76rem var(--mono);
+    }
+
+    .drawer {
+      position: fixed;
+      right: 22px;
+      bottom: 22px;
+      width: min(560px, calc(100vw - 44px));
+      max-height: min(460px, calc(100vh - 44px));
+      display: none;
+      flex-direction: column;
+      gap: 12px;
+      padding: 16px;
+      border-radius: 10px;
+      background: rgba(12, 17, 29, 0.95);
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow);
+      z-index: 5;
+    }
+
+    .drawer.open { display: flex; }
+
+    .drawer-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      font-weight: 900;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 250px;
+      resize: vertical;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      border-radius: 8px;
+      padding: 12px;
+      background: rgba(255, 255, 255, 0.08);
+      color: #fff;
+      font: 0.78rem var(--mono);
     }
 
     @keyframes rise {
-      from { transform: translateY(10px); opacity: 0; }
+      from { transform: translateY(8px); opacity: 0; }
       to { transform: translateY(0); opacity: 1; }
     }
 
-    @media (max-width: 860px) {
-      header, .grid { grid-template-columns: 1fr; }
-      .toolbar { justify-content: flex-start; }
-      .task { grid-template-columns: auto 1fr; }
-      .status { grid-column: 1 / -1; justify-self: start; }
+    @media (max-width: 900px) {
+      body { overflow: auto; }
+      .app {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto auto auto;
+      }
+      .brand,
+      .sidebar { display: none; }
+      .topbar,
+      .subbar,
+      .board {
+        grid-column: 1;
+      }
+      .topbar {
+        grid-row: 1;
+        min-height: 64px;
+        align-items: stretch;
+        flex-direction: column;
+        padding: 10px;
+      }
+      .tabs {
+        width: 100%;
+        overflow-x: auto;
+      }
+      .tab { height: 38px; }
+      .actions {
+        width: 100%;
+        justify-content: flex-start;
+        overflow-x: auto;
+      }
+      .subbar {
+        grid-row: 2;
+        min-height: 68px;
+        align-items: start;
+        flex-direction: column;
+        padding: 12px;
+      }
+      .avatars { display: none; }
+      .board {
+        grid-row: 4;
+        padding: 14px;
+        overflow: visible;
+      }
+      .quest-panel {
+        grid-column: 1;
+        grid-row: 3;
+        grid-template-columns: 1fr;
+        padding: 12px;
+      }
+      .quest-grid {
+        grid-template-columns: 1fr;
+      }
+      .columns {
+        min-width: 0;
+        grid-template-columns: 1fr;
+      }
+      .column {
+        min-height: auto;
+      }
     }
   </style>
 </head>
 <body>
-  <main class="shell">
-    <header>
-      <div>
-        <h1>Guild Dashboard</h1>
-        <p class="subhead">A human-readable view of the Worker Team blackboard: what is done, what is open, and what is blocked.</p>
+  <main class="app">
+    <div class="brand">G</div>
+
+    <nav class="topbar">
+      <div class="tabs" aria-label="Guild navigation">
+        <div class="tab"><span class="icon">P</span>Projects</div>
+        <div class="tab active"><span class="icon">B</span>Blackboard</div>
+        <div class="tab"><span class="icon">T</span>Team</div>
+        <div class="tab"><span class="icon">A</span>Artifacts</div>
       </div>
-      <div class="toolbar">
+      <div class="actions">
         <label class="file-label" for="fileInput">Load JSON</label>
         <input id="fileInput" type="file" accept="application/json,.json">
-        <button id="sampleButton" class="secondary">Demo Chain</button>
-        <button id="pasteButton">Render Paste</button>
+        <button id="sampleButton" type="button">Demo</button>
+        <button id="clearButton" type="button">Clear Output</button>
+        <button id="refreshButton" type="button">Refresh</button>
+        <button id="autoButton" type="button" aria-pressed="false">Auto Off</button>
+        <button id="pasteToggle" type="button">JSON</button>
       </div>
-    </header>
+    </nav>
 
-    <section class="grid">
-      <aside class="panel">
-        <h2>Snapshot</h2>
-        <div class="stats">
-          <div class="stat"><span id="taskCount" class="value">0</span><span class="label">tasks</span></div>
-          <div class="stat"><span id="artifactCount" class="value">0</span><span class="label">artifacts</span></div>
+    <aside class="sidebar" aria-label="Guild sections">
+      <div class="side-item">Guild</div>
+      <div class="side-item active">Board</div>
+      <div class="side-item">Tasks</div>
+      <div class="side-item">Agents</div>
+      <div class="side-item">Logs</div>
+    </aside>
+
+    <section class="subbar">
+      <div class="board-title">
+        <span class="icon">Q</span>
+        <span id="boardName">Guild Blackboard</span>
+        <span class="count-strip"><span id="taskCount">0</span> tasks</span>
+        <span class="count-strip"><span id="artifactCount">0</span> artifacts</span>
+      </div>
+      <div class="avatars" id="agentStrip"></div>
+    </section>
+
+    <section class="quest-panel" aria-label="Assign quest">
+      <form class="quest-form" id="questForm">
+        <div class="quest-grid">
+          <div class="quest-field">
+            <label for="questTitle">Task</label>
+            <input id="questTitle" value="Manual dashboard task">
+          </div>
+          <div class="quest-field">
+            <label for="questAdapter">Adapter</label>
+            <select id="questAdapter">
+              <option value="auto-rank" selected>auto-rank</option>
+              <option value="local-dry-run">local-dry-run</option>
+              <option value="opencode">opencode</option>
+              <option value="gemini">gemini</option>
+              <option value="groq">groq</option>
+              <option value="openrouter">openrouter</option>
+            </select>
+          </div>
+          <div class="quest-field">
+            <label for="questId">Quest ID</label>
+            <input id="questId" placeholder="auto">
+          </div>
+          <div class="quest-field wide">
+            <label for="questRequest">Prompt for Hermes</label>
+            <textarea id="questRequest">Build a tiny scoped demo change and publish evidence.</textarea>
+          </div>
+          <div class="quest-field wide">
+            <label for="questAllowed">Allowed files</label>
+            <input id="questAllowed" placeholder="docs/incubation/*, scripts/*">
+          </div>
         </div>
-        <div id="chains"></div>
-      </aside>
-
-      <section class="panel">
-        <h2>Task Board</h2>
-        <div id="tasks" class="tasks"></div>
+        <div class="quest-actions">
+          <button id="assignQuest" type="submit">Giao Task Cho Hermes</button>
+        </div>
+      </form>
+      <section class="hermes-log" aria-label="Hermes routing log">
+        <div class="hermes-log-title">Hermes Routing Log</div>
+        <div class="hermes-lines" id="hermesLines">
+          <div class="hermes-line">Waiting for a task.</div>
+        </div>
       </section>
     </section>
 
-    <section class="panel" style="margin-top: 18px;">
-      <h2>Paste Dashboard JSON</h2>
-      <p class="hint">Run the dashboard command with JSON output, paste it here, then click Render Paste.</p>
-      <textarea id="jsonInput" class="json-box" spellcheck="false"></textarea>
+    <section class="board" aria-label="Task board">
+      <div class="columns" id="columns"></div>
     </section>
   </main>
+
+  <section class="drawer" id="jsonDrawer" aria-label="Dashboard JSON">
+    <div class="drawer-head">
+      <span>Dashboard JSON</span>
+      <div class="actions">
+        <button id="renderPaste" type="button">Render</button>
+        <button id="closeDrawer" type="button">Close</button>
+      </div>
+    </div>
+    <textarea id="jsonInput" spellcheck="false"></textarea>
+  </section>
 
   <script>
     const sample = {
@@ -314,57 +744,268 @@
         blocked_review_tasks: []
       }],
       tasks: [
-        { sequence_no: 1, task_id: "demo-even-spec", title: "Spec random even app", status: "done", plan_review_status: "not_required", task_type: "contract", required_rank: "C", required_skill: "planning" },
-        { sequence_no: 2, task_id: "demo-even-app-logic", title: "Build random even number logic", status: "open", plan_review_status: "approved", task_type: "execution", required_rank: "C", required_skill: "app_logic" },
-        { sequence_no: 3, task_id: "demo-even-ui", title: "Design simple button UI", status: "open", plan_review_status: "approved", task_type: "execution", required_rank: "C", required_skill: "ui" },
-        { sequence_no: 4, task_id: "demo-even-tester", title: "Test random even app", status: "blocked", plan_review_status: "approved", task_type: "execution", required_rank: "B", required_skill: "testing" },
-        { sequence_no: 5, task_id: "demo-even-join-review", title: "Review app UI test integration", status: "blocked", plan_review_status: "approved", task_type: "join_review", required_rank: "B", required_skill: "integration_review" }
+        { sequence_no: 1, task_id: "demo-even-spec", title: "Spec random even app", status: "done", assignee_id: null, output_artifact: "app_spec", owner_area: "product", plan_review_status: "not_required", task_type: "contract", required_rank: "C", required_skill: "planning", quest_chain_id: "demo-even-random-app", block_reason: null },
+        { sequence_no: 2, task_id: "demo-even-app-logic", title: "Build random even number logic", status: "open", assignee_id: null, output_artifact: "app_logic_result", owner_area: "frontend_logic", plan_review_status: "approved", task_type: "execution", required_rank: "C", required_skill: "app_logic", quest_chain_id: "demo-even-random-app", block_reason: null },
+        { sequence_no: 3, task_id: "demo-even-ui", title: "Design simple button UI", status: "open", assignee_id: null, output_artifact: "ui_result", owner_area: "frontend_ui", plan_review_status: "approved", task_type: "execution", required_rank: "C", required_skill: "ui", quest_chain_id: "demo-even-random-app", block_reason: null },
+        { sequence_no: 4, task_id: "demo-even-tester", title: "Test random even app", status: "blocked", assignee_id: null, output_artifact: "test_result", owner_area: "qa", plan_review_status: "approved", task_type: "execution", required_rank: "B", required_skill: "testing", quest_chain_id: "demo-even-random-app", block_reason: "waiting_dependencies:demo-even-app-logic:open,demo-even-ui:open" },
+        { sequence_no: 5, task_id: "demo-even-join-review", title: "Review app UI test integration", status: "blocked", assignee_id: null, output_artifact: "integration_report", owner_area: "review", plan_review_status: "approved", task_type: "join_review", required_rank: "B", required_skill: "integration_review", quest_chain_id: "demo-even-random-app", block_reason: "waiting_dependencies:demo-even-app-logic:open,demo-even-ui:open,demo-even-tester:blocked" }
       ],
       artifacts: []
     };
 
-    const el = (id) => document.getElementById(id);
+    const agentRoster = [
+      { id: "hermes-codex", label: "Hermes", skills: ["planning", "review", "orchestration"] },
+      { id: "worker-a", label: "Worker A", skills: ["requirements", "writing"] },
+      { id: "worker-b", label: "Worker B", skills: ["risks", "analysis"] },
+      { id: "worker-c", label: "Worker C", skills: ["checklist", "writing"] }
+    ];
 
-    function pill(name, value) {
-      return `<span class="pill ${name}">${name}: ${value}</span>`;
+    const columnDefs = [
+      { id: "ready", title: "Ready", status: "open", empty: "No ready tasks" },
+      { id: "claimed", title: "Claimed", status: "claimed", alt: ["running"], empty: "No claimed tasks" },
+      { id: "blocked", title: "Blocked", status: "blocked", empty: "No blocked tasks" },
+      { id: "done", title: "Done", status: "done", empty: "No completed tasks" }
+    ];
+
+    let autoRefreshTimer = null;
+    let activeQuestChainId = null;
+    let finalizeInFlight = false;
+
+    const el = (id) => document.getElementById(id);
+    const escapeHtml = (value) => String(value ?? "").replace(/[&<>"']/g, (char) => ({
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#039;"
+    }[char]));
+
+    function emptyDashboard() {
+      return {
+        schema_version: "guild_dashboard_read_v0",
+        task_count: 0,
+        artifact_count: 0,
+        status_counts: {},
+        type_counts: {},
+        chains: [],
+        tasks: [],
+        artifacts: [],
+        filters: { quest_chain_id: "new-demo-ready" }
+      };
+    }
+
+    function questIdFromTitle(title) {
+      const slug = String(title || "guild-demo")
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "")
+        .slice(0, 36) || "guild-demo";
+      const stamp = new Date()
+        .toISOString()
+        .replace(/[-:TZ.]/g, "")
+        .slice(0, 14);
+      return `quest-${slug}-${stamp}`;
+    }
+
+    function logHermes(lines) {
+      const items = Array.isArray(lines) ? lines : [lines];
+      el("hermesLines").innerHTML = items
+        .filter(Boolean)
+        .map((line) => `<div class="hermes-line">${escapeHtml(line)}</div>`)
+        .join("");
+    }
+
+    function initials(value) {
+      const text = String(value || "guild").replace(/[^a-zA-Z0-9]+/g, " ").trim();
+      if (!text) return "G";
+      return text.split(" ").slice(0, 2).map((part) => part[0]).join("").toUpperCase();
+    }
+
+    function parseDate(value) {
+      const date = value ? new Date(value) : null;
+      return date && !Number.isNaN(date.getTime()) ? date : null;
+    }
+
+    function holdPercent(task) {
+      const status = String(task.status || "").toLowerCase();
+      if (status === "done") return 100;
+      if (status === "blocked") return 100;
+      if (status !== "claimed" && status !== "running") return 0;
+      const claimedAt = parseDate(task.claimed_at);
+      const leaseUntil = parseDate(task.lease_until);
+      if (!claimedAt || !leaseUntil || leaseUntil <= claimedAt) return 8;
+      const elapsed = Date.now() - claimedAt.getTime();
+      const total = leaseUntil.getTime() - claimedAt.getTime();
+      return Math.max(8, Math.min(100, Math.round((elapsed / total) * 100)));
+    }
+
+    function ageLabel(task) {
+      const status = String(task.status || "").toLowerCase();
+      if (status !== "claimed" && status !== "running") return status;
+      const claimedAt = parseDate(task.claimed_at);
+      if (!claimedAt) return "held ?";
+      const seconds = Math.max(0, Math.floor((Date.now() - claimedAt.getTime()) / 1000));
+      if (seconds < 60) return `held ${seconds}s`;
+      const minutes = Math.floor(seconds / 60);
+      return `held ${minutes}m`;
+    }
+
+    function blockLabel(task) {
+      const reason = String(task.block_reason || task.persistent_blocked_reason || "");
+      if (!reason) return null;
+      if (reason === "plan_review_pending") return "plan gate";
+      if (reason === "human_approval_required") return "human gate";
+      if (reason === "needs_info") return "needs info";
+      if (reason.startsWith("waiting_dependencies")) return "waiting deps";
+      return reason.replace(/_/g, " ");
+    }
+
+    function groupTasks(tasks) {
+      return columnDefs.reduce((acc, column) => {
+        acc[column.id] = tasks.filter((task) => {
+          const status = String(task.status || "").toLowerCase();
+          return status === column.status || (column.alt || []).includes(status);
+        });
+        return acc;
+      }, {});
+    }
+
+    function renderCard(task, index, artifactsByTask) {
+      const status = String(task.status || "unknown").toLowerCase();
+      const owner = task.assignee_id || task.owner_area || task.required_skill || "guild";
+      const hold = holdPercent(task);
+      const artifacts = artifactsByTask.get(task.task_id) || [];
+      const hasEvidence = artifacts.length > 0;
+      const meta = [
+        task.task_type || "task",
+        task.required_rank ? `rank ${task.required_rank}` : null,
+        task.required_skill || null,
+        task.generated_from ? "generated" : null,
+        task.human_approval_required ? "human gate" : null
+      ].filter(Boolean);
+      const review = task.plan_review_status ? `plan:${task.plan_review_status}` : "plan:-";
+      const artifact = task.output_artifact ? `artifact ${task.output_artifact}` : "artifact -";
+      const block = blockLabel(task);
+      const tags = meta.map((item, tagIndex) => `<span class="tag ${tagIndex === 0 ? "hot" : ""}">${escapeHtml(item)}</span>`).join("");
+
+      return `
+        <article class="task-card ${escapeHtml(status)}" style="--hold: ${hold}%; animation-delay: ${index * 35}ms">
+          <div class="card-top">
+            <h3 class="task-title">${escapeHtml(task.title || task.task_id || "Untitled task")}</h3>
+            <div class="rank">${escapeHtml(task.required_rank || "-")}</div>
+          </div>
+          <div class="meta-row">
+            ${tags}
+          </div>
+          <div class="hold-meter" title="${escapeHtml(ageLabel(task))}"><div class="hold-bar"></div></div>
+          <div class="meta-row">
+            <span class="tag">${escapeHtml(ageLabel(task))}</span>
+            <span class="tag">${escapeHtml(review)}</span>
+            ${block ? `<span class="tag warn">${escapeHtml(block)}</span>` : ""}
+            ${hasEvidence ? `<span class="tag good">${artifacts.length} artifact${artifacts.length === 1 ? "" : "s"}</span>` : ""}
+            <span>${escapeHtml(artifact)}</span>
+          </div>
+          <div class="card-foot">
+            <div class="task-id">#${escapeHtml(task.sequence_no || "?")} ${escapeHtml(task.task_id || "")}</div>
+            <div class="mini-avatar" title="${escapeHtml(owner)}">${escapeHtml(initials(owner))}</div>
+          </div>
+        </article>
+      `;
+    }
+
+    function renderAgents(tasks) {
+      const liveAgents = new Set(tasks
+        .filter((task) => ["claimed", "running"].includes(String(task.status || "").toLowerCase()))
+        .map((task) => task.assignee_id)
+        .filter(Boolean));
+      el("agentStrip").innerHTML = agentRoster.map((agent, index) => {
+        const active = liveAgents.has(agent.id);
+        const title = `${agent.label} / ${agent.skills.join(", ")}`;
+        return `<div class="avatar ${index === 0 ? "accent" : ""} ${active ? "live" : ""}" title="${escapeHtml(title)}">${escapeHtml(initials(agent.label))}</div>`;
+      }).join("");
+    }
+
+    function boardName(data) {
+      const filter = data.filters && data.filters.quest_chain_id;
+      const chain = Array.isArray(data.chains) && data.chains.length === 1 ? data.chains[0].quest_chain_id : null;
+      return filter || chain || "Guild Blackboard";
     }
 
     function render(data) {
-      el("taskCount").textContent = data.task_count ?? 0;
-      el("artifactCount").textContent = data.artifact_count ?? 0;
-
+      const tasks = Array.isArray(data.tasks) ? data.tasks : [];
       const chains = Array.isArray(data.chains) ? data.chains : [];
-      el("chains").innerHTML = chains.map((chain) => {
-        const counts = chain.status_counts || {};
-        const open = (chain.next_open_tasks || []).map((task) =>
-          `<div class="meta">open: ${task.task_id} [${task.required_rank}/${task.required_skill}]</div>`
-        ).join("");
-        const blocked = (chain.blocked_review_tasks || []).map((task) =>
-          `<div class="meta">blocked: ${task.task_id} [${task.task_type}]</div>`
-        ).join("");
+      const artifacts = Array.isArray(data.artifacts) ? data.artifacts : [];
+      const artifactsByTask = artifacts.reduce((map, artifact) => {
+        const taskId = artifact && artifact.task_id;
+        if (!taskId) return map;
+        if (!map.has(taskId)) map.set(taskId, []);
+        map.get(taskId).push(artifact);
+        return map;
+      }, new Map());
+      const grouped = groupTasks(tasks);
+      activeQuestChainId = boardName(data);
+
+      el("taskCount").textContent = data.task_count ?? tasks.length;
+      el("artifactCount").textContent = data.artifact_count ?? (Array.isArray(data.artifacts) ? data.artifacts.length : 0);
+      el("boardName").textContent = boardName(data);
+      renderAgents(tasks);
+
+      el("columns").innerHTML = columnDefs.map((column) => {
+        const columnTasks = grouped[column.id] || [];
+        const cards = columnTasks.length
+          ? columnTasks.map((task, index) => renderCard(task, index, artifactsByTask)).join("")
+          : `<div class="empty">${column.empty}</div>`;
         return `
-          <article class="chain-card">
-            <div class="chain-title">${chain.quest_chain_id}</div>
-            <div class="pills">
-              ${Object.entries(counts).map(([key, value]) => pill(key, value)).join("")}
+          <section class="column ${column.id}">
+            <div class="column-header">
+              <div class="column-name"><span class="dot"></span><span>${column.title}</span></div>
+              <div class="column-count">${columnTasks.length}</div>
             </div>
-            <div style="margin-top: 12px;">${open}${blocked}</div>
-          </article>
+            <div class="lane">${cards}</div>
+          </section>
         `;
       }).join("");
+      maybeFinalizeWithHermes(data);
+    }
 
+    async function maybeFinalizeWithHermes(data) {
+      if (finalizeInFlight || !activeQuestChainId) return;
       const tasks = Array.isArray(data.tasks) ? data.tasks : [];
-      el("tasks").innerHTML = tasks.map((task, index) => `
-        <article class="task" style="animation-delay: ${index * 45}ms">
-          <div class="seq">${task.sequence_no ?? index + 1}</div>
-          <div>
-            <h3>${task.title || task.task_id}</h3>
-            <div class="meta">${task.task_id} | ${task.task_type} | ${task.required_rank || "-"} / ${task.required_skill || "-"}</div>
-            <div class="meta">plan: ${task.plan_review_status || "-"}</div>
-          </div>
-          <div class="status ${task.status || ""}">${task.status || "unknown"}</div>
-        </article>
-      `).join("");
+      const buildTasks = tasks.filter((task) => String(task.task_id || "").match(/-build-[123]$/));
+      const reviewTask = tasks.find((task) => String(task.task_type || "") === "join_review");
+      if (buildTasks.length !== 3 || !reviewTask) return;
+      if (reviewTask.status === "done") return;
+      if (!buildTasks.every((task) => task.status === "done")) return;
+      finalizeInFlight = true;
+      logHermes([
+        "Three worker outputs detected.",
+        "Hermes is checking the quest workspace.",
+        "Writing review.md and final-summary.md..."
+      ]);
+      try {
+        const response = await fetch("/api/hermes/finalize", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ quest_chain_id: activeQuestChainId })
+        });
+        const value = await response.json();
+        if (value.ok && value.dashboard) {
+          const telegramLine = value.telegram && value.telegram.ok
+            ? (value.telegram.queued ? "Telegram report queued." : "Telegram report sent.")
+            : `Telegram report skipped/failed: ${value.telegram?.reason || "unknown"}`;
+          logHermes([
+            "Hermes final check completed.",
+            `Files: ${(value.files || []).join(" / ")}`,
+            "Blackboard review task marked done.",
+            telegramLine
+          ]);
+          render(value.dashboard);
+        }
+      } catch (_error) {
+        // Auto-refresh will try again on the next board update.
+      } finally {
+        finalizeInFlight = false;
+      }
     }
 
     el("sampleButton").addEventListener("click", () => {
@@ -372,8 +1013,28 @@
       render(sample);
     });
 
-    el("pasteButton").addEventListener("click", () => {
+    el("clearButton").addEventListener("click", () => {
+      activeQuestChainId = null;
+      finalizeInFlight = false;
+      setAutoRefresh(false);
+      el("questId").value = "";
+      logHermes(["Output cleared. Ready for a fresh Hermes quest."]);
+      const data = emptyDashboard();
+      el("jsonInput").value = JSON.stringify(data, null, 2);
+      render(data);
+    });
+
+    el("pasteToggle").addEventListener("click", () => {
+      el("jsonDrawer").classList.toggle("open");
+    });
+
+    el("closeDrawer").addEventListener("click", () => {
+      el("jsonDrawer").classList.remove("open");
+    });
+
+    el("renderPaste").addEventListener("click", () => {
       render(JSON.parse(el("jsonInput").value));
+      el("jsonDrawer").classList.remove("open");
     });
 
     el("fileInput").addEventListener("change", async (event) => {
@@ -384,8 +1045,131 @@
       render(data);
     });
 
-    el("jsonInput").value = JSON.stringify(sample, null, 2);
-    render(sample);
+    async function loadDefaultDashboard({ fallbackToSample = true } = {}) {
+      if (activeQuestChainId) {
+        try {
+          const response = await fetch(`/api/dashboard?quest_chain_id=${encodeURIComponent(activeQuestChainId)}`, { cache: "no-store" });
+          if (response.ok) {
+            const value = await response.json();
+            if (value.ok && value.dashboard) {
+              el("jsonInput").value = JSON.stringify(value.dashboard, null, 2);
+              render(value.dashboard);
+              return true;
+            }
+          }
+        } catch (_error) {
+          // Static mode falls back to JSON file fetch below.
+        }
+      }
+
+      const paths = [
+        "/_runtime/dashboard/guild-dashboard.json",
+        "../../_runtime/dashboard/guild-dashboard.json"
+      ];
+      for (const path of paths) {
+        try {
+          const response = await fetch(path, { cache: "no-store" });
+          if (!response.ok) continue;
+          const data = await response.json();
+          el("jsonInput").value = JSON.stringify(data, null, 2);
+          render(data);
+          return true;
+        } catch (_error) {
+          // Local file:// pages cannot fetch sibling JSON. The launcher script
+          // starts a tiny HTTP server so this path works without manual loading.
+        }
+      }
+      if (fallbackToSample) {
+        el("jsonInput").value = JSON.stringify(sample, null, 2);
+        render(sample);
+      }
+      return false;
+    }
+
+    function setAutoRefresh(enabled) {
+      if (autoRefreshTimer) {
+        clearInterval(autoRefreshTimer);
+        autoRefreshTimer = null;
+      }
+      el("autoButton").setAttribute("aria-pressed", enabled ? "true" : "false");
+      el("autoButton").textContent = enabled ? "Auto On" : "Auto Off";
+      if (enabled) {
+        autoRefreshTimer = setInterval(() => {
+          loadDefaultDashboard({ fallbackToSample: false });
+        }, 2500);
+      }
+    }
+
+    el("refreshButton").addEventListener("click", () => {
+      loadDefaultDashboard({ fallbackToSample: false });
+    });
+
+    el("autoButton").addEventListener("click", () => {
+      const enabled = el("autoButton").getAttribute("aria-pressed") !== "true";
+      setAutoRefresh(enabled);
+    });
+
+    el("questForm").addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const payload = {
+        title: el("questTitle").value,
+        request: el("questRequest").value,
+        quest_chain_id: el("questId").value || questIdFromTitle(el("questTitle").value),
+        allowed_files: el("questAllowed").value,
+        adapter: el("questAdapter").value
+      };
+      el("questId").value = payload.quest_chain_id;
+      const providerNote = payload.adapter === "local-dry-run"
+        ? "Using local-dry-run so the demo stays deterministic."
+        : `Using provider adapter ${payload.adapter}; credentials/model quirks may block the run.`;
+      logHermes([
+        "Sending prompt to Hermes S-rank manager.",
+        "Waiting for Hermes to create a bounded worker plan.",
+        "Posting Hermes-derived tasks to blackboard...",
+        providerNote,
+        "Waking workers automatically after board update..."
+      ]);
+      try {
+        const response = await fetch("/api/hermes/quest", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+        const value = await response.json();
+        if (!value.ok) throw new Error(value.error || "quest creation failed");
+        activeQuestChainId = value.quest_chain_id;
+        el("questId").value = value.quest_chain_id;
+        const wakeResponse = await fetch("/api/wake", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            quest_chain_id: value.quest_chain_id,
+            adapter: el("questAdapter").value,
+            profiles: value.wake_profiles || ["worker-a", "worker-b", "worker-c"],
+            interval_seconds: 2
+          })
+        });
+        const wakeValue = await wakeResponse.json();
+        if (!wakeValue.ok) throw new Error(wakeValue.error || "wake failed");
+        const launched = wakeValue.launched.map((item) => `${item.profile}:${item.ok ? "launched" : "failed"}`);
+        const adapterPlan = wakeValue.launched.map((item) => `${item.profile}=${item.adapter || payload.adapter}`);
+        logHermes([
+          ...value.events,
+          `Router mode: ${value.router_mode || "manual-router-v0"}`,
+          `Provider mode: ${value.provider_mode || payload.adapter}`,
+          `Quest chain: ${value.quest_chain_id}`,
+          `Created ${value.tasks.length} tasks and refreshed dashboard.`,
+          `Worker adapters: ${adapterPlan.join(" / ")}`,
+          `Workers: ${launched.join(" / ")}`
+        ]);
+        render(wakeValue.dashboard || value.dashboard);
+        setAutoRefresh(true);
+      } catch (error) {
+        logHermes([`Failed to assign task: ${error.message}`]);
+      }
+    });
+
+    loadDefaultDashboard();
   </script>
 </body>
 </html>

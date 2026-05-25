@@ -4,6 +4,9 @@ param(
 
     [string]$HermesHome = "$env:LOCALAPPDATA\hermes",
 
+    [ValidateRange(1, 60)]
+    [int]$TimeoutSec = 20,
+
     [switch]$DryRun
 )
 
@@ -52,7 +55,7 @@ $body = @{
     text = $Text
 }
 
-$response = Invoke-RestMethod -Method Post -Uri $uri -Body $body -TimeoutSec 20
+$response = Invoke-RestMethod -Method Post -Uri $uri -Body $body -TimeoutSec $TimeoutSec
 if (-not $response.ok) {
     throw "Telegram sendMessage returned ok=false."
 }

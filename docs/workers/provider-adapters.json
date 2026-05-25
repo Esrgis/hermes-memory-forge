@@ -1,0 +1,62 @@
+{
+  "schema_version": "guild_provider_adapters_v0",
+  "default_adapter": "local-dry-run",
+  "adapters": {
+    "codex": {
+      "kind": "strong_reasoning",
+      "secret_policy": "external",
+      "command": null,
+      "intended_profiles": ["hermes-codex"],
+      "notes": "Use Codex as Hermes planning/review brain while available."
+    },
+    "groq": {
+      "kind": "hosted_model",
+      "secret_policy": "external",
+      "command": null,
+      "intended_profiles": ["builder", "tester", "reviewer"],
+      "notes": "Groq OpenAI-compatible hosted worker backend. Requires GROQ_API_KEY in the environment. Do not store keys here."
+    },
+    "openrouter": {
+      "kind": "hosted_model_manual_fallback",
+      "secret_policy": "external",
+      "command": null,
+      "intended_profiles": ["builder", "tester", "reviewer"],
+      "notes": "Manual fallback hosted worker backend. Requires OPENROUTER_API_KEY in the local ignored provider config. Not part of the primary active set unless explicitly selected."
+    },
+    "gemini": {
+      "kind": "hosted_model_or_local_cli",
+      "secret_policy": "external",
+      "command": "Gemini OpenAI-compatible REST API, fallback gemini --prompt",
+      "intended_profiles": ["builder", "tester", "reviewer"],
+      "notes": "Gemini worker backend. Prefer GEMINI_API_KEY/GOOGLE_API_KEY direct API; fallback to Gemini CLI only when no API key is available. Do not store keys here."
+    },
+    "opencode": {
+      "kind": "local_cli",
+      "secret_policy": "external",
+      "command": "opencode run --pure --format json",
+      "intended_profiles": ["builder"],
+      "notes": "Local terminal/code execution path. Must still obey allowed_files. Smoke tests showed tiny prompts still load roughly 13k input tokens."
+    },
+    "cerebras": {
+      "kind": "hosted_model",
+      "secret_policy": "external",
+      "command": null,
+      "intended_profiles": ["builder", "tester", "reviewer"],
+      "notes": "Fast inference candidate. Do not store keys here."
+    },
+    "local-dry-run": {
+      "kind": "deterministic",
+      "secret_policy": "none",
+      "command": null,
+      "intended_profiles": ["builder", "tester", "reviewer"],
+      "notes": "No model call. Use for smoke tests and blocked-artifact plumbing."
+    },
+    "invalid-output-smoke": {
+      "kind": "test_only",
+      "secret_policy": "none",
+      "command": null,
+      "intended_profiles": ["builder", "tester", "reviewer"],
+      "notes": "Test-only adapter that returns malformed artifact JSON so worker-agent validation can prove invalid_adapter_output handling."
+    }
+  }
+}

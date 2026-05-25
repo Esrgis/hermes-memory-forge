@@ -1,0 +1,69 @@
+{
+  "schema_version": "guild_agent_profiles_v0",
+  "default_profile": "builder",
+  "profiles": {
+    "hermes-codex": {
+      "agent_id": "hermes-codex",
+      "display_name": "Hermes",
+      "rank": "S",
+      "skills": ["planning", "review", "orchestration", "memory", "coding", "general"],
+      "provider_role": "codex",
+      "bootstrap": "docs/workers/WORKER_BOOTSTRAP.md",
+      "notes": "Strong reasoning manager/reviewer. Do not treat as an ordinary queue worker unless explicitly assigned."
+    },
+    "builder": {
+      "agent_id": "builder",
+      "display_name": "Builder",
+      "rank": "C",
+      "skills": ["app_logic", "ui", "fix", "general"],
+      "provider_role": "cheap_worker",
+      "bootstrap": "docs/workers/WORKER_BOOTSTRAP.md",
+      "notes": "Scoped implementation worker. Must stay inside allowed_files and publish evidence."
+    },
+    "worker-a": {
+      "agent_id": "worker-a",
+      "display_name": "Worker A",
+      "rank": "C",
+      "skills": ["general", "planning", "writing"],
+      "provider_role": "cheap_worker",
+      "bootstrap": "docs/workers/WORKER_BOOTSTRAP.md",
+      "notes": "Demo build worker A. Writes build-1.md inside the bounded quest workspace."
+    },
+    "worker-b": {
+      "agent_id": "worker-b",
+      "display_name": "Worker B",
+      "rank": "C",
+      "skills": ["general", "analysis", "writing"],
+      "provider_role": "cheap_worker",
+      "bootstrap": "docs/workers/WORKER_BOOTSTRAP.md",
+      "notes": "Demo build worker B. Writes build-2.md inside the bounded quest workspace."
+    },
+    "worker-c": {
+      "agent_id": "worker-c",
+      "display_name": "Worker C",
+      "rank": "C",
+      "skills": ["general", "checklist", "writing"],
+      "provider_role": "cheap_worker",
+      "bootstrap": "docs/workers/WORKER_BOOTSTRAP.md",
+      "notes": "Demo build worker C. Writes build-3.md inside the bounded quest workspace."
+    },
+    "tester": {
+      "agent_id": "tester",
+      "display_name": "Tester",
+      "rank": "B",
+      "skills": ["testing", "qa", "general"],
+      "provider_role": "cheap_worker",
+      "bootstrap": "docs/workers/WORKER_BOOTSTRAP.md",
+      "notes": "Verification worker. Prefer commands/tests over model judgment."
+    },
+    "reviewer": {
+      "agent_id": "reviewer",
+      "display_name": "Reviewer",
+      "rank": "B",
+      "skills": ["integration_review", "review", "general"],
+      "provider_role": "cheap_worker",
+      "bootstrap": "docs/workers/WORKER_BOOTSTRAP.md",
+      "notes": "Join-review worker. Reads artifacts and produces accept/revise decisions."
+    }
+  }
+}

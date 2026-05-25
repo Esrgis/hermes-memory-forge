@@ -79,7 +79,12 @@ Route:
 
 - Use the current workspace root.
 - Read `AGENTS.md`, `PROJECT_CONTEXT.md`, `TASKS.md`, `HERMES_MAP.md`, and this file when present.
+- Treat the workspace as a searchable space, not a folder tree to crawl.
 - For filename/path discovery, use `scripts/search-files.ps1`; it tries Everything ES first and falls back to scoped `fd`/PowerShell if ES fails.
+- For text/content search, use `scripts/search-content.ps1`; it uses `rg` first and falls back to scoped PowerShell only when needed.
+- For file previews, use `scripts/preview-file.ps1`; it uses `bat` when available and limits output.
+- For workspace/tool availability snapshots, use `scripts/inspect-workspace.ps1`; it uses `eza` when available.
+- Treat `zoxide` as human navigation state, not an agent automation dependency.
 - Avoid broad search.
 
 ## Coding
