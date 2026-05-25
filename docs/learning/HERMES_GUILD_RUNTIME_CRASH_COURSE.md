@@ -399,7 +399,7 @@ Hermes   = rank S, planning/review/orchestration
 Profile nằm ở:
 
 ```text
-docs/workers/agent-profiles.json
+config/guild/agent-profiles.json
 docs/workers/AGENT_PROFILES.md
 ```
 

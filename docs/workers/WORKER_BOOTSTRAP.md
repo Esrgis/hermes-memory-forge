@@ -42,6 +42,17 @@ load agent profile
 -> mark task done only if evidence is complete
 ```
 
+## Capability / Ammo Model
+
+Treat the runtime as gun and ammo:
+
+- Capability adapter ("gun"): permissions, visible scope, artifact schema, allowed files, and failure policy.
+- Model cartridge ("ammo"): concrete model choice plus reliability/cost/context metadata.
+- Provider transport ("firing mechanism/fuel"): gateway/API/CLI/auth route such as OpenRouter HTTP, Groq HTTP, OpenCode CLI, or Gemini API/CLI.
+- `auto-ammo`: tries the capability configured cartridge ladder without changing worker permissions.
+
+Changing model/provider must not expand what the worker is allowed to see or edit.
+
 ## Artifact Shape
 
 Workers should publish this information even if the backend model is weak:

@@ -13,6 +13,10 @@ param(
 
     [string]$Model,
 
+    [string]$Capability,
+
+    [string]$TaskType,
+
     [switch]$Json
 )
 
@@ -45,6 +49,12 @@ if ($Provider) {
 }
 if ($Model) {
     $adapterArgs += @("--model", $Model)
+}
+if ($Capability) {
+    $adapterArgs += @("--capability", $Capability)
+}
+if ($TaskType) {
+    $adapterArgs += @("--task-type", $TaskType)
 }
 
 $raw = & $python @adapterArgs

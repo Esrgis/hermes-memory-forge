@@ -2,7 +2,7 @@
 
 These profiles are runtime hints for the Guild Worker Team prototype. They are not personalities.
 
-Machine-readable source: `docs/workers/agent-profiles.json`.
+Runtime config source: `config/guild/agent-profiles.json`.
 
 ## Roles
 

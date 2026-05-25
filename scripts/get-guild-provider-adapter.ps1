@@ -8,10 +8,15 @@ param(
 $ErrorActionPreference = "Stop"
 
 $workspace = (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot "..")).Path
-$adapterPath = Join-Path $workspace "docs\workers\provider-adapters.json"
+$adapterPath = Join-Path $workspace "config\guild\provider-adapters.json"
+$legacyAdapterPath = Join-Path $workspace "docs\workers\provider-adapters.json"
 
 if (-not (Test-Path -LiteralPath $adapterPath)) {
-    throw "Missing provider adapter file: $adapterPath"
+    if (Test-Path -LiteralPath $legacyAdapterPath) {
+        $adapterPath = $legacyAdapterPath
+    } else {
+        throw "Missing provider adapter file: $adapterPath"
+    }
 }
 
 $config = Get-Content -LiteralPath $adapterPath -Raw | ConvertFrom-Json

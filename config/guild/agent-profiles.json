@@ -1,0 +1,62 @@
+{
+  "schema_version": "guild_agent_profiles_v0",
+  "default_profile": "builder",
+  "profiles": {
+    "hermes-codex": {
+      "agent_id": "hermes-codex",
+      "display_name": "Hermes Codex",
+      "rank": "S",
+      "skills": ["planning", "review", "memory", "coordination"],
+      "provider_role": "manager",
+      "bootstrap": "docs/workers/WORKER_BOOTSTRAP.md"
+    },
+    "builder": {
+      "agent_id": "builder",
+      "display_name": "Builder",
+      "rank": "B",
+      "skills": ["implementation", "frontend", "backend", "general"],
+      "provider_role": "worker",
+      "bootstrap": "docs/workers/WORKER_BOOTSTRAP.md"
+    },
+    "worker-a": {
+      "agent_id": "worker-a",
+      "display_name": "Worker A",
+      "rank": "B",
+      "skills": ["implementation", "requirements", "general"],
+      "provider_role": "worker",
+      "bootstrap": "docs/workers/WORKER_BOOTSTRAP.md"
+    },
+    "worker-b": {
+      "agent_id": "worker-b",
+      "display_name": "Worker B",
+      "rank": "B",
+      "skills": ["implementation", "risk-analysis", "general"],
+      "provider_role": "worker",
+      "bootstrap": "docs/workers/WORKER_BOOTSTRAP.md"
+    },
+    "worker-c": {
+      "agent_id": "worker-c",
+      "display_name": "Worker C",
+      "rank": "B",
+      "skills": ["implementation", "verification", "general"],
+      "provider_role": "worker",
+      "bootstrap": "docs/workers/WORKER_BOOTSTRAP.md"
+    },
+    "tester": {
+      "agent_id": "tester",
+      "display_name": "Tester",
+      "rank": "C",
+      "skills": ["testing", "general"],
+      "provider_role": "worker",
+      "bootstrap": "docs/workers/WORKER_BOOTSTRAP.md"
+    },
+    "reviewer": {
+      "agent_id": "reviewer",
+      "display_name": "Reviewer",
+      "rank": "A",
+      "skills": ["review", "integration", "general"],
+      "provider_role": "reviewer",
+      "bootstrap": "docs/workers/WORKER_BOOTSTRAP.md"
+    }
+  }
+}

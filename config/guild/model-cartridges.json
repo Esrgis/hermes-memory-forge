@@ -1,0 +1,45 @@
+{
+  "schema_version": "guild_model_cartridges_v0",
+  "cartridges": {
+    "local:dry-run": {
+      "transport": "local-dry-run",
+      "model": null,
+      "cost_tier": "none",
+      "latency": "instant",
+      "structured_output_reliability": "high",
+      "notes": "Deterministic no-provider cartridge."
+    },
+    "opencode:deepseek-v4-flash-free": {
+      "transport": "opencode-cli",
+      "model": "opencode/deepseek-v4-flash-free",
+      "cost_tier": "free_or_local_config",
+      "latency": "medium",
+      "structured_output_reliability": "medium",
+      "notes": "Default OpenCode CLI cartridge for local code-worker smokes."
+    },
+    "openrouter:poolside-laguna-free": {
+      "transport": "openrouter-http",
+      "model": "poolside/laguna-m.1:free",
+      "cost_tier": "free",
+      "latency": "medium",
+      "structured_output_reliability": "medium",
+      "notes": "OpenRouter gateway cartridge used in 2026-05-24 real UI provider smoke."
+    },
+    "groq:gpt-oss-20b": {
+      "transport": "groq-http",
+      "model": "openai/gpt-oss-20b",
+      "cost_tier": "low",
+      "latency": "fast",
+      "structured_output_reliability": "medium",
+      "notes": "Groq fast worker cartridge."
+    },
+    "gemini:gemini-2.5-flash": {
+      "transport": "gemini-api",
+      "model": "gemini-2.5-flash",
+      "cost_tier": "low",
+      "latency": "medium",
+      "structured_output_reliability": "low_to_medium",
+      "notes": "Gemini cartridge kept as fallback; prior CLI path was unreliable."
+    }
+  }
+}

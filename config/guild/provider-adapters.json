@@ -9,6 +9,13 @@
       "intended_profiles": ["hermes-codex"],
       "notes": "Use Codex as Hermes planning/review brain while available."
     },
+    "auto-ammo": {
+      "kind": "capability_adapter",
+      "secret_policy": "external",
+      "command": "runtime-selected ammo ladder",
+      "intended_profiles": ["builder", "tester", "reviewer"],
+      "notes": "Gun selector. Keeps capability permissions fixed and tries provider/model ammo from config/guild/capability-adapters.json."
+    },
     "groq": {
       "kind": "hosted_model",
       "secret_policy": "external",

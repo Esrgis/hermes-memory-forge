@@ -1,0 +1,70 @@
+{
+  "schema_version": "guild_capability_adapters_v0",
+  "default_capability": "code-edit-worker",
+  "capabilities": {
+    "code-edit-worker": {
+      "kind": "capability_adapter",
+      "permissions": {
+        "visible_scope": "task_only",
+        "may_edit_files": true,
+        "may_run_commands": true,
+        "allowed_files_source": "task_contract",
+        "may_read_secrets": false
+      },
+      "artifact_schema": "guild_worker_artifact_v0",
+      "failure_policy": {
+        "invalid_output": "blocked_reason=invalid_adapter_output",
+        "missing_provider": "try_next_ammo",
+        "provider_failed": "try_next_ammo",
+        "exhausted": "blocked_reason=provider_exhausted"
+      },
+      "ammo_ladder": [
+        "opencode:deepseek-v4-flash-free",
+        "openrouter:poolside-laguna-free",
+        "groq:gpt-oss-20b",
+        "gemini:gemini-2.5-flash"
+      ],
+      "notes": "Default gun for bounded execution workers. Providers/models are ammo and do not change file permissions or artifact rules."
+    },
+    "join-review-worker": {
+      "kind": "capability_adapter",
+      "permissions": {
+        "visible_scope": "join_review",
+        "may_edit_files": true,
+        "may_run_commands": true,
+        "allowed_files_source": "task_contract",
+        "may_read_secrets": false,
+        "may_create_fix_task": true
+      },
+      "artifact_schema": "guild_worker_artifact_v0",
+      "failure_policy": {
+        "invalid_output": "blocked_reason=invalid_adapter_output",
+        "missing_provider": "try_next_ammo",
+        "provider_failed": "try_next_ammo",
+        "exhausted": "blocked_reason=provider_exhausted"
+      },
+      "ammo_ladder": [
+        "opencode:deepseek-v4-flash-free",
+        "openrouter:poolside-laguna-free",
+        "groq:gpt-oss-20b"
+      ],
+      "notes": "Fan-in review gun. It can inspect upstream artifacts but still cannot read secrets or unrelated board context."
+    },
+    "deterministic-smoke": {
+      "kind": "capability_adapter",
+      "permissions": {
+        "visible_scope": "task_only",
+        "may_edit_files": false,
+        "may_run_commands": false,
+        "allowed_files_source": "task_contract",
+        "may_read_secrets": false
+      },
+      "artifact_schema": "guild_worker_artifact_v0",
+      "failure_policy": {
+        "invalid_output": "blocked_reason=invalid_adapter_output"
+      },
+      "ammo_ladder": ["local:dry-run"],
+      "notes": "No-model smoke gun for board, validation, and blocked-artifact plumbing."
+    }
+  }
+}

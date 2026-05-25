@@ -51,6 +51,7 @@ If you only remember the core files for the UI-first Guild demo, remember these:
 - Launch visible worker terminal loop: `scripts/start-guild-worker-terminal.ps1`
 - Worker tick core: `scripts/run-guild-worker-agent.ps1`
 - Provider adapter runtime (canonical Python): `scripts/guild_provider_adapters/invoke.py`
+- Guild runtime config: `config/guild/`
 
 Flow (one button):
 
@@ -90,9 +91,12 @@ Worker profile docs live in `docs/workers/`.
 
 - `docs/workers/WORKER_BOOTSTRAP.md`: short route map for weak/model-backed workers.
 - `docs/workers/AGENT_PROFILES.md`: human-readable profile summary.
-- `docs/workers/agent-profiles.json`: machine-readable profile source.
 - `docs/workers/PROVIDER_ADAPTERS.md`: provider adapter contract, without secrets.
-- `docs/workers/provider-adapters.json`: machine-readable provider adapter source.
+- `config/guild/agent-profiles.json`: machine-readable profile source.
+- `config/guild/capability-adapters.json`: gun policy for visible scope, permissions, artifact schema, and ammo ladders.
+- `config/guild/model-cartridges.json`: concrete model ammo inventory.
+- `config/guild/provider-transports.json`: gateway/API/CLI transport inventory.
+- `config/guild/provider-adapters.json`: legacy backend adapter compatibility map.
 - `scripts/guild_provider_adapters/`: Python adapter runtime used by `invoke-guild-provider-adapter.ps1`.
 - `_runtime/guild-worker-agent/provider-selection.json`: local active provider selection written by `configure-guild-worker.ps1`.
 
@@ -102,10 +106,13 @@ Useful profile commands:
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\get-guild-agent-profile.ps1 -Profile builder
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\get-guild-provider-adapter.ps1 -Adapter local-dry-run
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\configure-guild-worker.ps1 -List
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\configure-guild-worker.ps1 -Profile builder -Adapter auto-ammo -Capability code-edit-worker -TestNow
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\configure-guild-worker.ps1 -Profile builder -Adapter opencode -TestNow
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\configure-guild-worker.ps1 -Profile builder -Adapter openrouter -TestNow
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\configure-guild-worker.ps1 -Profile tester -Adapter gemini -Model gemini-2.5-flash -TestNow
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\configure-guild-worker.ps1 -Profile builder -Adapter groq -Model openai/gpt-oss-20b -TestNow
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\invoke-guild-provider-adapter.ps1 -Adapter local-dry-run -Profile builder -Message "Return a smoke result."
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\invoke-guild-provider-adapter.ps1 -Adapter auto-ammo -Capability deterministic-smoke -Profile builder -Message "Return a smoke result."
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\invoke-guild-provider-adapter.ps1 -Adapter opencode -Profile builder -Message "Return exactly this JSON and do not modify files: {\"ok\":true}"
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\invoke-guild-provider-adapter.ps1 -Adapter groq -Profile builder -Model openai/gpt-oss-20b -Message "Return exactly this JSON: {\"ok\":true,\"summary\":\"groq smoke\",\"files_changed\":[],\"commands_run\":[\"groq smoke\"],\"test_result\":\"not_required\",\"known_risks\":[],\"blocked_reason\":null}"
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\run-guild-worker-agent.ps1 -Profile builder -Adapter local-dry-run -QuestChainId demo-even-random-app -Json
@@ -201,3 +208,13 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\inspect-workspace.
 ```
 
 Do not replace these with ad hoc recursive `Get-ChildItem` or `Select-String` unless the standard route fails or a very small known directory is being inspected.
+
+## Shared Cognition Update
+
+Use this after meaningful sessions to update shared Codex/Hermes reflex memory without dumping raw logs:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\update-shared-cognition.ps1 -Summary "Hermes capability adapters are guns; providers/models are ammo." -Reflex "Keep permissions fixed when swapping ammo." -Rule "Do not store raw chat logs." -NextAction "Wire post-session update into the close workflow."
+```
+
+Target note: `_obsidian_vault/System/Assistant/Shared/Cognition Reflexes.md`.

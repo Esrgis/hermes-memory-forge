@@ -8,10 +8,15 @@ param(
 $ErrorActionPreference = "Stop"
 
 $workspace = (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot "..")).Path
-$profilePath = Join-Path $workspace "docs\workers\agent-profiles.json"
+$profilePath = Join-Path $workspace "config\guild\agent-profiles.json"
+$legacyProfilePath = Join-Path $workspace "docs\workers\agent-profiles.json"
 
 if (-not (Test-Path -LiteralPath $profilePath)) {
-    throw "Missing agent profile file: $profilePath"
+    if (Test-Path -LiteralPath $legacyProfilePath) {
+        $profilePath = $legacyProfilePath
+    } else {
+        throw "Missing agent profile file: $profilePath"
+    }
 }
 
 $config = Get-Content -LiteralPath $profilePath -Raw | ConvertFrom-Json

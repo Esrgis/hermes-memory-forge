@@ -2,12 +2,14 @@
 param(
     [string]$Profile = "builder",
 
-    [ValidateSet("opencode", "gemini", "groq")]
+    [ValidateSet("auto-ammo", "opencode", "openrouter", "gemini", "groq")]
     [string]$Adapter = "opencode",
 
     [string]$Provider,
 
     [string]$Model,
+
+    [string]$Capability,
 
     [string]$Message = 'Return exactly this JSON and do not modify files: {"ok":true}',
 
@@ -21,15 +23,24 @@ param(
 $ErrorActionPreference = "Stop"
 
 $workspace = (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot "..")).Path
-$profilesPath = Join-Path $workspace "docs\workers\agent-profiles.json"
-$adaptersPath = Join-Path $workspace "docs\workers\provider-adapters.json"
+$profilesPath = Join-Path $workspace "config\guild\agent-profiles.json"
+$adaptersPath = Join-Path $workspace "config\guild\provider-adapters.json"
+$legacyProfilesPath = Join-Path $workspace "docs\workers\agent-profiles.json"
+$legacyAdaptersPath = Join-Path $workspace "docs\workers\provider-adapters.json"
 $runtimeDir = Join-Path $workspace "_runtime\guild-worker-agent"
 $configPath = Join-Path $runtimeDir "provider-selection.json"
 $invokeScript = Join-Path $workspace "scripts\invoke-guild-provider-adapter.ps1"
 
+if (-not (Test-Path -LiteralPath $profilesPath) -and (Test-Path -LiteralPath $legacyProfilesPath)) {
+    $profilesPath = $legacyProfilesPath
+}
+if (-not (Test-Path -LiteralPath $adaptersPath) -and (Test-Path -LiteralPath $legacyAdaptersPath)) {
+    $adaptersPath = $legacyAdaptersPath
+}
+
 $profilesConfig = Get-Content -LiteralPath $profilesPath -Raw | ConvertFrom-Json
 $adaptersConfig = Get-Content -LiteralPath $adaptersPath -Raw | ConvertFrom-Json
-$allowedAdapters = @("opencode", "gemini", "groq")
+$allowedAdapters = @("auto-ammo", "opencode", "openrouter", "gemini", "groq")
 
 function ConvertTo-Hashtable {
     param([Parameter(Mandatory = $true)]$Value)
@@ -71,7 +82,7 @@ if ($List) {
         [pscustomobject]@{
             adapter = $adapterName
             kind = $adapterData.kind
-            implemented = ($adapterName -in @("opencode", "gemini", "groq"))
+            implemented = ($adapterName -in @("auto-ammo", "opencode", "openrouter", "gemini", "groq"))
             notes = $adapterData.notes
         }
     }
@@ -79,7 +90,9 @@ if ($List) {
         profiles = $profiles
         adapters = $adapters
         examples = @(
+            '.\scripts\configure-guild-worker.ps1 -Profile builder -Adapter auto-ammo -Capability code-edit-worker -TestNow',
             '.\scripts\configure-guild-worker.ps1 -Profile builder -Adapter opencode -TestNow',
+            '.\scripts\configure-guild-worker.ps1 -Profile builder -Adapter openrouter -TestNow',
             '.\scripts\configure-guild-worker.ps1 -Profile tester -Adapter gemini -Model gemini-2.5-flash -TestNow',
             '.\scripts\configure-guild-worker.ps1 -Profile builder -Adapter groq -Model openai/gpt-oss-20b -TestNow'
         )
@@ -109,8 +122,9 @@ $selection = [ordered]@{
     adapter = $Adapter
     provider = if ($Provider) { $Provider } else { $null }
     model = if ($Model) { $Model } else { $null }
+    capability = if ($Capability) { $Capability } else { $null }
     adapter_kind = $adapterData.kind
-    implemented = ($Adapter -in @("opencode", "gemini", "groq"))
+    implemented = ($Adapter -in @("auto-ammo", "opencode", "openrouter", "gemini", "groq"))
     config_path = $configPath
     secret_policy = $adapterData.secret_policy
     notes = "Secrets are not stored here. Provider credentials must come from external provider config or environment."
@@ -132,6 +146,9 @@ if ($TestNow) {
     }
     if ($Model) {
         $testArgs.Model = $Model
+    }
+    if ($Capability) {
+        $testArgs.Capability = $Capability
     }
     $rawTest = & $invokeScript @testArgs
     if (-not $rawTest) {

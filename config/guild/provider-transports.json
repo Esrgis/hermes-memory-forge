@@ -1,0 +1,45 @@
+{
+  "schema_version": "guild_provider_transports_v0",
+  "transports": {
+    "local-dry-run": {
+      "kind": "deterministic",
+      "backend_adapter": "local-dry-run",
+      "requires_key": false,
+      "notes": "No model call. Used for deterministic smoke tests."
+    },
+    "opencode-cli": {
+      "kind": "cli",
+      "backend_adapter": "opencode",
+      "requires_key": false,
+      "env_keys": ["OPENCODE_MODEL"],
+      "notes": "OpenCode CLI transport. It may use local OpenCode config or model-specific provider env vars."
+    },
+    "openrouter-http": {
+      "kind": "gateway_http",
+      "backend_adapter": "openrouter",
+      "requires_key": true,
+      "env_keys": ["OPENROUTER_API_KEY"],
+      "notes": "OpenRouter gateway transport using OpenAI-compatible chat completions."
+    },
+    "groq-http": {
+      "kind": "openai_compatible_http",
+      "backend_adapter": "groq",
+      "requires_key": true,
+      "env_keys": ["GROQ_API_KEY"],
+      "notes": "Groq OpenAI-compatible chat completions transport."
+    },
+    "gemini-api": {
+      "kind": "openai_compatible_http",
+      "backend_adapter": "gemini",
+      "requires_key": true,
+      "env_keys": ["GEMINI_API_KEY", "GOOGLE_API_KEY"],
+      "notes": "Gemini OpenAI-compatible API path. The backend can fall back to Gemini CLI if no API key is present."
+    },
+    "gemini-cli": {
+      "kind": "cli",
+      "backend_adapter": "gemini",
+      "requires_key": false,
+      "notes": "Gemini CLI fallback for locally authenticated sessions."
+    }
+  }
+}

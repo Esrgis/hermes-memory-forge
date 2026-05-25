@@ -241,7 +241,8 @@
     }
 
     .quest-form,
-    .hermes-log {
+    .hermes-log,
+    .provider-lab {
       min-width: 0;
       border-radius: 8px;
       border: 1px solid var(--line);
@@ -299,6 +300,12 @@
       margin-top: 8px;
     }
 
+    .side-stack {
+      min-width: 0;
+      display: grid;
+      gap: 10px;
+    }
+
     .hermes-log {
       display: flex;
       flex-direction: column;
@@ -318,6 +325,34 @@
     .hermes-line {
       padding-left: 10px;
       border-left: 3px solid rgba(47, 180, 124, 0.8);
+    }
+
+    .provider-lab {
+      display: grid;
+      gap: 8px;
+    }
+
+    .provider-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .provider-grid .wide {
+      grid-column: 1 / -1;
+    }
+
+    .provider-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .provider-status {
+      min-height: 22px;
+      color: rgba(255, 255, 255, 0.82);
+      font: 0.72rem var(--mono);
+      overflow-wrap: anywhere;
     }
 
     .columns {
@@ -614,7 +649,8 @@
         grid-template-columns: 1fr;
         padding: 12px;
       }
-      .quest-grid {
+      .quest-grid,
+      .provider-grid {
         grid-template-columns: 1fr;
       }
       .columns {
@@ -678,6 +714,7 @@
             <label for="questAdapter">Adapter</label>
             <select id="questAdapter">
               <option value="auto-rank" selected>auto-rank</option>
+              <option value="auto-ammo">auto-ammo</option>
               <option value="local-dry-run">local-dry-run</option>
               <option value="opencode">opencode</option>
               <option value="gemini">gemini</option>
@@ -702,12 +739,49 @@
           <button id="assignQuest" type="submit">Giao Task Cho Hermes</button>
         </div>
       </form>
-      <section class="hermes-log" aria-label="Hermes routing log">
-        <div class="hermes-log-title">Hermes Routing Log</div>
-        <div class="hermes-lines" id="hermesLines">
-          <div class="hermes-line">Waiting for a task.</div>
-        </div>
-      </section>
+      <div class="side-stack">
+        <section class="hermes-log" aria-label="Hermes routing log">
+          <div class="hermes-log-title">Hermes Routing Log</div>
+          <div class="hermes-lines" id="hermesLines">
+            <div class="hermes-line">Waiting for a task.</div>
+          </div>
+        </section>
+        <section class="provider-lab" aria-label="Provider lab">
+          <div class="hermes-log-title">Provider Lab</div>
+          <div class="provider-grid">
+            <div class="quest-field">
+              <label for="providerTransport">Transport</label>
+              <select id="providerTransport"></select>
+            </div>
+            <div class="quest-field">
+              <label for="providerCapability">Gun</label>
+              <select id="providerCapability"></select>
+            </div>
+            <div class="quest-field">
+              <label for="providerSecretKey">Key</label>
+              <select id="providerSecretKey"></select>
+            </div>
+            <div class="quest-field">
+              <label for="providerSecretValue">Secret</label>
+              <input id="providerSecretValue" type="password" autocomplete="off" placeholder="paste key">
+            </div>
+            <div class="quest-field wide">
+              <label for="providerCartridge">Ammo / Model</label>
+              <select id="providerCartridge"></select>
+            </div>
+            <div class="quest-field wide">
+              <label for="providerModel">Override model</label>
+              <input id="providerModel" placeholder="optional exact model id">
+            </div>
+          </div>
+          <div class="provider-actions">
+            <button id="saveProviderKey" type="button">Save Key</button>
+            <button id="refreshProviderModels" type="button">List Models</button>
+            <button id="testProviderNow" type="button">Test Now</button>
+          </div>
+          <div class="provider-status" id="providerStatus">Loading providers...</div>
+        </section>
+      </div>
     </section>
 
     <section class="board" aria-label="Task board">
@@ -770,6 +844,7 @@
     let autoRefreshTimer = null;
     let activeQuestChainId = null;
     let finalizeInFlight = false;
+    let providerLabConfig = null;
 
     const el = (id) => document.getElementById(id);
     const escapeHtml = (value) => String(value ?? "").replace(/[&<>"']/g, (char) => ({
@@ -813,6 +888,76 @@
         .filter(Boolean)
         .map((line) => `<div class="hermes-line">${escapeHtml(line)}</div>`)
         .join("");
+    }
+
+    function setProviderStatus(message) {
+      el("providerStatus").textContent = message;
+    }
+
+    function selectedTransport() {
+      return el("providerTransport").value;
+    }
+
+    function renderProviderLab() {
+      if (!providerLabConfig) return;
+      const transports = providerLabConfig.transports || {};
+      const capabilities = providerLabConfig.capabilities || {};
+      const transportNames = Object.keys(transports);
+      el("providerTransport").innerHTML = transportNames
+        .map((name) => `<option value="${escapeHtml(name)}">${escapeHtml(name)}</option>`)
+        .join("");
+      const capabilityNames = Object.keys(capabilities);
+      el("providerCapability").innerHTML = capabilityNames
+        .map((name) => `<option value="${escapeHtml(name)}" ${name === "deterministic-smoke" ? "selected" : ""}>${escapeHtml(name)}</option>`)
+        .join("");
+      if (transports["openrouter-http"]) el("providerTransport").value = "openrouter-http";
+      updateProviderChoices();
+    }
+
+    function updateProviderChoices() {
+      if (!providerLabConfig) return;
+      const transportName = selectedTransport();
+      const transport = (providerLabConfig.transports || {})[transportName] || {};
+      const envKeys = transport.env_keys || [];
+      const secretStatus = providerLabConfig.secret_status || {};
+      el("providerSecretKey").innerHTML = envKeys.length
+        ? envKeys.map((key) => {
+            const status = secretStatus[key];
+            const suffix = status && status.has_key ? ` (${status.source})` : " (missing)";
+            return `<option value="${escapeHtml(key)}">${escapeHtml(key + suffix)}</option>`;
+          }).join("")
+        : `<option value="">no key needed</option>`;
+      const cartridges = providerLabConfig.cartridges || {};
+      const options = Object.entries(cartridges)
+        .filter(([, cartridge]) => String(cartridge.transport || "") === transportName)
+        .map(([name, cartridge]) => {
+          const model = cartridge.model ? ` / ${cartridge.model}` : "";
+          return `<option value="${escapeHtml(name)}" data-model="${escapeHtml(cartridge.model || "")}">${escapeHtml(name + model)}</option>`;
+        });
+      el("providerCartridge").innerHTML = options.length
+        ? options.join("")
+        : `<option value="${escapeHtml(transportName)}">${escapeHtml(transportName)}</option>`;
+      const selected = el("providerCartridge").selectedOptions[0];
+      el("providerModel").value = selected ? (selected.dataset.model || "") : "";
+      const keyLine = envKeys.length
+        ? envKeys.map((key) => {
+            const status = secretStatus[key];
+            return `${key}:${status && status.has_key ? status.source : "missing"}`;
+          }).join(" / ")
+        : "no key";
+      setProviderStatus(`${transportName} ready. ${keyLine}`);
+    }
+
+    async function loadProviderLab() {
+      try {
+        const response = await fetch("/api/provider-lab/config", { cache: "no-store" });
+        const value = await response.json();
+        if (!value.ok) throw new Error(value.error || "provider config failed");
+        providerLabConfig = value;
+        renderProviderLab();
+      } catch (error) {
+        setProviderStatus(`Provider Lab unavailable: ${error.message}`);
+      }
     }
 
     function initials(value) {
@@ -1109,6 +1254,91 @@
       setAutoRefresh(enabled);
     });
 
+    el("providerTransport").addEventListener("change", updateProviderChoices);
+
+    el("providerCartridge").addEventListener("change", () => {
+      const selected = el("providerCartridge").selectedOptions[0];
+      el("providerModel").value = selected ? (selected.dataset.model || "") : "";
+    });
+
+    el("saveProviderKey").addEventListener("click", async () => {
+      const envKey = el("providerSecretKey").value;
+      const value = el("providerSecretValue").value;
+      if (!envKey) {
+        setProviderStatus("Selected transport does not need a key.");
+        return;
+      }
+      if (!value) {
+        setProviderStatus("Secret value is empty.");
+        return;
+      }
+      setProviderStatus(`Saving ${envKey} locally...`);
+      try {
+        const response = await fetch("/api/provider-lab/save-secret", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ env_key: envKey, value })
+        });
+        const result = await response.json();
+        if (!result.ok) throw new Error(result.error || "save failed");
+        providerLabConfig.secret_status = result.secret_status;
+        el("providerSecretValue").value = "";
+        updateProviderChoices();
+        setProviderStatus(`${envKey} saved to ${result.path}.`);
+      } catch (error) {
+        setProviderStatus(`Save failed: ${error.message}`);
+      }
+    });
+
+    el("refreshProviderModels").addEventListener("click", async () => {
+      const transport = selectedTransport();
+      setProviderStatus(`Listing models for ${transport}...`);
+      try {
+        const response = await fetch("/api/provider-lab/list-models", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ transport })
+        });
+        const result = await response.json();
+        if (!result.ok) throw new Error(result.error || "list failed");
+        const staticCartridge = el("providerCartridge").options[0]?.value || transport;
+        const existing = new Set(Array.from(el("providerCartridge").options).map((option) => option.dataset.model || option.textContent));
+        const dynamic = (result.models || []).filter((model) => model.id && !existing.has(model.id));
+        if (dynamic.length) {
+          el("providerCartridge").insertAdjacentHTML(
+            "beforeend",
+            dynamic.map((model) => `<option value="${escapeHtml(staticCartridge)}" data-model="${escapeHtml(model.id)}">${escapeHtml(model.id)} (${escapeHtml(model.source || "provider")})</option>`).join("")
+          );
+        }
+        const note = result.dynamic && result.dynamic.ok
+          ? `${result.models.length} model(s) available.`
+          : `Static cartridges loaded; live list blocked: ${result.dynamic?.reason || "unknown"}.`;
+        setProviderStatus(note);
+      } catch (error) {
+        setProviderStatus(`List failed: ${error.message}`);
+      }
+    });
+
+    el("testProviderNow").addEventListener("click", async () => {
+      const cartridge = el("providerCartridge").value;
+      const model = el("providerModel").value;
+      const capability = el("providerCapability").value;
+      setProviderStatus(`Testing ${cartridge}...`);
+      try {
+        const response = await fetch("/api/provider-lab/test", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ cartridge, model, capability, profile: "builder" })
+        });
+        const result = await response.json();
+        const adapterResult = result.result || {};
+        const summary = adapterResult.summary || adapterResult.blocked_reason || result.stderr || "no summary";
+        setProviderStatus(`${result.ok ? "PASS" : "BLOCKED"} ${cartridge}: ${summary}`);
+      } catch (error) {
+        setProviderStatus(`Test failed: ${error.message}`);
+      }
+    });
+
     el("questForm").addEventListener("submit", async (event) => {
       event.preventDefault();
       const payload = {
@@ -1169,6 +1399,7 @@
       }
     });
 
+    loadProviderLab();
     loadDefaultDashboard();
   </script>
 </body>

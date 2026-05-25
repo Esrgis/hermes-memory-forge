@@ -8,6 +8,8 @@ param(
 
     [string]$Model,
 
+    [string]$Capability,
+
     [string]$QuestChainId = "demo-even-random-app",
 
     [string]$TaskId,
@@ -50,6 +52,7 @@ if ($UseConfiguredProvider) {
     $Adapter = $providerConfig.adapter
     $Provider = $providerConfig.provider
     $Model = $providerConfig.model
+    $Capability = $providerConfig.capability
 }
 
 $profileData = & $profileScript -Profile $Profile
@@ -307,6 +310,12 @@ if ($Provider) {
 }
 if ($Model) {
     $adapterArgs.Model = $Model
+}
+if ($Capability) {
+    $adapterArgs.Capability = $Capability
+}
+if ($task.task_type) {
+    $adapterArgs.TaskType = [string]$task.task_type
 }
 $adapterRaw = & $adapterScript @adapterArgs
 if (-not $adapterRaw) {

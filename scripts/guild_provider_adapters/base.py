@@ -15,6 +15,11 @@ class AdapterContext:
     workspace: str
     provider: str | None = None
     model: str | None = None
+    capability_name: str | None = None
+    capability_config: dict[str, Any] = field(default_factory=dict)
+    ammo_config: dict[str, Any] = field(default_factory=dict)
+    cartridge_config: dict[str, Any] = field(default_factory=dict)
+    transport_config: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -32,6 +37,10 @@ class AdapterResult:
     blocked_reason: str | None = None
     session_id: str | None = None
     tokens: Any = None
+    ammo: str | None = None
+    transport: str | None = None
+    capability: str | None = None
+    attempts: list[Any] = field(default_factory=list)
 
     def to_dict(self) -> dict[str, Any]:
         data = {
@@ -51,6 +60,14 @@ class AdapterResult:
             data["session_id"] = self.session_id
         if self.tokens is not None:
             data["tokens"] = self.tokens
+        if self.ammo is not None:
+            data["ammo"] = self.ammo
+        if self.transport is not None:
+            data["transport"] = self.transport
+        if self.capability is not None:
+            data["capability"] = self.capability
+        if self.attempts:
+            data["attempts"] = self.attempts
         return data
 
 

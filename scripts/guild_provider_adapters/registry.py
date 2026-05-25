@@ -26,7 +26,7 @@ class UnimplementedAdapter(ProviderAdapter):
         )
 
 
-def get_adapter(name: str) -> ProviderAdapter:
+def get_backend_adapter(name: str) -> ProviderAdapter:
     if name == "local-dry-run":
         return LocalDryRunAdapter()
     if name == "invalid-output-smoke":
@@ -40,3 +40,11 @@ def get_adapter(name: str) -> ProviderAdapter:
     if name == "openrouter":
         return OpenRouterAdapter()
     return UnimplementedAdapter()
+
+
+def get_adapter(name: str) -> ProviderAdapter:
+    if name in {"auto-ammo", "capability-auto"}:
+        from .ladder import AmmoLadderAdapter
+
+        return AmmoLadderAdapter()
+    return get_backend_adapter(name)

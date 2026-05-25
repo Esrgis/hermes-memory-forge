@@ -6,6 +6,7 @@ import os
 import subprocess
 import time
 import urllib.parse
+import urllib.request
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any
@@ -77,6 +78,9 @@ class GuildDashboardServer(SimpleHTTPRequestHandler):
             quest_chain_id = query.get("quest_chain_id", ["demo-even-random-app"])[0]
             self.handle_dashboard(quest_chain_id)
             return
+        if parsed.path == "/api/provider-lab/config":
+            self.handle_provider_lab_config()
+            return
         super().do_GET()
 
     def do_POST(self) -> None:  # noqa: N802
@@ -93,6 +97,15 @@ class GuildDashboardServer(SimpleHTTPRequestHandler):
                 return
             if parsed.path == "/api/wake":
                 self.handle_wake(self.read_json_body())
+                return
+            if parsed.path == "/api/provider-lab/save-secret":
+                self.handle_provider_lab_save_secret(self.read_json_body())
+                return
+            if parsed.path == "/api/provider-lab/list-models":
+                self.handle_provider_lab_list_models(self.read_json_body())
+                return
+            if parsed.path == "/api/provider-lab/test":
+                self.handle_provider_lab_test(self.read_json_body())
                 return
             self.send_json({"ok": False, "error": "not_found"}, status=404)
         except Exception as exc:  # Keep local demo errors visible to the UI.
@@ -646,6 +659,115 @@ Required JSON schema:
             }
         )
 
+    def handle_provider_lab_config(self) -> None:
+        config = load_guild_provider_config(self.workspace)
+        env_keys = allowed_provider_env_keys(config["transports"])
+        self.send_json(
+            {
+                "ok": True,
+                "transports": config["transports"],
+                "cartridges": config["cartridges"],
+                "capabilities": config["capabilities"],
+                "secret_status": provider_secret_status(self.workspace, env_keys),
+            }
+        )
+
+    def handle_provider_lab_save_secret(self, body: dict[str, Any]) -> None:
+        env_key = str(body.get("env_key") or "").strip()
+        value = str(body.get("value") or "").strip()
+        if not env_key:
+            raise ValueError("env_key is required")
+        if not value:
+            raise ValueError("secret value is required")
+        config = load_guild_provider_config(self.workspace)
+        env_keys = allowed_provider_env_keys(config["transports"])
+        if env_key not in env_keys:
+            raise ValueError(f"env_key is not allowed for provider lab: {env_key}")
+        write_provider_secret(self.workspace, env_key, value)
+        self.send_json(
+            {
+                "ok": True,
+                "env_key": env_key,
+                "secret_status": provider_secret_status(self.workspace, env_keys),
+                "path": "_runtime/provider-secrets.local.ps1",
+            }
+        )
+
+    def handle_provider_lab_list_models(self, body: dict[str, Any]) -> None:
+        transport_name = str(body.get("transport") or "").strip()
+        if not transport_name:
+            raise ValueError("transport is required")
+        config = load_guild_provider_config(self.workspace)
+        transports = config["transports"]
+        transport = transports.get(transport_name)
+        if not transport:
+            raise ValueError(f"unknown transport: {transport_name}")
+        models = list_static_cartridge_models(config["cartridges"], transport_name)
+        dynamic = list_provider_models(self.workspace, transport_name, transport)
+        if dynamic.get("ok"):
+            seen = {str(model.get("id")) for model in models}
+            for model in dynamic.get("models") or []:
+                model_id = str(model.get("id") or "").strip()
+                if model_id and model_id not in seen:
+                    models.append(model)
+                    seen.add(model_id)
+        self.send_json(
+            {
+                "ok": True,
+                "transport": transport_name,
+                "models": models,
+                "dynamic": dynamic,
+            }
+        )
+
+    def handle_provider_lab_test(self, body: dict[str, Any]) -> None:
+        cartridge = str(body.get("cartridge") or "").strip()
+        model = str(body.get("model") or "").strip()
+        capability = str(body.get("capability") or "deterministic-smoke").strip()
+        profile = str(body.get("profile") or "builder").strip()
+        if not cartridge:
+            raise ValueError("cartridge is required")
+        message = (
+            "Return only compact artifact JSON with ok=true, summary, files_changed, "
+            "commands_run, test_result, known_risks, and blocked_reason. This is a Provider Lab smoke test."
+        )
+        args = [
+            "powershell",
+            "-NoProfile",
+            "-ExecutionPolicy",
+            "Bypass",
+            "-File",
+            str(self.workspace / "scripts" / "invoke-guild-provider-adapter.ps1"),
+            "-Adapter",
+            "auto-ammo",
+            "-Profile",
+            profile,
+            "-Title",
+            "provider-lab-smoke",
+            "-Provider",
+            cartridge,
+            "-Capability",
+            capability,
+            "-Message",
+            message,
+            "-Json",
+        ]
+        if model:
+            args.extend(["-Model", model])
+        completed = self.run_cmd(args, timeout=180)
+        payload = parse_json_or_text(completed.stdout)
+        self.send_json(
+            {
+                "ok": completed.returncode == 0,
+                "returncode": completed.returncode,
+                "cartridge": cartridge,
+                "capability": capability,
+                "result": payload,
+                "stderr": completed.stderr,
+            },
+            status=200 if completed.returncode == 0 else 502,
+        )
+
 
 def slugify(value: str) -> str:
     text = "".join(char.lower() if char.isalnum() else "-" for char in value)
@@ -653,10 +775,201 @@ def slugify(value: str) -> str:
     return "-".join(parts[:8]) or "manual-quest"
 
 
+def load_json_file(path: Path, default: dict[str, Any]) -> dict[str, Any]:
+    if not path.is_file():
+        return default
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def load_guild_provider_config(workspace: Path) -> dict[str, Any]:
+    root = workspace / "config" / "guild"
+    return {
+        "transports": load_json_file(root / "provider-transports.json", {"transports": {}}).get("transports", {}),
+        "cartridges": load_json_file(root / "model-cartridges.json", {"cartridges": {}}).get("cartridges", {}),
+        "capabilities": load_json_file(root / "capability-adapters.json", {"capabilities": {}}).get("capabilities", {}),
+    }
+
+
+def allowed_provider_env_keys(transports: dict[str, Any]) -> set[str]:
+    keys: set[str] = set()
+    for transport in transports.values():
+        for key in transport.get("env_keys") or []:
+            if isinstance(key, str) and key.strip():
+                keys.add(key.strip())
+    return keys
+
+
+def provider_secret_path(workspace: Path) -> Path:
+    return workspace / "_runtime" / "provider-secrets.local.ps1"
+
+
+def read_local_secret_names(workspace: Path) -> set[str]:
+    path = provider_secret_path(workspace)
+    if not path.is_file():
+        return set()
+    names: set[str] = set()
+    for line in path.read_text(encoding="utf-8", errors="replace").splitlines():
+        stripped = line.strip()
+        if not stripped.startswith("$env:") or "=" not in stripped:
+            continue
+        name = stripped.split("=", 1)[0].replace("$env:", "", 1).strip()
+        if name:
+            names.add(name)
+    return names
+
+
+def provider_secret_status(workspace: Path, env_keys: set[str]) -> dict[str, Any]:
+    local_names = read_local_secret_names(workspace)
+    return {
+        key: {
+            "has_key": bool(os.environ.get(key)) or key in local_names,
+            "source": "env" if os.environ.get(key) else ("local" if key in local_names else "missing"),
+        }
+        for key in sorted(env_keys)
+    }
+
+
+def powershell_single_quote(value: str) -> str:
+    return "'" + value.replace("'", "''") + "'"
+
+
+def write_provider_secret(workspace: Path, env_key: str, value: str) -> None:
+    path = provider_secret_path(workspace)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    lines: list[str] = []
+    replaced = False
+    if path.is_file():
+        for line in path.read_text(encoding="utf-8", errors="replace").splitlines():
+            stripped = line.strip()
+            if stripped.startswith(f"$env:{env_key}") and "=" in stripped:
+                lines.append(f"$env:{env_key} = {powershell_single_quote(value)}")
+                replaced = True
+            else:
+                lines.append(line)
+    if not replaced:
+        if lines:
+            lines.append("")
+        lines.append(f"$env:{env_key} = {powershell_single_quote(value)}")
+    path.write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8")
+
+
+def read_provider_secret_value(workspace: Path, env_key: str) -> str | None:
+    if os.environ.get(env_key):
+        return os.environ[env_key]
+    path = provider_secret_path(workspace)
+    if not path.is_file():
+        return None
+    prefix = f"$env:{env_key}"
+    for line in path.read_text(encoding="utf-8", errors="replace").splitlines():
+        stripped = line.strip()
+        if not stripped.startswith(prefix) or "=" not in stripped:
+            continue
+        raw = stripped.split("=", 1)[1].strip()
+        if len(raw) >= 2 and raw[0] == "'" and raw[-1] == "'":
+            return raw[1:-1].replace("''", "'")
+    return None
+
+
+def list_static_cartridge_models(cartridges: dict[str, Any], transport_name: str) -> list[dict[str, Any]]:
+    models = []
+    for name, cartridge in cartridges.items():
+        if str(cartridge.get("transport") or "") != transport_name:
+            continue
+        models.append(
+            {
+                "id": cartridge.get("model") or name,
+                "cartridge": name,
+                "source": "cartridge",
+                "label": name,
+            }
+        )
+    return models
+
+
+def list_provider_models(workspace: Path, transport_name: str, transport: dict[str, Any]) -> dict[str, Any]:
+    if transport_name == "local-dry-run":
+        return {"ok": True, "source": "deterministic", "models": [{"id": "local-dry-run", "source": "deterministic"}]}
+    if transport_name == "opencode-cli":
+        completed = subprocess.run(
+            ["opencode", "models"],
+            cwd=workspace,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            timeout=30,
+        )
+        if completed.returncode != 0:
+            return {"ok": False, "reason": "opencode_models_failed", "stderr": completed.stderr}
+        models = []
+        for line in completed.stdout.splitlines():
+            text = line.strip()
+            if text and "/" in text and " " not in text:
+                models.append({"id": text, "source": "opencode"})
+        return {"ok": True, "source": "opencode", "models": models, "raw_count": len(completed.stdout.splitlines())}
+
+    env_keys = [str(key) for key in transport.get("env_keys") or []]
+    api_key = next((read_provider_secret_value(workspace, key) for key in env_keys if read_provider_secret_value(workspace, key)), None)
+    if not api_key:
+        return {"ok": False, "reason": "provider_missing", "missing_env_keys": env_keys}
+    try:
+        if transport_name == "openrouter-http":
+            request = urllib.request.Request(
+                "https://openrouter.ai/api/v1/models",
+                headers={"Authorization": f"Bearer {api_key}", "Accept": "application/json"},
+            )
+            with urllib.request.urlopen(request, timeout=20) as response:
+                data = json.loads(response.read().decode("utf-8"))
+            return {
+                "ok": True,
+                "source": "openrouter",
+                "models": [{"id": item.get("id"), "source": "openrouter"} for item in data.get("data", []) if item.get("id")],
+            }
+        if transport_name == "groq-http":
+            request = urllib.request.Request(
+                "https://api.groq.com/openai/v1/models",
+                headers={"Authorization": f"Bearer {api_key}", "Accept": "application/json"},
+            )
+            with urllib.request.urlopen(request, timeout=20) as response:
+                data = json.loads(response.read().decode("utf-8"))
+            return {
+                "ok": True,
+                "source": "groq",
+                "models": [{"id": item.get("id"), "source": "groq"} for item in data.get("data", []) if item.get("id")],
+            }
+        if transport_name == "gemini-api":
+            url = "https://generativelanguage.googleapis.com/v1beta/models?" + urllib.parse.urlencode({"key": api_key})
+            with urllib.request.urlopen(url, timeout=20) as response:
+                data = json.loads(response.read().decode("utf-8"))
+            return {
+                "ok": True,
+                "source": "gemini",
+                "models": [
+                    {"id": str(item.get("name") or "").replace("models/", ""), "source": "gemini"}
+                    for item in data.get("models", [])
+                    if item.get("name")
+                ],
+            }
+    except Exception as exc:
+        return {"ok": False, "reason": "provider_failed", "error": str(exc)}
+    return {"ok": False, "reason": "list_models_not_supported"}
+
+
+def parse_json_or_text(text: str) -> Any:
+    value = (text or "").strip()
+    if not value:
+        return None
+    try:
+        return json.loads(value)
+    except json.JSONDecodeError:
+        return {"raw": value[-4000:]}
+
+
 def resolve_worker_adapters(adapter: str, profiles: list[Any]) -> list[str]:
     if adapter not in {"auto-rank", "rank-auto", "auto"}:
         return [adapter for _ in profiles]
 
+    # auto-rank is a demo distribution policy; auto-ammo is the provider fallback loader.
     build_ladder = ["opencode", "openrouter", "groq"]
     build_index = 0
     result: list[str] = []
