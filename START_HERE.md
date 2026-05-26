@@ -5,17 +5,18 @@ Read this first before doing non-trivial work in this workspace.
 ## Core Routes
 
 1. For routine routing, read `docs/core/HERMES_ROUTER.md`.
-2. For routine status/recall, read `_obsidian_vault/System/Assistant/Shared/Current State.md` first.
-3. For deeper memory or recall, use `skills/obsidian-rag-check/SKILL.md` and follow `_obsidian_vault/Specs/Memory Query Protocol Spec.md`.
-4. Treat the filesystem as a searchable space, not a folder tree to crawl. Use the standard search routes:
+2. For Hermes mode/state routing, read `docs/core/HERMES_RUNTIME_ROUTER.md`.
+3. For routine status/recall, read `_obsidian_vault/System/Assistant/Shared/Current State.md` first.
+4. For deeper memory or recall, use `skills/obsidian-rag-check/SKILL.md` and follow `_obsidian_vault/Specs/Memory Query Protocol Spec.md`.
+5. Treat the filesystem as a searchable space, not a folder tree to crawl. Use the standard search routes:
    - filename/path discovery: `scripts/search-files.ps1`
    - content search: `scripts/search-content.ps1`
    - file preview: `scripts/preview-file.ps1`
    - workspace/tooling snapshot: `scripts/inspect-workspace.ps1`
    - runtime manifest: `HERMES_SEARCHABLE_WORKSPACE` or `_runtime/searchable-workspace/manifest.json`, created by `scripts/enable-searchable-workspace.ps1`
-5. Before destructive filesystem/git/path/junction/symlink operations, read `skills/dangerous-operation-guard/SKILL.md`.
-6. For Telegram, use `scripts/send-telegram-home.ps1`; do not inspect secrets or use gateway fallback unless approved.
-7. For new agents, use `AGENT_ONBOARDING.md` before assigning non-trivial work.
+6. Before destructive filesystem/git/path/junction/symlink operations, read `skills/dangerous-operation-guard/SKILL.md`.
+7. For Telegram, use `scripts/send-telegram-home.ps1`; do not inspect secrets or use gateway fallback unless approved.
+8. For new agents, use `AGENT_ONBOARDING.md` before assigning non-trivial work.
 
 ## Hard Rules
 

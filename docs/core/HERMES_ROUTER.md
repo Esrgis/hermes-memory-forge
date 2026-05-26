@@ -5,6 +5,7 @@ Use this file to route routine requests without broad discovery.
 Core rule:
 
 - Match the user's intent to a known route.
+- For Hermes mode/state routing, use `docs/core/HERMES_RUNTIME_ROUTER.md` first.
 - Use the known route directly.
 - Do not search the filesystem, inspect databases, or load broad skills for routine tasks.
 - If no route matches, ask one short question instead of probing.

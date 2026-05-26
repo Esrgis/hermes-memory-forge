@@ -26,6 +26,7 @@ These are useful on the current workstation, but should be treated as examples u
 - `get-guild-provider-adapter.ps1`
 - `configure-guild-worker.ps1`
 - `invoke-guild-provider-adapter.ps1`
+- `invoke-hermes-guild.ps1`
 - `invoke-hermes-opencode-task.ps1`
 - `run-guild-worker-agent.ps1`
 - `start-guild-worker-terminal.ps1`
@@ -90,6 +91,7 @@ JSON remains the default dashboard output for future UI/API consumers. Use `--fo
 Worker profile docs live in `docs/workers/`.
 
 - `docs/workers/WORKER_BOOTSTRAP.md`: short route map for weak/model-backed workers.
+- `docs/workers/HERMES_MANAGER_BOOTSTRAP.md`: compact boot contract for Hermes as Guild manager.
 - `docs/workers/AGENT_PROFILES.md`: human-readable profile summary.
 - `docs/workers/PROVIDER_ADAPTERS.md`: provider adapter contract, without secrets.
 - `config/guild/agent-profiles.json`: machine-readable profile source.
@@ -115,6 +117,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\invoke-guild-provi
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\invoke-guild-provider-adapter.ps1 -Adapter auto-ammo -Capability deterministic-smoke -Profile builder -Message "Return a smoke result."
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\invoke-guild-provider-adapter.ps1 -Adapter opencode -Profile builder -Message "Return exactly this JSON and do not modify files: {\"ok\":true}"
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\invoke-guild-provider-adapter.ps1 -Adapter groq -Profile builder -Model openai/gpt-oss-20b -Message "Return exactly this JSON: {\"ok\":true,\"summary\":\"groq smoke\",\"files_changed\":[],\"commands_run\":[\"groq smoke\"],\"test_result\":\"not_required\",\"known_risks\":[],\"blocked_reason\":null}"
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\invoke-hermes-guild.ps1 "Nói ngắn gọn Guild hiện có những provider nào?"
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\run-guild-worker-agent.ps1 -Profile builder -Adapter local-dry-run -QuestChainId demo-even-random-app -Json
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\run-guild-worker-agent.ps1 -UseConfiguredProvider -QuestChainId demo-even-random-app -Json
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\run-guild-worker-agent.ps1 -Profile builder -Adapter invalid-output-smoke -QuestChainId smoke-invalid-output-v1 -TaskId smoke-invalid-output-agent-v1 -Json
