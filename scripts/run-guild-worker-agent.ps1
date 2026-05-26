@@ -35,6 +35,8 @@ $guild = Join-Path $workspace "scripts\guild-worker-team.py"
 $profileScript = Join-Path $workspace "scripts\get-guild-agent-profile.ps1"
 $adapterScript = Join-Path $workspace "scripts\invoke-guild-provider-adapter.ps1"
 $providerConfigPath = Join-Path $workspace "_runtime\guild-worker-agent\provider-selection.json"
+$workerBootstrapPath = Join-Path $workspace "docs\workers\WORKER_BOOTSTRAP.md"
+$capabilityConfigPath = Join-Path $workspace "config\guild\capability-adapters.json"
 
 if (-not (Test-Path -LiteralPath $python)) {
     throw "Missing Python runtime: $python"
@@ -84,6 +86,88 @@ function Test-ArtifactArrayField {
     )
 
     return ($null -ne $Value -and $Value -is [System.Collections.IEnumerable] -and $Value -isnot [string])
+}
+
+function Get-AllowedFilePrefixes {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$AllowedFiles
+    )
+
+    $prefixes = @()
+    foreach ($part in ($AllowedFiles -split ',')) {
+        $pattern = $part.Trim()
+        if (-not $pattern) {
+            continue
+        }
+        $normalized = $pattern -replace '\\', '/'
+        $wildcardPositions = @($normalized.IndexOf('*'), $normalized.IndexOf('?')) | Where-Object { $_ -ge 0 }
+        $wildcardIndex = if ($wildcardPositions.Count -gt 0) { ($wildcardPositions | Measure-Object -Minimum).Minimum } else { -1 }
+        if ($wildcardIndex -ge 0) {
+            $normalized = $normalized.Substring(0, $wildcardIndex)
+        }
+        $normalized = $normalized.TrimEnd('/')
+        if ($normalized) {
+            $prefixes += $normalized
+        }
+    }
+    return $prefixes
+}
+
+function Test-DeclaredFilesWithinAllowedScope {
+    param(
+        [Parameter(Mandatory = $true)]
+        [object]$FilesChanged,
+        [Parameter(Mandatory = $true)]
+        [string]$AllowedFiles
+    )
+
+    if (-not (Test-ArtifactArrayField -Value $FilesChanged)) {
+        return [pscustomobject]@{
+            valid = $false
+            blocked_reason = "invalid_adapter_output"
+            errors = @("Field files_changed must be an array.")
+        }
+    }
+
+    $allowedPrefixes = @(Get-AllowedFilePrefixes -AllowedFiles $AllowedFiles)
+    if ($allowedPrefixes.Count -eq 0) {
+        return [pscustomobject]@{
+            valid = $true
+            blocked_reason = $null
+            errors = @()
+        }
+    }
+
+    $errors = @()
+    foreach ($file in $FilesChanged) {
+        $relative = [string]$file
+        if ([string]::IsNullOrWhiteSpace($relative)) {
+            $errors += "files_changed contains an empty path."
+            continue
+        }
+        if ([System.IO.Path]::IsPathRooted($relative) -or $relative.Contains("..")) {
+            $errors += "files_changed path is outside workspace scope: $relative"
+            continue
+        }
+        $normalized = $relative -replace '\\', '/'
+        $inScope = $false
+        foreach ($prefix in $allowedPrefixes) {
+            if ($normalized.StartsWith($prefix, [System.StringComparison]::OrdinalIgnoreCase)) {
+                $inScope = $true
+                break
+            }
+        }
+        if (-not $inScope) {
+            $errors += "files_changed path is outside allowed_files scope: $relative"
+        }
+    }
+
+    return [pscustomobject]@{
+        valid = ($errors.Count -eq 0)
+        blocked_reason = if ($errors.Count -eq 0) { $null } else { "files_outside_allowed_scope" }
+        errors = $errors
+    }
 }
 
 function ConvertFrom-GuildArtifactJson {
@@ -252,6 +336,16 @@ $task = $claim.task
 $taskJson = $task | ConvertTo-Json -Depth 20
 $visibleScope = if ($task.task_type -eq "join_review") { "join_review" } else { "task_only" }
 $mayCreateFixTask = if ($task.task_type -eq "join_review") { "true" } else { "false" }
+$bootstrapText = if (Test-Path -LiteralPath $workerBootstrapPath) {
+    Get-Content -LiteralPath $workerBootstrapPath -Raw
+} else {
+    "Worker bootstrap missing; obey task contract and allowed_files."
+}
+$capabilityPolicyText = if (Test-Path -LiteralPath $capabilityConfigPath) {
+    Get-Content -LiteralPath $capabilityConfigPath -Raw
+} else {
+    "{}"
+}
 $message = @"
 NON-INTERACTIVE EXECUTION: a Guild task has already been assigned to you.
 Do not ask for another task. Do not wait for more input.
@@ -265,6 +359,12 @@ Agent profile:
 - skills: $($profileData.skills)
 
 Follow docs/workers/WORKER_BOOTSTRAP.md conceptually.
+
+Worker bootstrap:
+$bootstrapText
+
+Capability policy config:
+$capabilityPolicyText
 
 Context envelope:
 {
@@ -325,9 +425,19 @@ $adapterResult = $adapterRaw | ConvertFrom-Json
 
 $artifactValidation = Test-GuildArtifactOutput -AdapterResult $adapterResult
 $workerOutput = $artifactValidation.output
+$scopeValidation = if ($workerOutput) {
+    Test-DeclaredFilesWithinAllowedScope -FilesChanged $workerOutput.files_changed -AllowedFiles ([string]$task.allowed_files)
+} else {
+    [pscustomobject]@{
+        valid = $false
+        blocked_reason = "invalid_adapter_output"
+        errors = @("Adapter output did not produce a worker payload.")
+    }
+}
 $artifactOk = [bool]$adapterResult.ok `
     -and -not $adapterResult.blocked_reason `
     -and [bool]$artifactValidation.valid `
+    -and [bool]$scopeValidation.valid `
     -and [bool]$workerOutput.ok `
     -and -not $workerOutput.blocked_reason
 
@@ -335,6 +445,8 @@ $effectiveBlockedReason = if ($adapterResult.blocked_reason) {
     $adapterResult.blocked_reason
 } elseif (-not $artifactValidation.valid) {
     $artifactValidation.blocked_reason
+} elseif ($scopeValidation -and -not $scopeValidation.valid) {
+    $scopeValidation.blocked_reason
 } elseif ($workerOutput -and $workerOutput.blocked_reason) {
     $workerOutput.blocked_reason
 } else {
@@ -354,6 +466,7 @@ $artifactPayload = [ordered]@{
     model = $Model
     adapter_result = $adapterResult
     adapter_output_validation = $artifactValidation
+    file_scope_validation = $scopeValidation
     worker_output = $workerOutput
     blocked_reason = $effectiveBlockedReason
 }

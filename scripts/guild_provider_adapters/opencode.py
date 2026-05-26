@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import json
 import os
+from datetime import datetime
+from pathlib import Path
 import shutil
 import subprocess
 from typing import Any
@@ -46,6 +48,13 @@ class OpenCodeAdapter(ProviderAdapter):
                 ]
             )
         message = sanitize_windows_cmd_message(context.message)
+        if len(message) > 6000:
+            prompt_path = write_prompt_attachment(context.workspace, context.title, message)
+            args.extend(["--file", str(prompt_path)])
+            message = (
+                "Read the attached Guild worker prompt file and return only the requested "
+                "artifact JSON. Do not include markdown."
+            )
         args.append(message)
 
         command_for_log = " ".join(args[1:-1]) + " <message>"
@@ -185,3 +194,13 @@ def find_opencode_executable() -> str | None:
         if executable:
             return executable
     return None
+
+
+def write_prompt_attachment(workspace: str, title: str, message: str) -> Path:
+    root = Path(workspace) / "_runtime" / "guild-provider-adapters" / "opencode-prompts"
+    root.mkdir(parents=True, exist_ok=True)
+    safe_title = "".join(ch if ch.isalnum() or ch in "-_" else "-" for ch in title)[:80].strip("-")
+    stamp = datetime.now().strftime("%Y%m%d-%H%M%S-%f")
+    path = root / f"{stamp}-{safe_title or 'prompt'}.md"
+    path.write_text(message, encoding="utf-8")
+    return path
