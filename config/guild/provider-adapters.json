@@ -58,6 +58,13 @@
       "intended_profiles": ["builder", "tester", "reviewer"],
       "notes": "No model call. Use for smoke tests and blocked-artifact plumbing."
     },
+    "local-file-writer": {
+      "kind": "deterministic_file_writer",
+      "secret_policy": "none",
+      "command": null,
+      "intended_profiles": ["builder", "tester", "reviewer"],
+      "notes": "No model call. Writes deterministic scoped files inside allowed_files to test file-output and final assembly plumbing."
+    },
     "invalid-output-smoke": {
       "kind": "test_only",
       "secret_policy": "none",

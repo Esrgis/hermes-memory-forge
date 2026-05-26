@@ -117,14 +117,16 @@
 - 2026-05-25: Added Provider Lab to the Guild Dashboard. It reads `config/guild` provider transport/cartridge/capability config, saves whitelisted keys to ignored `_runtime/provider-secrets.local.ps1`, can list static/live models, and runs `Test Now` through `auto-ammo`.
 - 2026-05-26: Corrected Guild progress framing: infrastructure exists, but the intended module-worker-artifact-meeting-fix-final loop is not complete. Added first bridge toward that model: skill-bound modules (`requirements`, `risk-analysis`, `verification`), `general` no longer wildcard-claims every task, OpenCode long prompts attach through files, dashboard server logs to `_runtime/dashboard/`, and `/api/hermes/finalize` can create module-specific fix tasks when builds fail or expected files are missing. See `_obsidian_vault/Daily/2026-05-26.md` / `[[Daily/2026-05-26]]`.
 - 2026-05-26: Reduced Guild UI runtime hard-coding with `config/guild/guild-runtime.json`. Scheduler now chooses worker profiles from configured rank/skill capability instead of fixed `worker-a/b/c`, auto-rank maps configured workers to `opencode/openrouter/groq`, meeting/finalize creates only missing/failed module fix tasks, UI shows derived Guild Event Log plus Meeting Rounds, final assembly writes and validates `review.md`, `final-summary.md`, and `final-artifact.json`, and clean provider smoke passed outside sandbox for `opencode`, `openrouter`, and `groq`.
+- 2026-05-26: Added deterministic `local-file-writer` provider adapter to prove worker file-writing semantics without paid providers. First visible smoke failed safely on `allowed_files` array normalization; after fixing normalization, `quest-file-writer-smoke-v2-20260526` created scoped `build-1.md`, `build-2.md`, `build-3.md`, and `review.md`, then `/api/hermes/finalize` produced validated `final-summary.md` and `final-artifact.json`.
 
 ## Next Small Actions
 
-1. Run one full visible dashboard smoke with real worker terminals using the config scheduler, not only API/direct smokes.
-2. Decide whether Hermes finalization should stay API-owned or become a normal `join_review` worker claim path.
-3. Expand scheduler policy if needed: weighted skill match, owner-worker pinning, provider quota checks, and retry ownership.
-4. Keep using ignored `_runtime/provider-secrets.local.ps1` for provider keys; do not expose or commit key values.
-5. Fix legacy cron job workdirs that still point to `D:\TuanKeCuoi`, if those jobs should remain active.
+1. Make real provider-backed workers write scoped files reliably, using the `local-file-writer` smoke as the contract baseline.
+2. Move final assembly from API-owned `hermes_finalize_v1` into a normal worker-claimed `final_review` or stronger `join_review` path after scoped file writes are stable.
+3. Add durable event/audit storage only when the derived Guild Event Log is insufficient for product debugging.
+4. Expand scheduler policy only after more real-provider evidence: weighted skill match, owner-worker pinning, provider quota checks, and retry ownership.
+5. Keep using ignored `_runtime/provider-secrets.local.ps1` for provider keys; do not expose or commit key values.
+6. Start/check Hermes gateway only with explicit approval; current scheduled jobs will not fire while the gateway is stopped.
 
 ## Deferred
 

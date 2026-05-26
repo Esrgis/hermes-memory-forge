@@ -5,6 +5,7 @@ from .gemini import GeminiCliAdapter
 from .groq import GroqAdapter
 from .invalid_output import InvalidOutputAdapter
 from .local_dry_run import LocalDryRunAdapter
+from .local_file_writer import LocalFileWriterAdapter
 from .opencode import OpenCodeAdapter
 from .openrouter import OpenRouterAdapter
 
@@ -29,6 +30,8 @@ class UnimplementedAdapter(ProviderAdapter):
 def get_backend_adapter(name: str) -> ProviderAdapter:
     if name == "local-dry-run":
         return LocalDryRunAdapter()
+    if name == "local-file-writer":
+        return LocalFileWriterAdapter()
     if name == "invalid-output-smoke":
         return InvalidOutputAdapter()
     if name in {"opencode", "opencode-9router"}:
