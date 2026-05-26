@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import shutil
 import subprocess
 import time
 import urllib.parse
@@ -333,6 +334,7 @@ Required JSON schema:
             raise RuntimeError(f"Hermes planner returned non-JSON output: {text[:1000]}") from exc
         if not planner.get("ok"):
             raise RuntimeError(f"Hermes planner returned ok=false: {planner}")
+        planner = validate_hermes_planner(planner, runtime)
         planner["_hermes_provider"] = provider
         planner["_hermes_model"] = model
         return planner
@@ -370,9 +372,6 @@ Required JSON schema:
         if not review_tasks:
             raise ValueError("missing join_review task")
         review_task = review_tasks[0]
-        if review_task.get("status") == "done":
-            self.send_json({"ok": True, "ready": True, "already_done": True, "dashboard": dashboard})
-            return
 
         repair = self.ensure_fix_tasks_for_failed_or_missing_modules(
             quest_chain_id=quest_chain_id,
@@ -395,6 +394,25 @@ Required JSON schema:
             )
             return
 
+        final_config = runtime.get("final_assembly") or {}
+        review_path = quest_workspace / str(final_config.get("review_file") or "review.md")
+        final_path = quest_workspace / str(final_config.get("summary_file") or "final-summary.md")
+        artifact_path = quest_workspace / str(final_config.get("artifact_file") or "final-artifact.json")
+        final_paths = [review_path, final_path, artifact_path]
+        if review_task.get("status") == "done" and all(path.is_file() for path in final_paths):
+            validations = validate_final_outputs(self.workspace, quest_workspace, tracks, final_paths)
+            if all(item["ok"] for item in validations):
+                self.send_json(
+                    {
+                        "ok": True,
+                        "ready": True,
+                        "already_done": True,
+                        "validations": validations,
+                        "dashboard": dashboard,
+                    }
+                )
+                return
+
         summaries: list[tuple[str, str]] = []
         missing: list[str] = []
         for track in tracks:
@@ -415,10 +433,6 @@ Required JSON schema:
             )
             return
 
-        final_config = runtime.get("final_assembly") or {}
-        review_path = quest_workspace / str(final_config.get("review_file") or "review.md")
-        final_path = quest_workspace / str(final_config.get("summary_file") or "final-summary.md")
-        artifact_path = quest_workspace / str(final_config.get("artifact_file") or "final-artifact.json")
         review_path.write_text(
             "\n".join(
                 [
@@ -766,7 +780,7 @@ Required JSON schema:
             stderr_handle = stderr_path.open("a", encoding="utf-8")
             process = subprocess.Popen(
                 [
-                    "powershell",
+                    resolve_powershell_exe(),
                     "-NoProfile",
                     "-ExecutionPolicy",
                     "Bypass",
@@ -805,10 +819,11 @@ Required JSON schema:
         interval_seconds = str(int(body.get("interval_seconds") or 2))
         worker_adapters = resolve_worker_adapters(adapter, profiles, runtime)
         launched = []
+        powershell_exe = resolve_powershell_exe()
         for index, profile in enumerate(profiles):
             worker_adapter = worker_adapters[index]
             args = [
-                "powershell",
+                powershell_exe,
                 "-NoProfile",
                 "-ExecutionPolicy",
                 "Bypass",
@@ -921,7 +936,7 @@ Required JSON schema:
             "commands_run, test_result, known_risks, and blocked_reason. This is a Provider Lab smoke test."
         )
         args = [
-            "powershell",
+            resolve_powershell_exe(),
             "-NoProfile",
             "-ExecutionPolicy",
             "Bypass",
@@ -1391,6 +1406,58 @@ def extract_json_object(text: str) -> dict[str, Any]:
     return json.loads(candidate[start : end + 1])
 
 
+def resolve_powershell_exe() -> str:
+    for name in ("powershell", "pwsh"):
+        resolved = shutil.which(name)
+        if resolved:
+            return resolved
+    windir = os.environ.get("WINDIR")
+    if windir:
+        candidate = Path(windir) / "System32" / "WindowsPowerShell" / "v1.0" / "powershell.exe"
+        if candidate.is_file():
+            return str(candidate)
+    raise RuntimeError("PowerShell executable is required for worker wake.")
+
+
+def validate_hermes_planner(planner: dict[str, Any], runtime: dict[str, Any]) -> dict[str, Any]:
+    expected_tracks = runtime_module_tracks(runtime)
+    errors: list[str] = []
+
+    if planner.get("ok") is not True:
+        errors.append("planner_ok_must_be_true")
+
+    for field in ("title", "request", "summary", "review_instruction"):
+        if not str(planner.get(field) or "").strip():
+            errors.append(f"missing_{field}")
+
+    tracks = planner.get("tracks")
+    if not isinstance(tracks, list):
+        errors.append("tracks_must_be_array")
+        tracks = []
+    if len(tracks) != len(expected_tracks):
+        errors.append(
+            f"tracks_count_must_equal_config:{len(tracks)}!={len(expected_tracks)}"
+        )
+
+    for index, expected in enumerate(expected_tracks):
+        if index >= len(tracks):
+            break
+        actual = tracks[index] if isinstance(tracks[index], dict) else {}
+        expected_id = str(expected["id"])
+        actual_id = str(actual.get("id") or "")
+        if actual_id != expected_id:
+            errors.append(f"track_{expected_id}_id_mismatch:{actual_id}")
+        if not str(actual.get("title") or "").strip():
+            errors.append(f"track_{expected_id}_missing_title")
+        if not str(actual.get("instruction") or "").strip():
+            errors.append(f"track_{expected_id}_missing_instruction")
+
+    if errors:
+        raise ValueError("invalid_hermes_planner_output: " + "; ".join(errors))
+
+    return planner
+
+
 def flatten_worker_summaries(summaries: list[tuple[str, str]]) -> list[str]:
     lines: list[str] = ["## Worker Outputs", ""]
     for filename, content in summaries:
@@ -1516,16 +1583,10 @@ def build_hermes_plan(
 ) -> tuple[list[dict[str, Any]], list[str], list[str]]:
     tracks = list(planner.get("tracks") or [])
     module_tracks = runtime_module_tracks(runtime)
-    while len(tracks) < len(module_tracks):
-        idx = len(tracks) + 1
-        tracks.append(
-            {
-                "id": chr(ord("A") + idx - 1),
-                "title": f"Build track {chr(ord('A') + idx - 1)}",
-                "instruction": request,
-            }
+    if len(tracks) != len(module_tracks):
+        raise RuntimeError(
+            f"Hermes planner track count mismatch: got {len(tracks)}, expected {len(module_tracks)}"
         )
-    tracks = tracks[: len(module_tracks)]
     review = runtime.get("review") or {}
     prefix = quest_chain_id.replace("quest-", "", 1)
     workspace_rel = quest_workspace.as_posix()

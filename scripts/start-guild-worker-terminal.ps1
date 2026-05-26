@@ -32,13 +32,9 @@ param(
 $ErrorActionPreference = "Stop"
 
 $workspace = (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot "..")).Path
-$tickScript = Join-Path $workspace "scripts\tick-guild-dashboard.ps1"
 $workerAgentScript = Join-Path $workspace "scripts\run-guild-worker-agent.ps1"
 $profileScript = Join-Path $workspace "scripts\get-guild-agent-profile.ps1"
 
-if (-not (Test-Path -LiteralPath $tickScript)) {
-    throw "Missing tick script: $tickScript"
-}
 if (-not (Test-Path -LiteralPath $workerAgentScript)) {
     throw "Missing worker-agent script: $workerAgentScript"
 }
@@ -114,7 +110,16 @@ while (`$true) {
 
 $pwsh = Get-Command pwsh -ErrorAction SilentlyContinue
 if (-not $pwsh) {
-    $pwsh = Get-Command powershell -ErrorAction Stop
+    $pwsh = Get-Command powershell -ErrorAction SilentlyContinue
+}
+if (-not $pwsh) {
+    $windowsPowerShell = Join-Path $env:WINDIR "System32\WindowsPowerShell\v1.0\powershell.exe"
+    if (Test-Path -LiteralPath $windowsPowerShell) {
+        $pwsh = [pscustomobject]@{ Source = $windowsPowerShell }
+    }
+}
+if (-not $pwsh) {
+    throw "PowerShell executable is required to launch a worker terminal."
 }
 
 if (-not $DryRun) {

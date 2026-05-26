@@ -20,6 +20,9 @@ $htmlPath = Join-Path $workspace "docs\incubation\guild-dashboard.html"
 $exportScript = Join-Path $workspace "scripts\export-guild-dashboard.ps1"
 $serverScript = Join-Path $workspace "scripts\guild-dashboard-server.py"
 $dashboardJson = Join-Path $workspace "_runtime\dashboard\guild-dashboard.json"
+$dashboardLogDir = Join-Path $workspace "_runtime\dashboard"
+$serverStdoutLog = Join-Path $dashboardLogDir "guild-dashboard-server.out.log"
+$serverStderrLog = Join-Path $dashboardLogDir "guild-dashboard-server.err.log"
 $workerDb = Join-Path $env:LOCALAPPDATA "hermes\flock\worker_team.sqlite"
 
 if (-not (Test-Path -LiteralPath $htmlPath)) {
@@ -36,6 +39,19 @@ if ($Reset) {
 }
 
 if (-not $NoExport) {
+    $powerShellCommand = Get-Command powershell -ErrorAction SilentlyContinue
+    if (-not $powerShellCommand) {
+        $powerShellCommand = Get-Command pwsh -ErrorAction SilentlyContinue
+    }
+    if (-not $powerShellCommand) {
+        $windowsPowerShell = Join-Path $env:WINDIR "System32\WindowsPowerShell\v1.0\powershell.exe"
+        if (Test-Path -LiteralPath $windowsPowerShell) {
+            $powerShellCommand = [pscustomobject]@{ Source = $windowsPowerShell }
+        }
+    }
+    if (-not $powerShellCommand) {
+        throw "PowerShell executable is required to export dashboard JSON."
+    }
     $exportArgs = @(
         "-NoProfile",
         "-ExecutionPolicy", "Bypass",
@@ -45,7 +61,7 @@ if (-not $NoExport) {
     if ($IncludeArtifacts) {
         $exportArgs += "-IncludeArtifacts"
     }
-    & powershell @exportArgs | Out-Null
+    & $powerShellCommand.Source @exportArgs | Out-Null
 }
 
 if (-not (Test-Path -LiteralPath $dashboardJson)) {
@@ -71,6 +87,7 @@ if (-not $serverReady) {
     if (-not (Test-Path -LiteralPath $serverScript)) {
         throw "Missing Guild dashboard server: $serverScript"
     }
+    New-Item -ItemType Directory -Force -Path $dashboardLogDir | Out-Null
 
     $args = @(
         $serverScript,
@@ -79,7 +96,7 @@ if (-not $serverReady) {
         "--port", "$Port",
         "--db", "$workerDb"
     )
-    Start-Process -FilePath $python.Source -ArgumentList $args -WindowStyle Hidden | Out-Null
+    Start-Process -FilePath $python.Source -ArgumentList $args -WindowStyle Hidden -RedirectStandardOutput $serverStdoutLog -RedirectStandardError $serverStderrLog | Out-Null
     Start-Sleep -Milliseconds 800
 }
 
@@ -92,6 +109,8 @@ if (-not $NoOpen) {
     url = $url
     html = $htmlPath
     json = $dashboardJson
+    server_stdout_log = $serverStdoutLog
+    server_stderr_log = $serverStderrLog
     quest_chain_id = $QuestChainId
     port = $Port
 }
