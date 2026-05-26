@@ -814,7 +814,7 @@ Required JSON schema:
             raise ValueError("quest_chain_id is required")
         adapter = str(body.get("adapter") or "local-dry-run").strip()
         runtime = load_guild_runtime_config(self.workspace)
-        profiles = body.get("profiles") or schedule_worker_profiles(self.workspace, runtime)
+        profiles = body.get("profiles") or schedule_quest_wake_profiles(self.workspace, runtime)
         dry_run = bool(body.get("dry_run"))
         interval_seconds = str(int(body.get("interval_seconds") or 2))
         worker_adapters = resolve_worker_adapters(adapter, profiles, runtime)
@@ -1075,6 +1075,14 @@ def profile_can_run_track(profile: dict[str, Any], track: dict[str, Any]) -> boo
     return rank_value(str(profile.get("rank") or "D")) >= rank_value(str(track.get("required_rank") or "C")) and str(track["skill"]) in skills
 
 
+def profile_can_run_review(profile: dict[str, Any], review: dict[str, Any]) -> bool:
+    skills = [str(skill) for skill in profile.get("skills") or []]
+    return (
+        rank_value(str(profile.get("rank") or "D")) >= rank_value(str(review.get("required_rank") or "B"))
+        and str(review.get("required_skill") or "integration_review") in skills
+    )
+
+
 def schedule_worker_profiles(workspace: Path, runtime: dict[str, Any]) -> list[str]:
     profiles = load_agent_profiles(workspace)
     scheduler = runtime.get("scheduler") or {}
@@ -1092,6 +1100,21 @@ def schedule_worker_profiles(workspace: Path, runtime: dict[str, Any]) -> list[s
         name = candidates[0][0]
         if name not in selected:
             selected.append(name)
+    return selected
+
+
+def schedule_quest_wake_profiles(workspace: Path, runtime: dict[str, Any]) -> list[str]:
+    profiles = load_agent_profiles(workspace)
+    selected = schedule_worker_profiles(workspace, runtime)
+    review = runtime.get("review") or {}
+    review_candidates = [
+        (name, profile)
+        for name, profile in profiles.items()
+        if name not in selected and profile_can_run_review(profile, review)
+    ]
+    review_candidates.sort(key=lambda item: (rank_value(str(item[1].get("rank") or "D")), item[0]))
+    if review_candidates:
+        selected.append(review_candidates[0][0])
     return selected
 
 
@@ -1567,7 +1590,7 @@ def build_manual_plan(
             + " -> review.",
             "Prepared skill-bound worker claims and join-review gate.",
         ],
-        schedule_worker_profiles(quest_workspace.parents[1], runtime),
+        schedule_quest_wake_profiles(quest_workspace.parents[1], runtime),
     )
 
 
@@ -1678,7 +1701,7 @@ def build_hermes_plan(
             str(planner.get("summary") or "Hermes produced a bounded worker plan."),
             "Posted Hermes-derived tasks to blackboard.",
         ],
-        schedule_worker_profiles(quest_workspace.parents[1], runtime),
+        schedule_quest_wake_profiles(quest_workspace.parents[1], runtime),
     )
 
 
