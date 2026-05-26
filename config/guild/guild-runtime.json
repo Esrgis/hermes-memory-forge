@@ -1,0 +1,54 @@
+{
+  "schema_version": "guild_runtime_v1",
+  "module_tracks": [
+    {
+      "id": "A",
+      "index": 1,
+      "skill": "requirements",
+      "output_file": "build-1.md",
+      "output_artifact": "implementation_result_1",
+      "instruction": "Extract requirements and module contract.",
+      "required_rank": "C"
+    },
+    {
+      "id": "B",
+      "index": 2,
+      "skill": "risk-analysis",
+      "output_file": "build-2.md",
+      "output_artifact": "implementation_result_2",
+      "instruction": "Identify risks, mismatches, and integration concerns.",
+      "required_rank": "C"
+    },
+    {
+      "id": "C",
+      "index": 3,
+      "skill": "verification",
+      "output_file": "build-3.md",
+      "output_artifact": "implementation_result_3",
+      "instruction": "Create the verification checklist and acceptance evidence plan.",
+      "required_rank": "C"
+    }
+  ],
+  "scheduler": {
+    "rank_policy": "minimum_rank",
+    "skill_policy": "exact_required_skill",
+    "build_provider_role": "worker",
+    "exclude_profiles": ["hermes-codex", "tester", "reviewer"],
+    "preferred_adapters": {
+      "worker-a": "opencode",
+      "worker-b": "openrouter",
+      "worker-c": "groq"
+    },
+    "fallback_adapter_ladder": ["opencode", "openrouter", "groq"]
+  },
+  "review": {
+    "required_rank": "B",
+    "required_skill": "integration_review",
+    "max_fix_rounds": 3
+  },
+  "final_assembly": {
+    "review_file": "review.md",
+    "summary_file": "final-summary.md",
+    "artifact_file": "final-artifact.json"
+  }
+}

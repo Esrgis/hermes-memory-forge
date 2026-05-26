@@ -38,7 +38,7 @@
         linear-gradient(90deg, rgba(13, 23, 38, 0.28) 0 8px, transparent 8px 92px),
         linear-gradient(0deg, rgba(255, 255, 255, 0.08) 0 2px, transparent 2px 118px),
         linear-gradient(135deg, #0d4b8d 0%, #1576c9 38%, #10213e 100%);
-      overflow: hidden;
+      overflow: auto;
     }
 
     button,
@@ -225,7 +225,7 @@
       grid-row: 4;
       min-width: 0;
       min-height: 0;
-      overflow: auto;
+      overflow: visible;
       padding: 14px 18px 28px;
     }
 
@@ -313,6 +313,14 @@
       min-height: 116px;
     }
 
+    .event-log,
+    .meeting-rounds {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      min-height: 92px;
+    }
+
     .hermes-lines {
       display: grid;
       gap: 6px;
@@ -325,6 +333,16 @@
     .hermes-line {
       padding-left: 10px;
       border-left: 3px solid rgba(47, 180, 124, 0.8);
+    }
+
+    .event-line {
+      padding-left: 10px;
+      border-left: 3px solid rgba(242, 182, 50, 0.9);
+    }
+
+    .meeting-line {
+      padding-left: 10px;
+      border-left: 3px solid rgba(124, 140, 255, 0.9);
     }
 
     .provider-lab {
@@ -364,7 +382,7 @@
     }
 
     .column {
-      min-height: calc(100vh - 188px);
+      min-height: 360px;
       display: flex;
       flex-direction: column;
       border-radius: 8px;
@@ -746,6 +764,18 @@
             <div class="hermes-line">Waiting for a task.</div>
           </div>
         </section>
+        <section class="event-log" aria-label="Guild event log">
+          <div class="hermes-log-title">Guild Event Log</div>
+          <div class="hermes-lines" id="eventLines">
+            <div class="event-line">No events yet.</div>
+          </div>
+        </section>
+        <section class="meeting-rounds" aria-label="Meeting rounds">
+          <div class="hermes-log-title">Meeting Rounds</div>
+          <div class="hermes-lines" id="meetingLines">
+            <div class="meeting-line">No meeting round yet.</div>
+          </div>
+        </section>
         <section class="provider-lab" aria-label="Provider lab">
           <div class="hermes-log-title">Provider Lab</div>
           <div class="provider-grid">
@@ -888,6 +918,58 @@
         .filter(Boolean)
         .map((line) => `<div class="hermes-line">${escapeHtml(line)}</div>`)
         .join("");
+    }
+
+    function renderLineList(elementId, lines, className, emptyText) {
+      const items = Array.isArray(lines) ? lines.filter(Boolean) : [];
+      el(elementId).innerHTML = (items.length ? items : [emptyText])
+        .map((line) => `<div class="${className}">${escapeHtml(line)}</div>`)
+        .join("");
+    }
+
+    function taskShort(task) {
+      return task.title || task.task_id || "task";
+    }
+
+    function buildEventLog(data) {
+      const tasks = Array.isArray(data.tasks) ? data.tasks : [];
+      const artifacts = Array.isArray(data.artifacts) ? data.artifacts : [];
+      const events = [];
+      if (data.filters && data.filters.quest_chain_id) {
+        events.push(`Hermes planned quest ${data.filters.quest_chain_id}.`);
+      }
+      const created = tasks.length;
+      if (created) events.push(`Tasks created: ${created}.`);
+      const claimed = tasks.filter((task) => ["claimed", "running"].includes(String(task.status || "")));
+      claimed.forEach((task) => events.push(`Worker claimed: ${task.assignee_id || "agent"} -> ${taskShort(task)}.`));
+      artifacts.slice(-6).forEach((artifact) => {
+        events.push(`Artifact published: ${artifact.artifact_type || "artifact"} from ${artifact.producer_agent_id || artifact.task_id}.`);
+      });
+      const fixes = tasks.filter((task) => String(task.task_type || "") === "fix");
+      if (fixes.length) events.push(`Meeting created fix tasks: ${fixes.map((task) => task.task_id).join(" / ")}.`);
+      const finalArtifact = artifacts.find((artifact) => String(artifact.summary || "").includes("hermes_finalized"));
+      if (finalArtifact) events.push("Final assembly done and durable artifact published.");
+      return events;
+    }
+
+    function buildMeetingRounds(data) {
+      const tasks = Array.isArray(data.tasks) ? data.tasks : [];
+      const artifacts = Array.isArray(data.artifacts) ? data.artifacts : [];
+      const review = tasks.find((task) => String(task.task_type || "") === "join_review");
+      const fixes = tasks
+        .filter((task) => String(task.task_type || "") === "fix")
+        .sort((a, b) => Number(a.fix_round || 0) - Number(b.fix_round || 0));
+      const lines = [];
+      if (review) {
+        lines.push(`Round 0: review ${review.status}; deps ${Array.isArray(review.depends_on) ? review.depends_on.length : 0}.`);
+      }
+      fixes.forEach((task) => {
+        const round = task.fix_round || "?";
+        lines.push(`Round ${round}: ${task.required_skill || "module"} fix ${task.status} (${task.generated_from || task.task_id}).`);
+      });
+      const finalArtifact = artifacts.find((artifact) => String(artifact.summary || "").includes("hermes_finalized"));
+      if (finalArtifact) lines.push("Final round: review accepted and final assembly artifact recorded.");
+      return lines;
     }
 
     function setProviderStatus(message) {
@@ -1094,6 +1176,8 @@
       el("artifactCount").textContent = data.artifact_count ?? (Array.isArray(data.artifacts) ? data.artifacts.length : 0);
       el("boardName").textContent = boardName(data);
       renderAgents(tasks);
+      renderLineList("eventLines", buildEventLog(data), "event-line", "No events yet.");
+      renderLineList("meetingLines", buildMeetingRounds(data), "meeting-line", "No meeting round yet.");
 
       el("columns").innerHTML = columnDefs.map((column) => {
         const columnTasks = grouped[column.id] || [];
@@ -1116,17 +1200,25 @@
     async function maybeFinalizeWithHermes(data) {
       if (finalizeInFlight || !activeQuestChainId) return;
       const tasks = Array.isArray(data.tasks) ? data.tasks : [];
-      const buildTasks = tasks.filter((task) => String(task.task_id || "").match(/-build-[123]$/));
+      const buildTasks = tasks.filter((task) => String(task.task_id || "").match(/-build-\d+$/));
       const reviewTask = tasks.find((task) => String(task.task_type || "") === "join_review");
-      if (buildTasks.length !== 3 || !reviewTask) return;
+      if (!buildTasks.length || !reviewTask) return;
       if (reviewTask.status === "done") return;
-      if (!buildTasks.every((task) => task.status === "done")) return;
+      const terminalStatuses = new Set(["done", "failed", "cancelled"]);
+      if (!buildTasks.every((task) => terminalStatuses.has(task.status))) return;
       finalizeInFlight = true;
-      logHermes([
-        "Three worker outputs detected.",
-        "Hermes is checking the quest workspace.",
-        "Writing review.md and final-summary.md..."
-      ]);
+      const failedBuilds = buildTasks.filter((task) => task.status !== "done");
+      logHermes(failedBuilds.length
+        ? [
+            "Hermes meeting detected a failed module.",
+            "Creating bounded repair tasks for the responsible worker.",
+            "Review will wait for repair artifacts."
+          ]
+        : [
+            "Three worker outputs detected.",
+            "Hermes is checking the quest workspace.",
+            "Writing review.md and final-summary.md..."
+          ]);
       try {
         const response = await fetch("/api/hermes/finalize", {
           method: "POST",
@@ -1135,6 +1227,15 @@
         });
         const value = await response.json();
         if (value.ok && value.dashboard) {
+          if (value.ready === false && value.repair) {
+            logHermes([
+              "Hermes meeting queued repair work.",
+              `Created fixes: ${(value.repair.created || []).join(" / ") || "none"}`,
+              `Waiting fixes: ${(value.repair.waiting || []).join(" / ") || "none"}`
+            ]);
+            render(value.dashboard);
+            return;
+          }
           const telegramLine = value.telegram && value.telegram.ok
             ? (value.telegram.queued ? "Telegram report queued." : "Telegram report sent.")
             : `Telegram report skipped/failed: ${value.telegram?.reason || "unknown"}`;
@@ -1164,6 +1265,8 @@
       setAutoRefresh(false);
       el("questId").value = "";
       logHermes(["Output cleared. Ready for a fresh Hermes quest."]);
+      renderLineList("eventLines", [], "event-line", "No events yet.");
+      renderLineList("meetingLines", [], "meeting-line", "No meeting round yet.");
       const data = emptyDashboard();
       el("jsonInput").value = JSON.stringify(data, null, 2);
       render(data);
@@ -1375,7 +1478,7 @@
           body: JSON.stringify({
             quest_chain_id: value.quest_chain_id,
             adapter: el("questAdapter").value,
-            profiles: value.wake_profiles || ["worker-a", "worker-b", "worker-c"],
+            profiles: value.wake_profiles || [],
             interval_seconds: 2
           })
         });

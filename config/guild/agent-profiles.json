@@ -54,7 +54,7 @@
       "agent_id": "reviewer",
       "display_name": "Reviewer",
       "rank": "A",
-      "skills": ["review", "integration", "general"],
+      "skills": ["review", "integration", "integration_review", "general"],
       "provider_role": "reviewer",
       "bootstrap": "docs/workers/WORKER_BOOTSTRAP.md"
     }

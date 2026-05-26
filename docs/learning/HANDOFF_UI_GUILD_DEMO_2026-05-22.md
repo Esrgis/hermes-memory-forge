@@ -23,7 +23,7 @@ The Hermes log must be a progress/routing log, not hidden chain-of-thought.
 
 ## Current Percent
 
-For the UI demo target above: about 90%.
+For the UI demo target above: about 92%.
 
 Done:
 
@@ -40,6 +40,10 @@ Done:
 - Least-context worker prompt envelope.
 - Durable `needs_info` blocked artifact path.
 - Crash-course learning doc.
+- Config-driven Guild runtime policy in `config/guild/guild-runtime.json`.
+- Scheduler wake profiles chosen from configured rank/skill capabilities.
+- Visible Guild Event Log and Meeting Rounds panels.
+- Final assembly artifact plus file validation.
 
 Now verified:
 
@@ -49,22 +53,28 @@ Now verified:
 - Needs-info smoke: `quest-needs-info-smoke-20260522-1535` published artifact `artifact-e88c7606`, set build task `blocked`, preserved `block_reason=needs_info`, and `unlock-ready` did not reopen it.
 - Final local UI demo smoke on port `8785`: `quest-final-ui-demo-local-20260522` launched three builder terminals plus one reviewer terminal, reached `done=5`, and published four artifacts.
 - The dashboard UI was opened at `http://127.0.0.1:8785/docs/incubation/guild-dashboard.html`.
+- Config scheduler API smoke on port `8791`: selected workers from config and mapped auto-rank adapters to `opencode/openrouter/groq`.
+- Targeted meeting smoke on port `8793`: one failed module created only one fix task, then final assembly wrote `review.md`, `final-summary.md`, and `final-artifact.json`.
+- Clean provider smoke passed outside sandbox for `opencode`, `openrouter`, and `groq`.
 
 Still needed:
 
+- Run one full visible dashboard smoke with real worker terminals after the config scheduler changes.
+- Decide whether finalization should remain API-owned or move into a normal `join_review` worker claim.
 - Polish terminal progress logs if they are too noisy.
-- Only after that, try `opencode`; it has token/sandbox/provider quirks.
 
 ## Routing Contract
 
-This week is `manual-router v0`.
+The current bridge is `config-driven manual-router v1`.
 
-The dashboard server uses a fixed prompt/rules split, not autonomous planning:
+The dashboard server still uses a bounded prompt/rules split, not broad autonomous planning. The module tracks and scheduler policy now come from `config/guild/guild-runtime.json`:
 
 ```text
 spec done
 -> build-1/build-2/build-3 open in parallel
--> review blocked until all build tasks are done
+-> review/finalize waits on configured module outputs
+-> failed or missing modules get targeted fix tasks
+-> final assembly writes a durable artifact
 ```
 
 Next week, Hermes planner can replace this fixed split with autonomous DAG planning after the local-dry-run UI path is smooth.
@@ -105,6 +115,13 @@ Adapter runtime:
 
 ```text
 scripts/guild_provider_adapters/
+```
+
+Guild runtime config:
+
+```text
+config/guild/guild-runtime.json
+config/guild/agent-profiles.json
 ```
 
 Learning doc:

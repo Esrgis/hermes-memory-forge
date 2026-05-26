@@ -128,6 +128,51 @@ Smoke đã chứng minh bằng adapter test-only:
 invalid-output-smoke
 ```
 
+## 2026-05-26 update: config-driven Guild loop
+
+Guild UI runtime đã chuyển bước đầu từ hard-code sang config:
+
+```text
+config/guild/guild-runtime.json
+```
+
+File này mô tả:
+
+```text
+module_tracks      = mỗi module cần skill nào và ghi file nào
+scheduler          = chọn worker theo rank/skill và map adapter auto-rank
+review             = skill/rank của join review và giới hạn fix rounds
+final_assembly     = review.md, final-summary.md, final-artifact.json
+```
+
+Luồng hiện tại:
+
+```text
+Hermes tạo spec
+-> server tạo module tasks từ config
+-> scheduler chọn worker profile từ agent-profiles.json
+-> worker publish artifact
+-> meeting/finalize chỉ tạo fix task cho module failed/missing
+-> final assembly ghi durable artifact và validate file output
+```
+
+Dashboard có thêm hai vùng nhìn trạng thái:
+
+```text
+Guild Event Log   = planned / tasks / claims / artifacts / fixes / final assembly
+Meeting Rounds    = round 0 review + các fix round theo module
+```
+
+Smoke đã pass:
+
+```text
+config scheduler API smoke: worker-a,worker-b,worker-c được chọn từ config
+targeted meeting smoke: chỉ module 2 fail thì chỉ tạo build-2-fix-1
+provider smoke ngoài sandbox: opencode, openrouter, groq pass
+```
+
+Lưu ý: sandbox có thể chặn provider/network path. Provider health nên kiểm bằng normal terminal hoặc Provider Lab; không ghi hoặc commit key từ `_runtime/provider-secrets.local.ps1`.
+
 ## 4. Adapter là gì?
 
 Adapter là driver. Worker không nên gọi provider thẳng.

@@ -149,6 +149,7 @@ class GuildDashboardServer(SimpleHTTPRequestHandler):
         quest_chain_id = slug if slug.startswith("quest-") else f"quest-{slug}"
         allowed_files = str(body.get("allowed_files") or "").strip()
         adapter = str(body.get("adapter") or "local-dry-run").strip()
+        runtime = load_guild_runtime_config(self.workspace)
 
         quest_workspace = create_quest_workspace(self.workspace, quest_chain_id, title, request)
         workspace_glob = f"guild-workspaces/{quest_chain_id}/**"
@@ -160,6 +161,7 @@ class GuildDashboardServer(SimpleHTTPRequestHandler):
             request,
             effective_allowed_files,
             quest_workspace,
+            runtime,
         )
 
         for task in plan:
@@ -200,6 +202,7 @@ class GuildDashboardServer(SimpleHTTPRequestHandler):
         quest_chain_id = slug if slug.startswith("quest-") else f"quest-{slug}"
         allowed_files = str(body.get("allowed_files") or "").strip()
         adapter = str(body.get("adapter") or "opencode").strip()
+        runtime = load_guild_runtime_config(self.workspace)
 
         workspace_rel = Path("guild-workspaces") / quest_chain_id
         planner = self.call_hermes_planner(
@@ -208,6 +211,7 @@ class GuildDashboardServer(SimpleHTTPRequestHandler):
             quest_chain_id=quest_chain_id,
             workspace_path=workspace_rel.as_posix(),
             adapter=adapter,
+            runtime=runtime,
         )
 
         planner_title = str(planner.get("title") or title).strip()
@@ -229,6 +233,7 @@ class GuildDashboardServer(SimpleHTTPRequestHandler):
             allowed_files=effective_allowed_files,
             quest_workspace=quest_workspace,
             planner=planner,
+            runtime=runtime,
         )
 
         for task in plan:
@@ -273,9 +278,15 @@ class GuildDashboardServer(SimpleHTTPRequestHandler):
         quest_chain_id: str,
         workspace_path: str,
         adapter: str,
+        runtime: dict[str, Any],
     ) -> dict[str, Any]:
         provider = os.environ.get("HERMES_GUILD_HERMES_PROVIDER", "openai-codex")
         model = os.environ.get("HERMES_GUILD_HERMES_MODEL", "gpt-5.5")
+        tracks = runtime_module_tracks(runtime)
+        track_lines = "\n".join(
+            f"- Track {track['id']} writes {track['output_file']} with required_skill={track['skill']}"
+            for track in tracks
+        )
         prompt = f"""
 You are Hermes, S-rank Guild manager for HermesGuildCore.
 Return only compact JSON. No markdown.
@@ -285,11 +296,9 @@ Use this fixed runtime contract:
 - quest_chain_id: {quest_chain_id}
 - quest workspace: {workspace_path}
 - workers may write only inside the quest workspace
-- split into exactly three parallel build tracks
-- Build track A writes build-1.md
-- Build track B writes build-2.md
-- Build track C writes build-3.md
-- Hermes performs the final review after all three worker outputs are done; no fourth worker terminal
+- split into exactly {len(tracks)} parallel build tracks from runtime config
+{track_lines}
+- Hermes performs the final review after configured worker outputs are done; no extra worker terminal
 - preferred worker adapter: {adapter}
 
 User title:
@@ -338,17 +347,19 @@ Required JSON schema:
 
         dashboard = self.export_dashboard(quest_chain_id)
         tasks = dashboard.get("tasks") or []
+        runtime = load_guild_runtime_config(self.workspace)
+        tracks = runtime_module_tracks(runtime)
         build_tasks = [
             task
             for task in tasks
-            if str(task.get("task_id") or "").endswith(("-build-1", "-build-2", "-build-3"))
+            if str(task.get("task_type") or "") == "execution" and module_track_for_task(task, tracks)
         ]
-        if len(build_tasks) != 3 or any(task.get("status") != "done" for task in build_tasks):
+        if len(build_tasks) != len(tracks):
             self.send_json(
                 {
                     "ok": False,
                     "ready": False,
-                    "reason": "waiting_for_three_build_workers",
+                    "reason": "waiting_for_configured_build_workers",
                     "dashboard": dashboard,
                 },
                 status=409,
@@ -363,10 +374,31 @@ Required JSON schema:
             self.send_json({"ok": True, "ready": True, "already_done": True, "dashboard": dashboard})
             return
 
+        repair = self.ensure_fix_tasks_for_failed_or_missing_modules(
+            quest_chain_id=quest_chain_id,
+            quest_workspace=quest_workspace,
+            tasks=tasks,
+            build_tasks=build_tasks,
+            review_task=review_task,
+            runtime=runtime,
+        )
+        if repair["created"] or repair["waiting"]:
+            dashboard = self.export_dashboard(quest_chain_id)
+            self.send_json(
+                {
+                    "ok": True,
+                    "ready": False,
+                    "reason": "repair_tasks_pending",
+                    "repair": repair,
+                    "dashboard": dashboard,
+                }
+            )
+            return
+
         summaries: list[tuple[str, str]] = []
         missing: list[str] = []
-        for index in range(1, 4):
-            path = quest_workspace / f"build-{index}.md"
+        for track in tracks:
+            path = quest_workspace / str(track["output_file"])
             if not path.is_file():
                 missing.append(path.name)
                 continue
@@ -383,24 +415,24 @@ Required JSON schema:
             )
             return
 
-        review_path = quest_workspace / "review.md"
-        final_path = quest_workspace / "final-summary.md"
+        final_config = runtime.get("final_assembly") or {}
+        review_path = quest_workspace / str(final_config.get("review_file") or "review.md")
+        final_path = quest_workspace / str(final_config.get("summary_file") or "final-summary.md")
+        artifact_path = quest_workspace / str(final_config.get("artifact_file") or "final-artifact.json")
         review_path.write_text(
             "\n".join(
                 [
                     f"# Hermes Final Review: {quest_chain_id}",
                     "",
-                    "Hermes checked the quest workspace after all three worker outputs completed.",
+                    "Hermes checked the quest workspace after configured worker outputs completed.",
                     "",
                     "## Inputs",
                     "",
-                    "- build-1.md",
-                    "- build-2.md",
-                    "- build-3.md",
+                    *[f"- {track['output_file']}" for track in tracks],
                     "",
                     "## Verdict",
                     "",
-                    "All required worker files are present inside the bounded quest workspace.",
+                    "All configured worker files are present inside the bounded quest workspace.",
                     "The final summary is ready for handoff.",
                     "",
                 ]
@@ -412,14 +444,14 @@ Required JSON schema:
                 [
                     f"# Final Summary: {quest_chain_id}",
                     "",
-                    "Hermes fan-in completed after three worker terminals produced their scoped files.",
+                    "Hermes fan-in completed after configured worker terminals produced their scoped files.",
                     "",
                     *flatten_worker_summaries(summaries),
                     "",
                     "## Completion",
                     "",
                     "- Workspace created by Hermes.",
-                    "- Three worker outputs detected.",
+                    f"- {len(tracks)} worker outputs detected.",
                     "- Hermes final review completed.",
                     "- Blackboard review task marked done.",
                     "",
@@ -428,19 +460,47 @@ Required JSON schema:
             encoding="utf-8",
         )
 
+        pre_artifact_validations = validate_final_outputs(self.workspace, quest_workspace, tracks, [review_path, final_path])
+        if not all(item["ok"] for item in pre_artifact_validations):
+            self.send_json(
+                {
+                    "ok": False,
+                    "ready": False,
+                    "reason": "final_output_validation_failed",
+                    "validations": pre_artifact_validations,
+                    "dashboard": dashboard,
+                },
+                status=409,
+            )
+            return
+
         payload_dir = self.workspace / "_runtime" / "dashboard"
         payload_dir.mkdir(parents=True, exist_ok=True)
         payload_path = payload_dir / f"{quest_chain_id}-hermes-finalize.json"
         payload = {
             "ok": True,
-            "mode": "hermes_finalize_v0",
+            "mode": "hermes_finalize_v1",
             "quest_chain_id": quest_chain_id,
             "files_changed": [
                 str(review_path.relative_to(self.workspace)),
                 str(final_path.relative_to(self.workspace)),
+                str(artifact_path.relative_to(self.workspace)),
             ],
-            "summary": "Hermes verified three worker outputs and wrote final review files.",
+            "summary": "Hermes verified configured worker outputs and wrote final review files.",
+            "validations": pre_artifact_validations,
+            "module_tracks": [
+                {
+                    "index": track["index"],
+                    "skill": track["skill"],
+                    "output_file": track["output_file"],
+                }
+                for track in tracks
+            ],
         }
+        artifact_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+        validations = validate_final_outputs(self.workspace, quest_workspace, tracks, [review_path, final_path, artifact_path])
+        payload["validations"] = validations
+        artifact_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
         payload_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
         self.publish_artifact(
             task_id=str(review_task["task_id"]),
@@ -455,8 +515,8 @@ Required JSON schema:
                 [
                     "Hermes Guild quest complete",
                     f"Quest: {quest_chain_id}",
-                    "Workers: worker-a/opencode, worker-b/openrouter, worker-c/groq",
-                    "Files: review.md, final-summary.md",
+                    "Workers: selected from config/guild/guild-runtime.json",
+                    f"Files: {review_path.name}, {final_path.name}, {artifact_path.name}",
                     f"Workspace: guild-workspaces/{quest_chain_id}",
                 ]
             )
@@ -472,6 +532,126 @@ Required JSON schema:
                 "dashboard": dashboard,
             }
         )
+
+    def ensure_fix_tasks_for_failed_or_missing_modules(
+        self,
+        *,
+        quest_chain_id: str,
+        quest_workspace: Path,
+            tasks: list[dict[str, Any]],
+            build_tasks: list[dict[str, Any]],
+            review_task: dict[str, Any],
+            runtime: dict[str, Any],
+    ) -> dict[str, Any]:
+        fix_tasks = [task for task in tasks if str(task.get("task_type") or "") == "fix"]
+        fixes_by_source: dict[str, list[dict[str, Any]]] = {}
+        for task in fix_tasks:
+            source = str(task.get("generated_from") or "")
+            if source:
+                fixes_by_source.setdefault(source, []).append(task)
+
+        created: list[str] = []
+        waiting: list[str] = []
+        review_dependencies: list[str] = []
+        tracks = runtime_module_tracks(runtime)
+
+        for build_task in sorted(build_tasks, key=lambda item: int(item.get("sequence_no") or 0)):
+            task_id = str(build_task.get("task_id") or "")
+            track = module_track_for_task(build_task, tracks)
+            if not track:
+                continue
+            module_index = int(track["index"])
+            output_file = str(track["output_file"])
+            expected_file = quest_workspace / output_file
+            status = str(build_task.get("status") or "")
+            needs_fix = status != "done" or not expected_file.is_file()
+
+            if not needs_fix:
+                review_dependencies.append(task_id)
+                continue
+
+            existing = fixes_by_source.get(task_id, [])
+            done_fix = next((task for task in existing if task.get("status") == "done"), None)
+            if done_fix:
+                review_dependencies.append(str(done_fix.get("task_id")))
+                continue
+
+            active_fix = next(
+                (
+                    task
+                    for task in existing
+                    if task.get("status") in {"open", "claimed", "running", "blocked"}
+                ),
+                None,
+            )
+            if active_fix:
+                waiting.append(str(active_fix.get("task_id")))
+                review_dependencies.append(str(active_fix.get("task_id")))
+                continue
+
+            fix_round = len(existing) + 1
+            fix_task_id = f"{task_id}-fix-{fix_round}"
+            skill = str(track.get("skill") or build_task.get("required_skill") or "general")
+            reason = "failed build task" if status != "done" else f"missing {output_file}"
+            self.create_task(
+                {
+                    "task_id": fix_task_id,
+                    "task_type": "fix",
+                    "required_rank": str(build_task.get("required_rank") or "C"),
+                    "required_skill": skill,
+                    "owner_area": "repair",
+                    "status": "open",
+                    "plan_review_status": "approved",
+                    "quest_chain_id": quest_chain_id,
+                    "sequence_no": int(build_task.get("sequence_no") or module_index) + 10 + fix_round,
+                    "depends_on": [],
+                    "output_artifact": f"fix_result_{module_index}",
+                    "allowed_files": f"guild-workspaces/{quest_chain_id}/**",
+                    "generated_from": task_id,
+                    "fix_round": fix_round,
+                    "max_fix_rounds": int((runtime.get("review") or {}).get("max_fix_rounds") or 3),
+                    "title": f"Fix module {module_index}: {build_task.get('title') or task_id}",
+                    "request": "\n".join(
+                        [
+                            f"Repair module {module_index} after Hermes meeting detected: {reason}.",
+                            f"Quest workspace: guild-workspaces/{quest_chain_id}",
+                            f"Write or correct {output_file} inside the quest workspace.",
+                            "Keep the fix bounded to this module.",
+                            "Return artifact JSON listing the file you wrote.",
+                        ]
+                    ),
+                }
+            )
+            created.append(fix_task_id)
+            review_dependencies.append(fix_task_id)
+
+        if created or waiting:
+            self.create_task(
+                {
+                    "task_id": str(review_task.get("task_id")),
+                    "task_type": "join_review",
+                    "required_rank": str(review_task.get("required_rank") or "B"),
+                    "required_skill": str(review_task.get("required_skill") or "integration_review"),
+                    "owner_area": str(review_task.get("owner_area") or "review"),
+                    "status": "blocked",
+                    "plan_review_status": "approved",
+                    "quest_chain_id": quest_chain_id,
+                    "sequence_no": int(review_task.get("sequence_no") or 5),
+                    "depends_on": review_dependencies,
+                    "output_artifact": str(review_task.get("output_artifact") or "integration_report"),
+                    "allowed_files": f"guild-workspaces/{quest_chain_id}/**",
+                    "title": str(review_task.get("title") or f"Review: {quest_chain_id}"),
+                    "request": "\n".join(
+                        [
+                            "Hermes meeting/review waits for original module tasks and repair tasks.",
+                            f"Quest workspace: guild-workspaces/{quest_chain_id}",
+                            "When all dependencies are done, write review.md and final-summary.md.",
+                        ]
+                    ),
+                }
+            )
+
+        return {"created": created, "waiting": waiting, "review_dependencies": review_dependencies}
 
     def create_task(self, task: dict[str, Any]) -> None:
         prototype = self.workspace / "_runtime" / "flock" / "worker_team_prototype.py"
@@ -510,6 +690,14 @@ Required JSON schema:
             args.extend(["--depends-on", ",".join(task["depends_on"])])
         if task.get("allowed_files"):
             args.extend(["--allowed-files", task["allowed_files"]])
+        if task.get("generated_from"):
+            args.extend(["--generated-from", task["generated_from"]])
+        if task.get("source_artifact"):
+            args.extend(["--source-artifact", task["source_artifact"]])
+        if task.get("fix_round") is not None:
+            args.extend(["--fix-round", str(task["fix_round"])])
+        if task.get("max_fix_rounds") is not None:
+            args.extend(["--max-fix-rounds", str(task["max_fix_rounds"])])
         if task["plan_review_status"] == "not_required":
             args.append("--plan-review-not-required")
         completed = self.run_cmd(args)
@@ -611,10 +799,11 @@ Required JSON schema:
         if not quest_chain_id:
             raise ValueError("quest_chain_id is required")
         adapter = str(body.get("adapter") or "local-dry-run").strip()
-        profiles = body.get("profiles") or ["worker-a", "worker-b", "worker-c"]
+        runtime = load_guild_runtime_config(self.workspace)
+        profiles = body.get("profiles") or schedule_worker_profiles(self.workspace, runtime)
         dry_run = bool(body.get("dry_run"))
         interval_seconds = str(int(body.get("interval_seconds") or 2))
-        worker_adapters = resolve_worker_adapters(adapter, profiles)
+        worker_adapters = resolve_worker_adapters(adapter, profiles, runtime)
         launched = []
         for index, profile in enumerate(profiles):
             worker_adapter = worker_adapters[index]
@@ -779,6 +968,150 @@ def load_json_file(path: Path, default: dict[str, Any]) -> dict[str, Any]:
     if not path.is_file():
         return default
     return json.loads(path.read_text(encoding="utf-8"))
+
+
+def load_json_file(path: Path, default: dict[str, Any]) -> dict[str, Any]:
+    if not path.is_file():
+        return default
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def load_guild_runtime_config(workspace: Path) -> dict[str, Any]:
+    default = {
+        "schema_version": "guild_runtime_v1",
+        "module_tracks": [
+            {
+                "id": "A",
+                "index": 1,
+                "skill": "requirements",
+                "output_file": "build-1.md",
+                "output_artifact": "implementation_result_1",
+                "instruction": "Extract requirements and module contract.",
+                "required_rank": "C",
+            },
+            {
+                "id": "B",
+                "index": 2,
+                "skill": "risk-analysis",
+                "output_file": "build-2.md",
+                "output_artifact": "implementation_result_2",
+                "instruction": "Identify risks, mismatches, and integration concerns.",
+                "required_rank": "C",
+            },
+            {
+                "id": "C",
+                "index": 3,
+                "skill": "verification",
+                "output_file": "build-3.md",
+                "output_artifact": "implementation_result_3",
+                "instruction": "Create the verification checklist and acceptance evidence plan.",
+                "required_rank": "C",
+            },
+        ],
+        "scheduler": {
+            "exclude_profiles": ["hermes-codex", "tester", "reviewer"],
+            "preferred_adapters": {
+                "worker-a": "opencode",
+                "worker-b": "openrouter",
+                "worker-c": "groq",
+            },
+            "fallback_adapter_ladder": ["opencode", "openrouter", "groq"],
+        },
+        "review": {
+            "required_rank": "B",
+            "required_skill": "integration_review",
+            "max_fix_rounds": 3,
+        },
+        "final_assembly": {
+            "review_file": "review.md",
+            "summary_file": "final-summary.md",
+            "artifact_file": "final-artifact.json",
+        },
+    }
+    return load_json_file(workspace / "config" / "guild" / "guild-runtime.json", default)
+
+
+def runtime_module_tracks(runtime: dict[str, Any]) -> list[dict[str, Any]]:
+    tracks = []
+    for index, raw in enumerate(runtime.get("module_tracks") or [], start=1):
+        track = dict(raw)
+        track["index"] = int(track.get("index") or index)
+        track["id"] = str(track.get("id") or chr(ord("A") + index - 1))
+        track["skill"] = str(track.get("skill") or "general")
+        track["output_file"] = str(track.get("output_file") or f"build-{track['index']}.md")
+        track["output_artifact"] = str(track.get("output_artifact") or f"implementation_result_{track['index']}")
+        track["instruction"] = str(track.get("instruction") or "Complete this module.")
+        track["required_rank"] = str(track.get("required_rank") or "C")
+        tracks.append(track)
+    return tracks
+
+
+def load_agent_profiles(workspace: Path) -> dict[str, Any]:
+    data = load_json_file(workspace / "config" / "guild" / "agent-profiles.json", {"profiles": {}})
+    return data.get("profiles") or {}
+
+
+def rank_value(rank: str) -> int:
+    return {"D": 1, "C": 2, "B": 3, "A": 4, "S": 5}.get(str(rank), 0)
+
+
+def profile_can_run_track(profile: dict[str, Any], track: dict[str, Any]) -> bool:
+    skills = [str(skill) for skill in profile.get("skills") or []]
+    return rank_value(str(profile.get("rank") or "D")) >= rank_value(str(track.get("required_rank") or "C")) and str(track["skill"]) in skills
+
+
+def schedule_worker_profiles(workspace: Path, runtime: dict[str, Any]) -> list[str]:
+    profiles = load_agent_profiles(workspace)
+    scheduler = runtime.get("scheduler") or {}
+    excluded = {str(item) for item in scheduler.get("exclude_profiles") or []}
+    selected: list[str] = []
+    for track in runtime_module_tracks(runtime):
+        candidates = [
+            (name, profile)
+            for name, profile in profiles.items()
+            if name not in excluded and profile_can_run_track(profile, track)
+        ]
+        if not candidates:
+            continue
+        candidates.sort(key=lambda item: (rank_value(str(item[1].get("rank") or "D")), item[0]))
+        name = candidates[0][0]
+        if name not in selected:
+            selected.append(name)
+    return selected
+
+
+def module_track_for_task(task: dict[str, Any], tracks: list[dict[str, Any]]) -> dict[str, Any] | None:
+    task_id = str(task.get("task_id") or "")
+    task_skill = str(task.get("required_skill") or "")
+    output_artifact = str(task.get("output_artifact") or "")
+    for track in tracks:
+        index = int(track["index"])
+        if task_id.endswith(f"-build-{index}") or task_skill == track["skill"] or output_artifact == track["output_artifact"]:
+            return track
+    return None
+
+
+def validate_final_outputs(
+    workspace: Path,
+    quest_workspace: Path,
+    tracks: list[dict[str, Any]],
+    final_paths: list[Path],
+) -> list[dict[str, Any]]:
+    paths = [quest_workspace / str(track["output_file"]) for track in tracks]
+    paths.extend(final_paths)
+    validations = []
+    for path in paths:
+        exists = path.is_file()
+        size = path.stat().st_size if exists else 0
+        validations.append(
+            {
+                "path": str(path.relative_to(workspace)),
+                "ok": exists and size > 0,
+                "exists": exists,
+                "bytes": size,
+            }
+        )
+    return validations
 
 
 def load_guild_provider_config(workspace: Path) -> dict[str, Any]:
@@ -965,20 +1298,20 @@ def parse_json_or_text(text: str) -> Any:
         return {"raw": value[-4000:]}
 
 
-def resolve_worker_adapters(adapter: str, profiles: list[Any]) -> list[str]:
+def resolve_worker_adapters(adapter: str, profiles: list[Any], runtime: dict[str, Any] | None = None) -> list[str]:
     if adapter not in {"auto-rank", "rank-auto", "auto"}:
         return [adapter for _ in profiles]
 
-    # auto-rank is a demo distribution policy; auto-ammo is the provider fallback loader.
-    build_ladder = ["opencode", "openrouter", "groq"]
+    # auto-rank is a distribution policy; auto-ammo is the provider fallback loader.
+    scheduler = (runtime or {}).get("scheduler") or {}
+    preferred = scheduler.get("preferred_adapters") or {}
+    build_ladder = [str(item) for item in scheduler.get("fallback_adapter_ladder") or ["opencode", "openrouter", "groq"]]
     build_index = 0
     result: list[str] = []
     for profile in profiles:
         name = str(profile)
-        if name == "reviewer":
-            result.append("groq")
-        elif name == "tester":
-            result.append("openrouter")
+        if name in preferred:
+            result.append(str(preferred[name]))
         else:
             result.append(build_ladder[min(build_index, len(build_ladder) - 1)])
             build_index += 1
@@ -1002,6 +1335,8 @@ def create_quest_workspace(
     request: str,
     planner: dict[str, Any] | None = None,
 ) -> Path:
+    runtime = load_guild_runtime_config(workspace)
+    final_config = runtime.get("final_assembly") or {}
     root = workspace / "guild-workspaces"
     quest_workspace = root / quest_chain_id
     quest_workspace.mkdir(parents=True, exist_ok=True)
@@ -1026,11 +1361,10 @@ def create_quest_workspace(
                 "",
                 "## Expected Worker Files",
                 "",
-                "- `build-1.md`",
-                "- `build-2.md`",
-                "- `build-3.md`",
-                "- `review.md` from Hermes final check",
-                "- `final-summary.md` from Hermes final check",
+                *[f"- `{track['output_file']}`" for track in runtime_module_tracks(runtime)],
+                f"- `{final_config.get('review_file') or 'review.md'}` from Hermes final check",
+                f"- `{final_config.get('summary_file') or 'final-summary.md'}` from Hermes final check",
+                f"- `{final_config.get('artifact_file') or 'final-artifact.json'}` durable final artifact",
                 "",
             ]
         ),
@@ -1073,28 +1407,29 @@ def build_manual_plan(
     request: str,
     allowed_files: str,
     quest_workspace: Path,
+    runtime: dict[str, Any],
 ) -> tuple[list[dict[str, Any]], list[str], list[str]]:
     prefix = quest_chain_id.replace("quest-", "", 1)
     workspace_rel = quest_workspace.as_posix()
-    worker_request = "\n".join(
-        [
-            request,
-            "",
-            f"Quest workspace: {workspace_rel}",
-            "Write your visible deliverable inside the quest workspace.",
-            "Build track A writes build-1.md; build track B writes build-2.md; build track C writes build-3.md; review writes review.md and final-summary.md.",
-            "Return artifact JSON listing the file(s) you wrote.",
-        ]
-    )
+    worker_tracks = runtime_module_tracks(runtime)
+    review = runtime.get("review") or {}
+
+    def worker_request(track: dict[str, Any]) -> str:
+        return "\n".join(
+            [
+                request,
+                "",
+                f"Quest workspace: {workspace_rel}",
+                f"Assigned module: track {track['id']} / {track['skill']}",
+                str(track["instruction"]),
+                f"Write your visible deliverable to {track['output_file']} inside the quest workspace.",
+                "Return artifact JSON listing the file you wrote.",
+            ]
+        )
     base = {
         "quest_chain_id": quest_chain_id,
         "allowed_files": allowed_files,
     }
-    parallel_titles = [
-        "Build track A",
-        "Build track B",
-        "Build track C",
-    ]
     tasks = [
         {
             **base,
@@ -1109,50 +1444,63 @@ def build_manual_plan(
             "depends_on": [],
             "output_artifact": "app_spec",
             "title": f"Spec: {title}",
-            "request": worker_request,
+            "request": request,
         },
         *[
             {
                 **base,
-                "task_id": f"{prefix}-build-{index}",
+                "task_id": f"{prefix}-build-{track['index']}",
                 "task_type": "execution",
-                "required_rank": "C",
-                "required_skill": "general",
+                "required_rank": str(track["required_rank"]),
+                "required_skill": str(track["skill"]),
                 "owner_area": "implementation",
                 "status": "blocked",
                 "plan_review_status": "approved",
-                "sequence_no": index + 1,
+                "sequence_no": int(track["index"]) + 1,
                 "depends_on": [f"{prefix}-spec"],
-                "output_artifact": f"implementation_result_{index}",
-                "title": f"{track}: {title}",
-                "request": worker_request,
+                "output_artifact": str(track["output_artifact"]),
+                "title": f"Build track {track['id']}: {title}",
+                "request": worker_request(track),
             }
-            for index, track in enumerate(parallel_titles, start=1)
+            for track in worker_tracks
         ],
         {
             **base,
             "task_id": f"{prefix}-review",
             "task_type": "join_review",
-            "required_rank": "B",
-            "required_skill": "integration_review",
+            "required_rank": str(review.get("required_rank") or "B"),
+            "required_skill": str(review.get("required_skill") or "integration_review"),
             "owner_area": "review",
             "status": "blocked",
             "plan_review_status": "approved",
-            "sequence_no": 5,
-            "depends_on": [f"{prefix}-build-{index}" for index in range(1, 4)],
+            "sequence_no": len(worker_tracks) + 2,
+            "depends_on": [f"{prefix}-build-{track['index']}" for track in worker_tracks],
             "output_artifact": "integration_report",
             "title": f"Review: {title}",
-            "request": worker_request,
+            "request": "\n".join(
+                [
+                    request,
+                    "",
+                    f"Quest workspace: {workspace_rel}",
+                    "Read configured module outputs: "
+                    + ", ".join(str(track["output_file"]) for track in worker_tracks)
+                    + ".",
+                    "If modules mismatch, request bounded fix tasks for the responsible module.",
+                    "If all modules align, write review.md and final-summary.md.",
+                ]
+            ),
         },
     ]
     return (
         tasks,
         [
             "Hermes Guild router received the prompt.",
-            "Applied temporary manual-router v0 split: spec -> three parallel build tracks -> review.",
-            "Prepared parallel worker claims and join-review gate.",
+            "Applied config-driven module router: "
+            + " -> ".join(str(track["skill"]) for track in worker_tracks)
+            + " -> review.",
+            "Prepared skill-bound worker claims and join-review gate.",
         ],
-        ["worker-a", "worker-b", "worker-c"],
+        schedule_worker_profiles(quest_workspace.parents[1], runtime),
     )
 
 
@@ -1164,9 +1512,11 @@ def build_hermes_plan(
     allowed_files: str,
     quest_workspace: Path,
     planner: dict[str, Any],
+    runtime: dict[str, Any],
 ) -> tuple[list[dict[str, Any]], list[str], list[str]]:
     tracks = list(planner.get("tracks") or [])
-    while len(tracks) < 3:
+    module_tracks = runtime_module_tracks(runtime)
+    while len(tracks) < len(module_tracks):
         idx = len(tracks) + 1
         tracks.append(
             {
@@ -1175,7 +1525,8 @@ def build_hermes_plan(
                 "instruction": request,
             }
         )
-    tracks = tracks[:3]
+    tracks = tracks[: len(module_tracks)]
+    review = runtime.get("review") or {}
     prefix = quest_chain_id.replace("quest-", "", 1)
     workspace_rel = quest_workspace.as_posix()
     base = {
@@ -1184,12 +1535,14 @@ def build_hermes_plan(
     }
 
     def worker_request(index: int, track: dict[str, Any]) -> str:
+        module = module_tracks[index - 1]
         return "\n".join(
             [
                 str(track.get("instruction") or request),
                 "",
                 f"Quest workspace: {workspace_rel}",
-                f"Write your visible deliverable to build-{index}.md inside the quest workspace.",
+                f"Assigned module: track {module['id']} / {module['skill']}",
+                f"Write your visible deliverable to {module['output_file']} inside the quest workspace.",
                 "Return artifact JSON listing the file you wrote.",
             ]
         )
@@ -1215,16 +1568,16 @@ def build_hermes_plan(
         tasks.append(
             {
                 **base,
-                "task_id": f"{prefix}-build-{index}",
+                "task_id": f"{prefix}-build-{module_tracks[index - 1]['index']}",
                 "task_type": "execution",
-                "required_rank": "C",
-                "required_skill": "general",
+                "required_rank": str(module_tracks[index - 1]["required_rank"]),
+                "required_skill": str(module_tracks[index - 1]["skill"]),
                 "owner_area": "implementation",
                 "status": "blocked",
                 "plan_review_status": "approved",
-                "sequence_no": index + 1,
+                "sequence_no": int(module_tracks[index - 1]["index"]) + 1,
                 "depends_on": [f"{prefix}-spec"],
-                "output_artifact": f"implementation_result_{index}",
+                "output_artifact": str(module_tracks[index - 1]["output_artifact"]),
                 "title": f"{track.get('title') or f'Build track {index}'}: {title}",
                 "request": worker_request(index, track),
             }
@@ -1235,13 +1588,13 @@ def build_hermes_plan(
             **base,
             "task_id": f"{prefix}-review",
             "task_type": "join_review",
-            "required_rank": "B",
-            "required_skill": "integration_review",
+            "required_rank": str(review.get("required_rank") or "B"),
+            "required_skill": str(review.get("required_skill") or "integration_review"),
             "owner_area": "review",
             "status": "blocked",
             "plan_review_status": "approved",
-            "sequence_no": 5,
-            "depends_on": [f"{prefix}-build-{index}" for index in range(1, 4)],
+            "sequence_no": len(module_tracks) + 2,
+            "depends_on": [f"{prefix}-build-{track['index']}" for track in module_tracks],
             "output_artifact": "integration_report",
             "title": f"Review: {title}",
             "request": "\n".join(
@@ -1264,7 +1617,7 @@ def build_hermes_plan(
             str(planner.get("summary") or "Hermes produced a bounded worker plan."),
             "Posted Hermes-derived tasks to blackboard.",
         ],
-        ["worker-a", "worker-b", "worker-c"],
+        schedule_worker_profiles(quest_workspace.parents[1], runtime),
     )
 
 
