@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 from pathlib import Path
 from typing import Any
@@ -30,6 +31,9 @@ def first_existing(*paths: Path) -> Path:
 
 
 def main() -> int:
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    os.environ.setdefault("PYTHONIOENCODING", "utf-8")
     parser = argparse.ArgumentParser(description="Invoke a Guild provider adapter.")
     parser.add_argument("--adapter", default="local-dry-run")
     parser.add_argument("--profile", default="builder")

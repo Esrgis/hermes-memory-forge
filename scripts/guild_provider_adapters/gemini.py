@@ -12,9 +12,7 @@ class GeminiCliAdapter(ProviderAdapter):
     name = "gemini"
 
     def invoke(self, context: AdapterContext) -> AdapterResult:
-        api_key = os.environ.get("GEMINI_API_KEY")
-        if not api_key and os.environ.get("GEMINI_USE_GOOGLE_API_KEY", "").lower() == "true":
-            api_key = os.environ.get("GOOGLE_API_KEY")
+        api_key = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
         if api_key:
             return self._invoke_api(context, api_key)
 

@@ -10,6 +10,19 @@ vibe.md
 HERMES_USER_CONFIG.md
 auto_skill_creation_summary.md
 one_hermes_ex.md
+!INTERNSHIP_REPORT_SPINE.md
+
+# Local one-off scratch and handoff files.
+/Prompt.md
+/NEXT_SESSION_OWNERSHIP_HANDOFF.md
+/Hermes-Guild-Visible-E2E.cmd
+/Hermes_bug.png
+/zen_*.png
+
+# Keep polished internship/report notes explicit; ignore raw source dumps.
+/docs/internship-hermes-report/00-raw-dump/
+/docs/internship-hermes-report/CV2025___Technical_Report_Template/
+
 *.log
 *.tmp
 *.bak

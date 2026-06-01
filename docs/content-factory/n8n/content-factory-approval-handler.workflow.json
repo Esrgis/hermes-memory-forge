@@ -1,0 +1,100 @@
+{
+  "id": "content-factory-approval-handler",
+  "name": "Content Factory - Telegram Approval Handler Skeleton",
+  "active": false,
+  "nodes": [
+    {
+      "parameters": {
+        "updates": ["message", "callback_query"],
+        "additionalFields": {}
+      },
+      "id": "telegram-trigger",
+      "name": "Telegram Trigger",
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.3,
+      "position": [0, 0],
+      "credentials": {
+        "telegramApi": {
+          "id": "REPLACE_WITH_LOCAL_CREDENTIAL_ID",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const item = $input.first().json;\nconst text = item.message?.text || item.callback_query?.data || '';\nconst parts = text.trim().split(/\\s+/);\nconst command = parts[0] || '';\nconst jobId = parts[1] || '';\nconst reason = parts.slice(2).join(' ');\nlet decision = '';\nif (command === '/approve') decision = 'approved';\nif (command === '/reject') decision = 'rejected';\nreturn [{ json: { command, job_id: jobId, decision, reason } }];"
+      },
+      "id": "parse-decision",
+      "name": "Parse Decision",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [240, 0]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "has-decision",
+              "leftValue": "={{$json.decision}}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            },
+            {
+              "id": "has-job",
+              "leftValue": "={{$json.job_id}}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "valid-command",
+      "name": "Valid Command",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [480, 0]
+    },
+    {
+      "parameters": {
+        "command": "=python .\\scripts\\content_factory.py mark-decision --job-id {{$json.job_id}} --decision {{$json.decision}} --reason \"{{$json.reason}}\" --channel telegram --json"
+      },
+      "id": "record-decision",
+      "name": "Record Decision",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [720, -80]
+    }
+  ],
+  "connections": {
+    "Telegram Trigger": {
+      "main": [[{ "node": "Parse Decision", "type": "main", "index": 0 }]]
+    },
+    "Parse Decision": {
+      "main": [[{ "node": "Valid Command", "type": "main", "index": 0 }]]
+    },
+    "Valid Command": {
+      "main": [[{ "node": "Record Decision", "type": "main", "index": 0 }], []]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": []
+}

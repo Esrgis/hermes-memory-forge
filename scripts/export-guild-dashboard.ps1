@@ -2,6 +2,7 @@
 param(
     [string]$QuestChainId = "demo-even-random-app",
     [string]$OutputPath = "_runtime\dashboard\guild-dashboard.json",
+    [string]$DbPath,
     [switch]$IncludeArtifacts
 )
 
@@ -24,7 +25,14 @@ if (-not (Test-Path -LiteralPath $prototype)) {
 New-Item -ItemType Directory -Path $outputDir -Force | Out-Null
 
 $args = @(
-    $prototype,
+    $prototype
+)
+
+if ($DbPath) {
+    $args += @("--db", $DbPath)
+}
+
+$args += @(
     "dashboard",
     "--quest-chain-id",
     $QuestChainId,

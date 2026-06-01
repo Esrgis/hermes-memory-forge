@@ -731,10 +731,10 @@
           <div class="quest-field">
             <label for="questAdapter">Adapter</label>
             <select id="questAdapter">
-              <option value="auto-rank" selected>auto-rank</option>
+              <option value="local-file-writer" selected>local-file-writer</option>
+              <option value="auto-rank">auto-rank</option>
               <option value="auto-ammo">auto-ammo</option>
               <option value="local-dry-run">local-dry-run</option>
-              <option value="local-file-writer">local-file-writer</option>
               <option value="opencode">opencode</option>
               <option value="gemini">gemini</option>
               <option value="groq">groq</option>
@@ -747,7 +747,7 @@
           </div>
           <div class="quest-field wide">
             <label for="questRequest">Prompt for Hermes</label>
-            <textarea id="questRequest">Build a tiny scoped demo change and publish evidence.</textarea>
+            <textarea id="questRequest">Make a one-hour Guild demo: split this prompt into requirements, risk analysis, and verification modules; each worker must write its scoped output file, then publish a final review artifact.</textarea>
           </div>
           <div class="quest-field wide">
             <label for="questAllowed">Allowed files</label>
@@ -948,6 +948,10 @@
       });
       const fixes = tasks.filter((task) => String(task.task_type || "") === "fix");
       if (fixes.length) events.push(`Meeting created fix tasks: ${fixes.map((task) => task.task_id).join(" / ")}.`);
+      const repaired = data.repair_summary && Array.isArray(data.repair_summary.repaired_tasks)
+        ? data.repair_summary.repaired_tasks
+        : [];
+      if (repaired.length) events.push(`Repaired modules: ${repaired.join(" / ")}.`);
       const finalArtifact = artifacts.find((artifact) => String(artifact.summary || "").includes("hermes_finalized"));
       if (finalArtifact) events.push("Final assembly done and durable artifact published.");
       return events;
@@ -1055,7 +1059,7 @@
     }
 
     function holdPercent(task) {
-      const status = String(task.status || "").toLowerCase();
+      const status = taskStatus(task);
       if (status === "done") return 100;
       if (status === "blocked") return 100;
       if (status !== "claimed" && status !== "running") return 0;
@@ -1068,7 +1072,8 @@
     }
 
     function ageLabel(task) {
-      const status = String(task.status || "").toLowerCase();
+      if (task.repair_state === "repaired") return "repaired";
+      const status = taskStatus(task);
       if (status !== "claimed" && status !== "running") return status;
       const claimedAt = parseDate(task.claimed_at);
       if (!claimedAt) return "held ?";
@@ -1088,10 +1093,14 @@
       return reason.replace(/_/g, " ");
     }
 
+    function taskStatus(task) {
+      return String(task.display_status || task.status || "").toLowerCase();
+    }
+
     function groupTasks(tasks) {
       return columnDefs.reduce((acc, column) => {
         acc[column.id] = tasks.filter((task) => {
-          const status = String(task.status || "").toLowerCase();
+          const status = taskStatus(task);
           return status === column.status || (column.alt || []).includes(status);
         });
         return acc;
@@ -1099,7 +1108,7 @@
     }
 
     function renderCard(task, index, artifactsByTask) {
-      const status = String(task.status || "unknown").toLowerCase();
+      const status = taskStatus(task) || "unknown";
       const owner = task.assignee_id || task.owner_area || task.required_skill || "guild";
       const hold = holdPercent(task);
       const artifacts = artifactsByTask.get(task.task_id) || [];
@@ -1108,6 +1117,7 @@
         task.task_type || "task",
         task.required_rank ? `rank ${task.required_rank}` : null,
         task.required_skill || null,
+        task.repair_state === "repaired" ? "repaired" : null,
         task.generated_from ? "generated" : null,
         task.human_approval_required ? "human gate" : null
       ].filter(Boolean);
@@ -1128,6 +1138,7 @@
           <div class="hold-meter" title="${escapeHtml(ageLabel(task))}"><div class="hold-bar"></div></div>
           <div class="meta-row">
             <span class="tag">${escapeHtml(ageLabel(task))}</span>
+            ${task.display_label ? `<span class="tag good">${escapeHtml(task.display_label)}</span>` : ""}
             <span class="tag">${escapeHtml(review)}</span>
             ${block ? `<span class="tag warn">${escapeHtml(block)}</span>` : ""}
             ${hasEvidence ? `<span class="tag good">${artifacts.length} artifact${artifacts.length === 1 ? "" : "s"}</span>` : ""}
@@ -1204,7 +1215,9 @@
       const buildTasks = tasks.filter((task) => String(task.task_id || "").match(/-build-\d+$/));
       const reviewTask = tasks.find((task) => String(task.task_type || "") === "join_review");
       if (!buildTasks.length || !reviewTask) return;
-      if (reviewTask.status === "done") return;
+      const finalArtifact = (Array.isArray(data.artifacts) ? data.artifacts : [])
+        .find((artifact) => String(artifact.summary || "").includes("hermes_finalized"));
+      if (reviewTask.status === "done" && finalArtifact) return;
       const terminalStatuses = new Set(["done", "failed", "cancelled"]);
       if (!buildTasks.every((task) => terminalStatuses.has(task.status))) return;
       finalizeInFlight = true;
@@ -1216,9 +1229,9 @@
             "Review will wait for repair artifacts."
           ]
         : [
-            "Three worker outputs detected.",
+            reviewTask.status === "done" ? "Reviewer output detected." : "Three worker outputs detected.",
             "Hermes is checking the quest workspace.",
-            "Writing review.md and final-summary.md..."
+            "Writing or validating review.md, final-summary.md, and final-artifact.json..."
           ]);
       try {
         const response = await fetch("/api/hermes/finalize", {
@@ -1453,8 +1466,9 @@
         adapter: el("questAdapter").value
       };
       el("questId").value = payload.quest_chain_id;
-      const providerNote = payload.adapter === "local-dry-run"
-        ? "Using local-dry-run so the demo stays deterministic."
+      const localDemo = ["local-dry-run", "local-file-writer"].includes(payload.adapter);
+      const providerNote = localDemo
+        ? `Using ${payload.adapter} so the demo stays deterministic and keyless.`
         : `Using provider adapter ${payload.adapter}; credentials/model quirks may block the run.`;
       logHermes([
         "Sending prompt to Hermes S-rank manager.",
@@ -1464,7 +1478,8 @@
         "Waking workers automatically after board update..."
       ]);
       try {
-        const response = await fetch("/api/hermes/quest", {
+        const questEndpoint = localDemo ? "/api/quest/manual" : "/api/hermes/quest";
+        const response = await fetch(questEndpoint, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload)
@@ -1480,7 +1495,8 @@
             quest_chain_id: value.quest_chain_id,
             adapter: el("questAdapter").value,
             profiles: value.wake_profiles || [],
-            interval_seconds: 2
+            interval_seconds: 2,
+            include_hermes_terminal: true
           })
         });
         const wakeValue = await wakeResponse.json();
@@ -1489,7 +1505,7 @@
         const adapterPlan = wakeValue.launched.map((item) => `${item.profile}=${item.adapter || payload.adapter}`);
         logHermes([
           ...value.events,
-          `Router mode: ${value.router_mode || "manual-router-v0"}`,
+          `Router mode: ${value.router_mode || (localDemo ? "manual-router-v0" : "hermes-planner-v0")}`,
           `Provider mode: ${value.provider_mode || payload.adapter}`,
           `Quest chain: ${value.quest_chain_id}`,
           `Created ${value.tasks.length} tasks and refreshed dashboard.`,

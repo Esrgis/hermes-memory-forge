@@ -13,6 +13,72 @@ from pathlib import Path
 from typing import Any
 
 
+def enrich_repaired_dashboard(data: dict[str, Any]) -> dict[str, Any]:
+    tasks = data.get("tasks")
+    if not isinstance(tasks, list):
+        return data
+
+    done_fixes_by_source: dict[str, dict[str, Any]] = {}
+    for task in tasks:
+        if not isinstance(task, dict):
+            continue
+        if str(task.get("task_type") or "") != "fix" or str(task.get("status") or "") != "done":
+            continue
+        source = str(task.get("generated_from") or "")
+        if source:
+            done_fixes_by_source[source] = task
+
+    repaired_ids: list[str] = []
+    unrepaired_failed_ids: list[str] = []
+    effective_status_counts: dict[str, int] = {}
+    for task in tasks:
+        if not isinstance(task, dict):
+            continue
+        status = str(task.get("status") or "")
+        task_id = str(task.get("task_id") or "")
+        repair = done_fixes_by_source.get(task_id)
+        if status in {"failed", "cancelled"} and repair:
+            task["repair_state"] = "repaired"
+            task["repair_task_id"] = repair.get("task_id")
+            task["display_status"] = "done"
+            task["display_label"] = "repaired"
+            repaired_ids.append(task_id)
+            effective_status_counts["repaired"] = effective_status_counts.get("repaired", 0) + 1
+            continue
+        task["display_status"] = status
+        if status in {"failed", "cancelled"}:
+            unrepaired_failed_ids.append(task_id)
+        effective_status_counts[status] = effective_status_counts.get(status, 0) + 1
+
+    final_artifact_done = any(
+        isinstance(artifact, dict) and "hermes_finalized" in str(artifact.get("summary") or "")
+        for artifact in data.get("artifacts", [])
+        if isinstance(artifact, dict)
+    )
+    active_statuses = {"open", "claimed", "running", "blocked", "review"}
+    active_ids = [
+        str(task.get("task_id") or "")
+        for task in tasks
+        if isinstance(task, dict) and str(task.get("status") or "") in active_statuses
+    ]
+    repair_summary = {
+        "repaired_tasks": repaired_ids,
+        "unrepaired_failed_tasks": unrepaired_failed_ids,
+        "active_tasks": active_ids,
+        "final_artifact_done": final_artifact_done,
+        "complete": final_artifact_done and not unrepaired_failed_ids and not active_ids,
+    }
+    data["effective_status_counts"] = effective_status_counts
+    data["repair_summary"] = repair_summary
+
+    for chain in data.get("chains", []):
+        if isinstance(chain, dict):
+            chain["effective_status_counts"] = effective_status_counts
+            chain["repair_summary"] = repair_summary
+
+    return data
+
+
 class GuildDashboardServer(SimpleHTTPRequestHandler):
     server_version = "GuildDashboardServer/0.1"
 
@@ -133,6 +199,7 @@ class GuildDashboardServer(SimpleHTTPRequestHandler):
         if completed.returncode != 0:
             raise RuntimeError(completed.stderr or completed.stdout or "dashboard export failed")
         data = json.loads(completed.stdout)
+        data = enrich_repaired_dashboard(data)
         out_dir = self.workspace / "_runtime" / "dashboard"
         out_dir.mkdir(parents=True, exist_ok=True)
         (out_dir / "guild-dashboard.json").write_text(
@@ -185,7 +252,7 @@ class GuildDashboardServer(SimpleHTTPRequestHandler):
                 "quest_chain_id": quest_chain_id,
                 "adapter": adapter,
                 "router_mode": "manual-router-v0",
-                "provider_mode": "local-demo" if adapter == "local-dry-run" else "provider-adapter",
+                "provider_mode": "local-demo" if adapter in {"local-dry-run", "local-file-writer"} else "provider-adapter",
                 "workspace_path": str(quest_workspace.relative_to(self.workspace)),
                 "events": events,
                 "wake_profiles": wake_profiles,
@@ -578,7 +645,12 @@ Required JSON schema:
             output_file = str(track["output_file"])
             expected_file = quest_workspace / output_file
             status = str(build_task.get("status") or "")
-            needs_fix = status != "done" or not expected_file.is_file()
+            if status != "done" and status not in {"failed", "cancelled"}:
+                waiting.append(task_id)
+                review_dependencies.append(task_id)
+                continue
+
+            needs_fix = status in {"failed", "cancelled"} or not expected_file.is_file()
 
             if not needs_fix:
                 review_dependencies.append(task_id)
@@ -815,11 +887,15 @@ Required JSON schema:
         adapter = str(body.get("adapter") or "local-dry-run").strip()
         runtime = load_guild_runtime_config(self.workspace)
         profiles = body.get("profiles") or schedule_quest_wake_profiles(self.workspace, runtime)
+        include_hermes_terminal = bool(body.get("include_hermes_terminal"))
+        if include_hermes_terminal:
+            profiles = [profile for profile in profiles if str(profile).lower() not in {"reviewer", "hermes"}][:3]
         dry_run = bool(body.get("dry_run"))
         interval_seconds = str(int(body.get("interval_seconds") or 2))
         worker_adapters = resolve_worker_adapters(adapter, profiles, runtime)
         launched = []
         powershell_exe = resolve_powershell_exe()
+        port = int(self.server.server_port)  # type: ignore[attr-defined]
         for index, profile in enumerate(profiles):
             worker_adapter = worker_adapters[index]
             args = [
@@ -837,6 +913,8 @@ Required JSON schema:
                 worker_adapter,
                 "-IntervalSeconds",
                 interval_seconds,
+                "-DbPath",
+                self.db_path,
             ]
             if dry_run:
                 args.append("-DryRun")
@@ -845,6 +923,31 @@ Required JSON schema:
                 {
                     "profile": profile,
                     "adapter": worker_adapter,
+                    "ok": completed.returncode == 0,
+                    "stdout": completed.stdout,
+                    "stderr": completed.stderr,
+                }
+            )
+        if include_hermes_terminal:
+            args = [
+                powershell_exe,
+                "-NoProfile",
+                "-ExecutionPolicy",
+                "Bypass",
+                "-File",
+                str(self.workspace / "scripts" / "start-guild-finalizer-terminal.ps1"),
+                "-QuestChainId",
+                quest_chain_id,
+                "-Port",
+                str(port),
+                "-IntervalSeconds",
+                interval_seconds,
+            ]
+            completed = self.run_cmd(args)
+            launched.append(
+                {
+                    "profile": "hermes-finalizer",
+                    "adapter": "hermes",
                     "ok": completed.returncode == 0,
                     "stdout": completed.stdout,
                     "stderr": completed.stderr,

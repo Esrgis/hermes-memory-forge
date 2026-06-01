@@ -1,0 +1,40 @@
+{
+  "schema_version": "hermes_runtime_paths_v1",
+  "paths": [
+    {
+      "id": "hermes_home",
+      "path": "%LOCALAPPDATA%/hermes",
+      "role": "durable_state",
+      "cleanup": "manual_only",
+      "notes": "Hermes durable runtime home. May contain SQLite state, auth-adjacent files, and long-lived blackboard data."
+    },
+    {
+      "id": "workspace_runtime",
+      "path": "_runtime",
+      "role": "workspace_runtime",
+      "cleanup": "dry_run_then_approve",
+      "notes": "Ignored workspace runtime, logs, prompt attachments, local runners, and scratch artifacts."
+    },
+    {
+      "id": "quest_artifacts",
+      "path": "guild-workspaces",
+      "role": "quest_artifacts",
+      "cleanup": "dry_run_then_approve",
+      "notes": "Ignored Guild quest output folders. Old quest folders are good cleanup candidates after review."
+    },
+    {
+      "id": "obsidian_vault_link",
+      "path": "_obsidian_vault",
+      "role": "external_junction",
+      "cleanup": "never",
+      "notes": "Junction to the real Obsidian vault. Never treat as cache."
+    },
+    {
+      "id": "demo_temp_sqlite",
+      "path": "%TEMP%/hermes-guild-*.sqlite",
+      "role": "temporary_demo_state",
+      "cleanup": "dry_run_then_approve",
+      "notes": "Temporary E2E/demo SQLite files."
+    }
+  ]
+}

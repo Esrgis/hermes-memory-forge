@@ -22,6 +22,8 @@ param(
 
     [string]$Model,
 
+    [string]$DbPath,
+
     [switch]$UseConfiguredProvider,
 
     [switch]$Once,
@@ -60,8 +62,10 @@ $encodedProfile = $Profile.Replace("'", "''")
 $encodedAdapter = $Adapter.Replace("'", "''")
 $encodedProvider = if ($Provider) { $Provider.Replace("'", "''") } else { "" }
 $encodedModel = if ($Model) { $Model.Replace("'", "''") } else { "" }
+$encodedDbPath = if ($DbPath) { $DbPath.Replace("'", "''") } else { "" }
 
 $tickCommand = @"
+Remove-Module PSReadLine -Force -ErrorAction SilentlyContinue
 Set-Location -LiteralPath '$encodedWorkspace'
 Write-Host 'Guild worker terminal: $encodedAgent / profile $encodedProfile'
 Write-Host 'Quest chain: $encodedQuest'
@@ -79,6 +83,7 @@ while (`$true) {
     }
     if ('$encodedProvider') { `$workerArgs.Provider = '$encodedProvider' }
     if ('$encodedModel') { `$workerArgs.Model = '$encodedModel' }
+    if ('$encodedDbPath') { `$workerArgs.DbPath = '$encodedDbPath' }
     if ('$UseConfiguredProvider' -eq 'True') { `$workerArgs.UseConfiguredProvider = `$true }
     `$result = .\scripts\run-guild-worker-agent.ps1 @workerArgs
     if (`$LASTEXITCODE -ne 0) {
@@ -102,7 +107,12 @@ while (`$true) {
             }
         }
     }
-    .\scripts\export-guild-dashboard.ps1 -QuestChainId '$encodedQuest' -IncludeArtifacts | Out-Null
+    `$exportArgs = @{
+        QuestChainId = '$encodedQuest'
+        IncludeArtifacts = `$true
+    }
+    if ('$encodedDbPath') { `$exportArgs.DbPath = '$encodedDbPath' }
+    .\scripts\export-guild-dashboard.ps1 @exportArgs | Out-Null
     if ('$Once' -eq 'True') { break }
     Start-Sleep -Seconds $IntervalSeconds
 }

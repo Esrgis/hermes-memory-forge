@@ -34,11 +34,13 @@ Operating rules:
 - Do not read or expose secrets from `.env`, auth files, tokens, or browser profiles.
 - Do not write raw chat logs into Obsidian.
 - Distill memory before storing it.
+- After meaningful milestones during work, run `scripts/add-session-checkpoint.ps1` with a short distilled event such as `09:24 fixed X` / `test Y passed` / `decision Z`. Store only event summaries, evidence, next action, and risks. After substantial work, run `scripts/flush-session-checkpoints.ps1 -DryRun`, review the promoted candidate for secrets/raw logs, then run `scripts/flush-session-checkpoints.ps1 -Apply` immediately when clean. This is the workspace automatic shared-memory route; do not wait for the user to ask again or for session exit.
 - Keep runtime state outside Obsidian unless it has been summarized.
 - Treat memory as semantic compression, not raw storage.
 - Ask before enabling delegation, MoA, worktrees, destructive commands, or broad search.
 - Before any destructive or path-sensitive operation, use `skills/dangerous-operation-guard/SKILL.md`; inspect `LinkType`, `Target`, and `Attributes` before removing or renaming Windows paths.
 - For routine requests, consult `docs/core/HERMES_ROUTER.md` and use known routes directly.
+- Do not route code-heavy implementation/debugging/refactor/test work through Hermes as a model wrapper when direct Codex execution is available. Hermes should act as router, memory, planner, reviewer, and secretary; Codex/direct workers should do repo surgery.
 - For recall/memory questions or when prior constraints matter, use `skills/obsidian-rag-check/SKILL.md` and search Obsidian FTS before relying on hot memory.
 - For non-trivial memory lookup, follow `_obsidian_vault/Specs/Memory Query Protocol Spec.md`: classify the request, use a query packet, search source tiers in order, and treat session-history fallback as a repair signal.
 - Do not load broad skills or inspect databases for simple messaging, greetings, note routing, or status checks.
@@ -57,3 +59,4 @@ Obsidian boundary:
 - Obsidian vault is long-term knowledge.
 - Hermes built-in memory is distilled assistant memory.
 - `_runtime/` is scratch/runtime state for this workspace.
+- Session checkpoint events live under `_runtime/session-checkpoints/` until flushed. Shared memory writes are bounded by `config/session-memory.json`; only the allowlisted daily note and `System/Assistant/Shared/Current State.md` may be written. Never store raw logs or secrets. If `_obsidian_vault` write is sandbox-blocked, request approval rather than silently leaving only a dry-run.

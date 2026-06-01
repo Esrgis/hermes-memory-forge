@@ -40,24 +40,19 @@ class OpenCodeAdapter(ProviderAdapter):
         model_ref = self._model_ref(context)
         if model_ref:
             args.extend(["--model", model_ref])
-        elif context.adapter_name == "opencode-9router":
-            args.extend(
-                [
-                    "--model",
-                    "9router/openrouter/qwen/qwen3-coder:free",
-                ]
-            )
         message = sanitize_windows_cmd_message(context.message)
+        attached_prompt: Path | None = None
         if len(message) > 6000:
-            prompt_path = write_prompt_attachment(context.workspace, context.title, message)
-            args.extend(["--file", str(prompt_path)])
+            attached_prompt = write_prompt_attachment(context.workspace, context.title, message)
             message = (
                 "Read the attached Guild worker prompt file and return only the requested "
                 "artifact JSON. Do not include markdown."
             )
         args.append(message)
+        if attached_prompt is not None:
+            args.extend(["--file", str(attached_prompt)])
 
-        command_for_log = " ".join(args[1:-1]) + " <message>"
+        command_for_log = " ".join(args[1:]).replace(message, "<message>")
         try:
             completed = subprocess.run(
                 args,

@@ -1,0 +1,19 @@
+{
+  "schema_version": "session_memory_v1",
+  "memory_root": "_obsidian_vault",
+  "daily_dir": "Daily",
+  "current_state_path": "System/Assistant/Shared/Current State.md",
+  "allowed_writes": [
+    "Daily/*.md",
+    "System/Assistant/Shared/Current State.md"
+  ],
+  "forbidden": [
+    ".env",
+    "auth.json",
+    ".obsidian/*",
+    "_runtime/provider-secrets.local.ps1",
+    "_hermes/*",
+    ".git/*"
+  ],
+  "notes": "Configurable but bounded session memory route. Dry-run first; apply writes only allowlisted distilled memory files."
+}

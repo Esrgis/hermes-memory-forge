@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import json
 import os
+import re
+import time
 import urllib.error
 import urllib.request
 
@@ -75,34 +77,55 @@ def post_openai_compatible(
         method="POST",
     )
 
-    try:
-        with urllib.request.urlopen(
-            request,
-            timeout=int(os.environ.get("GUILD_PROVIDER_TIMEOUT_SECONDS", "120")),
-        ) as response:
-            raw = response.read().decode("utf-8", errors="replace")
-    except urllib.error.HTTPError as exc:
-        error_text = exc.read().decode("utf-8", errors="replace")
+    opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
+    max_attempts = max(1, int(os.environ.get("GUILD_PROVIDER_RETRY_ATTEMPTS", "3")))
+    error_text = ""
+    raw = ""
+    for attempt in range(1, max_attempts + 1):
+        try:
+            with opener.open(
+                request,
+                timeout=int(os.environ.get("GUILD_PROVIDER_TIMEOUT_SECONDS", "120")),
+            ) as response:
+                raw = response.read().decode("utf-8", errors="replace")
+                break
+        except urllib.error.HTTPError as exc:
+            error_text = exc.read().decode("utf-8", errors="replace")
+            if exc.code == 429 and attempt < max_attempts:
+                time.sleep(retry_delay_seconds(exc, error_text))
+                continue
+            return AdapterResult(
+                ok=False,
+                adapter=context.adapter_name,
+                profile=context.profile_name,
+                agent_id=agent_id(context),
+                summary=f"{provider_label} returned HTTP {exc.code}.",
+                commands_run=[command_label],
+                test_result="failed",
+                known_risks=[safe_error(error_text, api_key)],
+                blocked_reason="provider_failed",
+            )
+        except OSError as exc:
+            return AdapterResult(
+                ok=False,
+                adapter=context.adapter_name,
+                profile=context.profile_name,
+                agent_id=agent_id(context),
+                summary=f"{provider_label} request failed: {exc}",
+                commands_run=[command_label],
+                test_result="failed",
+                blocked_reason="provider_failed",
+            )
+    else:
         return AdapterResult(
             ok=False,
             adapter=context.adapter_name,
             profile=context.profile_name,
             agent_id=agent_id(context),
-            summary=f"{provider_label} returned HTTP {exc.code}.",
+            summary=f"{provider_label} request failed after {max_attempts} attempts.",
             commands_run=[command_label],
             test_result="failed",
-            known_risks=[safe_error(error_text, api_key)],
-            blocked_reason="provider_failed",
-        )
-    except OSError as exc:
-        return AdapterResult(
-            ok=False,
-            adapter=context.adapter_name,
-            profile=context.profile_name,
-            agent_id=agent_id(context),
-            summary=f"{provider_label} request failed: {exc}",
-            commands_run=[command_label],
-            test_result="failed",
+            known_risks=[safe_error(error_text, api_key)] if error_text else [],
             blocked_reason="provider_failed",
         )
 
@@ -147,6 +170,19 @@ def safe_error(value: str, api_key: str | None) -> str:
     if api_key:
         result = result.replace(api_key, "[REDACTED]")
     return result[:2000]
+
+
+def retry_delay_seconds(exc: urllib.error.HTTPError, error_text: str) -> float:
+    header = exc.headers.get("Retry-After")
+    if header:
+        try:
+            return min(15.0, max(0.5, float(header)))
+        except ValueError:
+            pass
+    match = re.search(r"try again in\s+([0-9.]+)s", error_text, flags=re.IGNORECASE)
+    if match:
+        return min(15.0, max(0.5, float(match.group(1)) + 0.25))
+    return 2.0
 
 
 def normalize_json_text(value: str) -> str:

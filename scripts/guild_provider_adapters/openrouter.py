@@ -6,7 +6,7 @@ import urllib.error
 import urllib.request
 
 from .base import AdapterContext, AdapterResult, ProviderAdapter, agent_id
-from .groq import normalize_json_text
+from .groq import normalize_json_text, retry_delay_seconds
 
 
 class OpenRouterAdapter(ProviderAdapter):
@@ -56,30 +56,52 @@ class OpenRouterAdapter(ProviderAdapter):
         }
         request = urllib.request.Request(endpoint, data=body, headers=headers, method="POST")
 
-        try:
-            with urllib.request.urlopen(request, timeout=120) as response:
-                raw = response.read().decode("utf-8", errors="replace")
-        except urllib.error.HTTPError as exc:
-            error_text = exc.read().decode("utf-8", errors="replace")
+        opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
+        max_attempts = max(1, int(os.environ.get("GUILD_PROVIDER_RETRY_ATTEMPTS", "3")))
+        command_label = f"openrouter chat.completions model={model}"
+        raw = ""
+        for attempt in range(1, max_attempts + 1):
+            try:
+                with opener.open(request, timeout=120) as response:
+                    raw = response.read().decode("utf-8", errors="replace")
+                    break
+            except urllib.error.HTTPError as exc:
+                error_text = exc.read().decode("utf-8", errors="replace")
+                if exc.code == 429 and attempt < max_attempts:
+                    import time
+
+                    time.sleep(retry_delay_seconds(exc, error_text))
+                    continue
+                return AdapterResult(
+                    ok=False,
+                    adapter=context.adapter_name,
+                    profile=context.profile_name,
+                    agent_id=agent_id(context),
+                    summary=f"OpenRouter returned HTTP {exc.code}.",
+                    commands_run=[command_label],
+                    test_result="failed",
+                    known_risks=[safe_error(error_text)],
+                    blocked_reason="provider_failed",
+                )
+            except OSError as exc:
+                return AdapterResult(
+                    ok=False,
+                    adapter=context.adapter_name,
+                    profile=context.profile_name,
+                    agent_id=agent_id(context),
+                    summary=f"OpenRouter request failed: {exc}",
+                    commands_run=[command_label],
+                    test_result="failed",
+                    blocked_reason="provider_failed",
+                )
+        else:
             return AdapterResult(
                 ok=False,
                 adapter=context.adapter_name,
                 profile=context.profile_name,
                 agent_id=agent_id(context),
-                summary=f"OpenRouter returned HTTP {exc.code}.",
-                commands_run=[f"openrouter chat.completions model={model}"],
-                test_result="failed",
-                known_risks=[safe_error(error_text)],
-                blocked_reason="provider_failed",
-            )
-        except OSError as exc:
-            return AdapterResult(
-                ok=False,
-                adapter=context.adapter_name,
-                profile=context.profile_name,
-                agent_id=agent_id(context),
-                summary=f"OpenRouter request failed: {exc}",
-                commands_run=[f"openrouter chat.completions model={model}"],
+                summary=f"OpenRouter request failed after {max_attempts} attempts.",
+                commands_run=[command_label],
                 test_result="failed",
                 blocked_reason="provider_failed",
             )
@@ -112,7 +134,7 @@ class OpenRouterAdapter(ProviderAdapter):
             summary=f"OpenRouter completed chat completion with {response_model or model}.",
             text=text,
             files_changed=[],
-            commands_run=[f"openrouter chat.completions model={model}"],
+            commands_run=[command_label],
             test_result="not_run",
             known_risks=[],
             blocked_reason=None,

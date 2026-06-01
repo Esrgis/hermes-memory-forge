@@ -2,7 +2,7 @@ import argparse
 import json
 import os
 import sqlite3
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
@@ -19,7 +19,10 @@ DB_PATH = Path(
         str(DEFAULT_DB_PATH),
     )
 )
-TZ = ZoneInfo("Asia/Ho_Chi_Minh")
+try:
+    TZ = ZoneInfo("Asia/Ho_Chi_Minh")
+except Exception:
+    TZ = timezone(timedelta(hours=7), name="Asia/Ho_Chi_Minh")
 
 
 def now_iso() -> str:

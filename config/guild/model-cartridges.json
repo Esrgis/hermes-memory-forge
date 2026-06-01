@@ -9,6 +9,14 @@
       "structured_output_reliability": "high",
       "notes": "Deterministic no-provider cartridge."
     },
+    "local:file-writer": {
+      "transport": "local-file-writer",
+      "model": null,
+      "cost_tier": "none",
+      "latency": "instant",
+      "structured_output_reliability": "high",
+      "notes": "Deterministic demo cartridge that writes scoped worker deliverables into guild-workspaces."
+    },
     "opencode:deepseek-v4-flash-free": {
       "transport": "opencode-cli",
       "model": "opencode/deepseek-v4-flash-free",

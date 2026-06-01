@@ -34,7 +34,7 @@ def get_backend_adapter(name: str) -> ProviderAdapter:
         return LocalFileWriterAdapter()
     if name == "invalid-output-smoke":
         return InvalidOutputAdapter()
-    if name in {"opencode", "opencode-9router"}:
+    if name == "opencode":
         return OpenCodeAdapter()
     if name == "gemini":
         return GeminiCliAdapter()

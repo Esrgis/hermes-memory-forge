@@ -65,6 +65,23 @@
       },
       "ammo_ladder": ["local:dry-run"],
       "notes": "No-model smoke gun for board, validation, and blocked-artifact plumbing."
+    },
+    "scoped-demo-writer": {
+      "kind": "capability_adapter",
+      "permissions": {
+        "visible_scope": "task_only",
+        "may_edit_files": true,
+        "may_run_commands": false,
+        "allowed_files_source": "task_contract",
+        "may_read_secrets": false
+      },
+      "artifact_schema": "guild_worker_artifact_v0",
+      "failure_policy": {
+        "invalid_output": "blocked_reason=invalid_adapter_output",
+        "files_outside_allowed_scope": "blocked_reason=files_outside_allowed_scope"
+      },
+      "ammo_ladder": ["local:file-writer"],
+      "notes": "Deterministic full-demo gun. It proves scoped file writes, artifact publication, and final assembly without provider keys."
     }
   }
 }

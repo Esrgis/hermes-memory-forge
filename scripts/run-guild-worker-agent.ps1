@@ -14,6 +14,8 @@ param(
 
     [string]$TaskId,
 
+    [string]$DbPath,
+
     [switch]$Once,
 
     [int]$LeaseSeconds = 900,
@@ -37,6 +39,22 @@ $adapterScript = Join-Path $workspace "scripts\invoke-guild-provider-adapter.ps1
 $providerConfigPath = Join-Path $workspace "_runtime\guild-worker-agent\provider-selection.json"
 $workerBootstrapPath = Join-Path $workspace "docs\workers\WORKER_BOOTSTRAP.md"
 $capabilityConfigPath = Join-Path $workspace "config\guild\capability-adapters.json"
+$guildBaseArgs = @($guild)
+if ($DbPath) {
+    $guildBaseArgs += @("--db", $DbPath)
+}
+
+function New-GuildArgs {
+    param(
+        [Parameter(Mandatory = $true)]
+        [object[]]$Tail
+    )
+
+    $args = @()
+    $args += $guildBaseArgs
+    $args += $Tail
+    return $args
+}
 
 if (-not (Test-Path -LiteralPath $python)) {
     throw "Missing Python runtime: $python"
@@ -170,6 +188,116 @@ function Test-DeclaredFilesWithinAllowedScope {
     }
 }
 
+function Get-GuildQuestWorkspacePrefix {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$AllowedFiles
+    )
+
+    foreach ($part in ($AllowedFiles -split ',')) {
+        $pattern = $part.Trim() -replace '\\', '/'
+        if ($pattern -match '^(guild-workspaces/[^/*?]+)(?:/\*\*)?$') {
+            return $Matches[1]
+        }
+    }
+    return $null
+}
+
+function Normalize-GuildWorkerOutputPaths {
+    param(
+        [Parameter(Mandatory = $true)]
+        [object]$WorkerOutput,
+        [Parameter(Mandatory = $true)]
+        [string]$AllowedFiles
+    )
+
+    $prefix = Get-GuildQuestWorkspacePrefix -AllowedFiles $AllowedFiles
+    if (-not $prefix) {
+        return
+    }
+
+    if (Test-ArtifactArrayField -Value $WorkerOutput.files_changed) {
+        $normalizedFiles = @()
+        foreach ($file in $WorkerOutput.files_changed) {
+            $relative = ([string]$file) -replace '\\', '/'
+            if ($relative -and -not [System.IO.Path]::IsPathRooted($relative) -and -not $relative.Contains("..") -and $relative -notmatch '/') {
+                $normalizedFiles += "$prefix/$relative"
+            } else {
+                $normalizedFiles += $relative
+            }
+        }
+        $WorkerOutput.files_changed = $normalizedFiles
+    }
+
+    $fields = @($WorkerOutput.PSObject.Properties.Name)
+    if ($fields -contains "file_outputs" -and (Test-ArtifactArrayField -Value $WorkerOutput.file_outputs)) {
+        foreach ($item in $WorkerOutput.file_outputs) {
+            $itemFields = @($item.PSObject.Properties.Name)
+            if ($itemFields -notcontains "path") {
+                continue
+            }
+            $relative = ([string]$item.path) -replace '\\', '/'
+            if ($relative -and -not [System.IO.Path]::IsPathRooted($relative) -and -not $relative.Contains("..") -and $relative -notmatch '/') {
+                $item.path = "$prefix/$relative"
+            }
+        }
+    }
+}
+
+function Write-GuildWorkerFileOutputs {
+    param(
+        [Parameter(Mandatory = $true)]
+        [object]$WorkerOutput,
+        [Parameter(Mandatory = $true)]
+        [string]$Workspace
+    )
+
+    $written = @()
+    $errors = @()
+    $fieldNames = @($WorkerOutput.PSObject.Properties.Name)
+    if ($fieldNames -notcontains "file_outputs" -or $null -eq $WorkerOutput.file_outputs) {
+        return [pscustomobject]@{
+            ok = $true
+            skipped = $true
+            written = @()
+            errors = @()
+        }
+    }
+    if (-not (Test-ArtifactArrayField -Value $WorkerOutput.file_outputs)) {
+        return [pscustomobject]@{
+            ok = $false
+            skipped = $false
+            written = @()
+            errors = @("Optional file_outputs must be an array when present.")
+        }
+    }
+
+    foreach ($item in $WorkerOutput.file_outputs) {
+        $itemFields = @($item.PSObject.Properties.Name)
+        if ($itemFields -notcontains "path" -or $itemFields -notcontains "content") {
+            $errors += "Each file_outputs item must include path and content."
+            continue
+        }
+        $relative = [string]$item.path
+        if ([string]::IsNullOrWhiteSpace($relative) -or [System.IO.Path]::IsPathRooted($relative) -or $relative.Contains("..")) {
+            $errors += "Refusing unsafe file_outputs path: $relative"
+            continue
+        }
+        $target = Join-Path $Workspace $relative
+        $parent = Split-Path -Parent $target
+        New-Item -ItemType Directory -Force -Path $parent | Out-Null
+        Set-Content -LiteralPath $target -Value ([string]$item.content) -Encoding UTF8
+        $written += ($relative -replace '\\', '/')
+    }
+
+    return [pscustomobject]@{
+        ok = ($errors.Count -eq 0)
+        skipped = $false
+        written = $written
+        errors = $errors
+    }
+}
+
 function ConvertFrom-GuildArtifactJson {
     param(
         [Parameter(Mandatory = $true)]
@@ -297,8 +425,7 @@ function Test-GuildArtifactOutput {
     }
 }
 
-$claimArgs = @(
-    $guild,
+$claimArgs = New-GuildArgs -Tail @(
     "claim-next",
     "--agent-id", $profileData.agent_id,
     "--agent-rank", $profileData.rank,
@@ -336,15 +463,15 @@ $task = $claim.task
 $taskJson = $task | ConvertTo-Json -Depth 20
 $visibleScope = if ($task.task_type -eq "join_review") { "join_review" } else { "task_only" }
 $mayCreateFixTask = if ($task.task_type -eq "join_review") { "true" } else { "false" }
-$bootstrapText = if (Test-Path -LiteralPath $workerBootstrapPath) {
-    Get-Content -LiteralPath $workerBootstrapPath -Raw
+$bootstrapHint = if (Test-Path -LiteralPath $workerBootstrapPath) {
+    "docs/workers/WORKER_BOOTSTRAP.md"
 } else {
-    "Worker bootstrap missing; obey task contract and allowed_files."
+    "missing; obey task contract and allowed_files"
 }
-$capabilityPolicyText = if (Test-Path -LiteralPath $capabilityConfigPath) {
-    Get-Content -LiteralPath $capabilityConfigPath -Raw
+$capabilityHint = if (Test-Path -LiteralPath $capabilityConfigPath) {
+    "config/guild/capability-adapters.json"
 } else {
-    "{}"
+    "missing; use task allowed_files as the authority"
 }
 $message = @"
 NON-INTERACTIVE EXECUTION: a Guild task has already been assigned to you.
@@ -358,13 +485,8 @@ Agent profile:
 - rank: $($profileData.rank)
 - skills: $($profileData.skills)
 
-Follow docs/workers/WORKER_BOOTSTRAP.md conceptually.
-
-Worker bootstrap:
-$bootstrapText
-
-Capability policy config:
-$capabilityPolicyText
+Bootstrap reference: $bootstrapHint
+Capability policy reference: $capabilityHint
 
 Context envelope:
 {
@@ -391,11 +513,17 @@ Return only compact artifact JSON with this shape:
   "ok": true,
   "summary": "short result",
   "files_changed": [],
+  "file_outputs": [
+    {"path": "relative/path/inside/allowed_files.md", "content": "file text to write"}
+  ],
   "commands_run": [],
   "test_result": "passed|failed|not_run|not_required",
   "known_risks": [],
   "blocked_reason": null
 }
+
+If the task asks you to write a deliverable file and you are not directly editing the filesystem,
+put that file path in files_changed and include the exact file text in file_outputs.
 "@
 
 $adapterArgs = @{
@@ -425,6 +553,9 @@ $adapterResult = $adapterRaw | ConvertFrom-Json
 
 $artifactValidation = Test-GuildArtifactOutput -AdapterResult $adapterResult
 $workerOutput = $artifactValidation.output
+if ($workerOutput) {
+    Normalize-GuildWorkerOutputPaths -WorkerOutput $workerOutput -AllowedFiles ([string]$task.allowed_files)
+}
 $scopeValidation = if ($workerOutput) {
     Test-DeclaredFilesWithinAllowedScope -FilesChanged $workerOutput.files_changed -AllowedFiles ([string]$task.allowed_files)
 } else {
@@ -434,10 +565,21 @@ $scopeValidation = if ($workerOutput) {
         errors = @("Adapter output did not produce a worker payload.")
     }
 }
+$fileWrite = if ($workerOutput -and [bool]$artifactValidation.valid -and [bool]$scopeValidation.valid) {
+    Write-GuildWorkerFileOutputs -WorkerOutput $workerOutput -Workspace $workspace
+} else {
+    [pscustomobject]@{
+        ok = $false
+        skipped = $true
+        written = @()
+        errors = @("Skipped file output write because artifact or scope validation failed.")
+    }
+}
 $artifactOk = [bool]$adapterResult.ok `
     -and -not $adapterResult.blocked_reason `
     -and [bool]$artifactValidation.valid `
     -and [bool]$scopeValidation.valid `
+    -and [bool]$fileWrite.ok `
     -and [bool]$workerOutput.ok `
     -and -not $workerOutput.blocked_reason
 
@@ -447,6 +589,8 @@ $effectiveBlockedReason = if ($adapterResult.blocked_reason) {
     $artifactValidation.blocked_reason
 } elseif ($scopeValidation -and -not $scopeValidation.valid) {
     $scopeValidation.blocked_reason
+} elseif ($fileWrite -and -not $fileWrite.ok) {
+    "file_output_write_failed"
 } elseif ($workerOutput -and $workerOutput.blocked_reason) {
     $workerOutput.blocked_reason
 } else {
@@ -467,6 +611,7 @@ $artifactPayload = [ordered]@{
     adapter_result = $adapterResult
     adapter_output_validation = $artifactValidation
     file_scope_validation = $scopeValidation
+    file_output_write = $fileWrite
     worker_output = $workerOutput
     blocked_reason = $effectiveBlockedReason
 }
@@ -492,35 +637,33 @@ New-Item -ItemType Directory -Force -Path $payloadDir | Out-Null
 $payloadPath = Join-Path $payloadDir "$($task.task_id)-$($profileData.agent_id)-payload.json"
 Set-Content -LiteralPath $payloadPath -Value $payloadJson -Encoding UTF8
 
-$publish = Invoke-GuildCliJson -Arguments @(
-    $guild,
+$publish = Invoke-GuildCliJson -Arguments (New-GuildArgs -Tail @(
     "publish-artifact",
     "--task-id", $task.task_id,
     "--artifact-type", $task.output_artifact,
     "--producer-agent-id", $profileData.agent_id,
     "--summary", $summary,
     "--payload-json-file", $payloadPath
-)
+))
 
 $statusUpdate = $null
 if ($artifactOk -and -not $KeepClaimed) {
-    $statusUpdate = Invoke-GuildCliJson -Arguments @($guild, "set-status", $task.task_id, "done")
+    $statusUpdate = Invoke-GuildCliJson -Arguments (New-GuildArgs -Tail @("set-status", $task.task_id, "done"))
 } elseif (-not $artifactOk -and -not $KeepClaimed) {
     if ($effectiveBlockedReason -eq "needs_info") {
-        $statusUpdate = Invoke-GuildCliJson -Arguments @(
-            $guild,
+        $statusUpdate = Invoke-GuildCliJson -Arguments (New-GuildArgs -Tail @(
             "set-status",
             $task.task_id,
             "blocked",
             "--blocked-reason",
             $effectiveBlockedReason
-        )
+        ))
     } else {
-        $statusUpdate = Invoke-GuildCliJson -Arguments @($guild, "set-status", $task.task_id, "failed")
+        $statusUpdate = Invoke-GuildCliJson -Arguments (New-GuildArgs -Tail @("set-status", $task.task_id, "failed"))
     }
 }
 
-$unlock = Invoke-GuildCliJson -Arguments @($guild, "unlock-ready", "--limit", "50")
+$unlock = Invoke-GuildCliJson -Arguments (New-GuildArgs -Tail @("unlock-ready", "--limit", "50"))
 
 $result = [pscustomobject]@{
     ok = $artifactOk

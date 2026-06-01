@@ -4,13 +4,19 @@ import sys
 import urllib.parse
 import urllib.request
 import xml.etree.ElementTree as ET
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 import json
 
 
 for key in ("HTTP_PROXY", "HTTPS_PROXY", "ALL_PROXY", "http_proxy", "https_proxy", "all_proxy"):
     os.environ.pop(key, None)
+
+
+try:
+    LOCAL_TZ = ZoneInfo("Asia/Ho_Chi_Minh")
+except Exception:
+    LOCAL_TZ = timezone(timedelta(hours=7), name="Asia/Ho_Chi_Minh")
 
 
 def fetch_text(url: str, timeout: int = 20) -> str:
@@ -86,7 +92,7 @@ def build_brief(location: str, latitude: float, longitude: float) -> str:
     vn_news = rss_titles("https://vnexpress.net/rss/thoi-su.rss", 3)
     world_news = rss_titles("https://feeds.bbci.co.uk/news/world/rss.xml", 3)
 
-    now = datetime.now(ZoneInfo("Asia/Ho_Chi_Minh"))
+    now = datetime.now(LOCAL_TZ)
     lines: list[str] = [
         f"Chao buoi sang. {now:%d/%m/%Y %H:%M} - {location}",
         "",

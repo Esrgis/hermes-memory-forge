@@ -7,6 +7,12 @@
       "requires_key": false,
       "notes": "No model call. Used for deterministic smoke tests."
     },
+    "local-file-writer": {
+      "kind": "deterministic",
+      "backend_adapter": "local-file-writer",
+      "requires_key": false,
+      "notes": "No model call. Writes scoped quest files so the dashboard demo produces real artifacts without provider keys."
+    },
     "opencode-cli": {
       "kind": "cli",
       "backend_adapter": "opencode",

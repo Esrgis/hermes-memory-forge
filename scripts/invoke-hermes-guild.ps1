@@ -7,6 +7,10 @@ param(
 
     [string]$Model,
 
+    [switch]$DryRun,
+
+    [switch]$NoSessionMemory,
+
     [switch]$Json
 )
 
@@ -14,6 +18,7 @@ $ErrorActionPreference = "Stop"
 
 $workspace = (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot "..")).Path
 $runtimeConfigPath = Join-Path $workspace "config\guild\guild-runtime.json"
+. (Join-Path $PSScriptRoot "Resolve-HermesCli.ps1")
 
 function Test-HermesPlannerOutput {
     param(
@@ -82,6 +87,7 @@ function Read-CompactFile {
 
 $managerBootstrap = Read-CompactFile -RelativePath "docs\workers\HERMES_MANAGER_BOOTSTRAP.md" -MaxChars 14000
 $startHere = Read-CompactFile -RelativePath "START_HERE.md" -MaxChars 8000
+$currentState = Read-CompactFile -RelativePath "_obsidian_vault\System\Assistant\Shared\Current State.md" -MaxChars 8000
 $runtimeRouter = Read-CompactFile -RelativePath "docs\core\HERMES_RUNTIME_ROUTER.md" -MaxChars 12000
 $router = Read-CompactFile -RelativePath "docs\core\HERMES_ROUTER.md" -MaxChars 10000
 $providerAdapters = Read-CompactFile -RelativePath "docs\workers\PROVIDER_ADAPTERS.md" -MaxChars 12000
@@ -102,6 +108,9 @@ $managerBootstrap
 
 === START_HERE ===
 $startHere
+
+=== Shared Current State ===
+$currentState
 
 === Runtime Mode Router ===
 $runtimeRouter
@@ -139,7 +148,59 @@ if ($Model) {
     $args += @("-m", $Model)
 }
 
-$raw = & hermes @args
+function Invoke-SessionMemoryHook {
+    param([Parameter(Mandatory = $true)][string]$UserPrompt)
+
+    if ($NoSessionMemory) {
+        return
+    }
+    $shortPrompt = $UserPrompt.Trim()
+    if ($shortPrompt.Length -gt 160) {
+        $shortPrompt = $shortPrompt.Substring(0, 160) + "..."
+    }
+    try {
+        & (Join-Path $PSScriptRoot "close-session-memory.ps1") `
+            -Apply `
+            -Summary "Hermes Guild manager call completed: $shortPrompt" `
+            -NextAction @(
+                "Use Guild manager for planning/review; use Codex/direct worker for code-heavy execution.",
+                "For status/resume, read shared Current State first."
+            ) `
+            -Risk @(
+                "Do not route code-heavy work through Hermes as a model wrapper unless explicitly requested.",
+                "Provider/model swaps must not expand permissions."
+            ) | Out-Null
+    } catch {
+        Write-Warning "Session memory hook failed: $($_.Exception.Message)"
+    }
+}
+
+if ($DryRun) {
+    [pscustomobject]@{
+        ok = $true
+        dry_run = $true
+        hermes_cli = (Resolve-HermesCli -Workspace $workspace)
+        provider = $Provider
+        model = $Model
+        json_mode = [bool]$Json
+        session_memory_hook_enabled = -not [bool]$NoSessionMemory
+        prompt_chars = $fullPrompt.Length
+        injected = @(
+            "docs/workers/HERMES_MANAGER_BOOTSTRAP.md",
+            "START_HERE.md",
+            "_obsidian_vault/System/Assistant/Shared/Current State.md",
+            "docs/core/HERMES_RUNTIME_ROUTER.md",
+            "docs/core/HERMES_ROUTER.md",
+            "docs/workers/PROVIDER_ADAPTERS.md",
+            "config/guild/*.json",
+            "_obsidian_vault/System/Assistant/Shared/Cognition Reflexes.md"
+        )
+    }
+    return
+}
+
+$hermesCli = Resolve-HermesCli -Workspace $workspace
+$raw = & $hermesCli @args
 if ($LASTEXITCODE -ne 0) {
     throw "Hermes Guild manager call failed with exit code $LASTEXITCODE. Output: $($raw -join "`n")"
 }
@@ -156,8 +217,10 @@ if ($Json) {
     }
     $planner = $candidate.Substring($start, $end - $start + 1) | ConvertFrom-Json
     Test-HermesPlannerOutput -Planner $planner -ExpectedTrackCount $expectedTrackCount
+    Invoke-SessionMemoryHook -UserPrompt $Prompt
     $planner | ConvertTo-Json -Depth 20
     return
 }
 
+Invoke-SessionMemoryHook -UserPrompt $Prompt
 $raw

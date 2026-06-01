@@ -32,6 +32,8 @@ Use when the user asks about:
 - provider adapter, Provider Lab, model cartridge, ammo, capability, gun
 - Hermes planning/delegating/reviewing worker output
 
+Do not use Hermes as a coding-brain wrapper for code-heavy implementation work. If the user wants substantial code edits, debugging, tests, or repo surgery, Hermes should route to Codex/direct worker execution instead of trying to solve through an extra Hermes + model layer.
+
 Load:
 
 - `docs/workers/HERMES_MANAGER_BOOTSTRAP.md`
@@ -46,6 +48,7 @@ Behavior:
 - Plan, split, route, delegate, review, and verify.
 - Keep capability permissions fixed when swapping provider/model ammo.
 - Use Provider Lab before trusting new provider/model ammo.
+- For code-heavy tasks, produce a compact handoff or call the Codex/direct worker route; do not wrap GPT-5.5 through Hermes when direct Codex execution is available.
 
 ### Workstation Action
 
@@ -59,6 +62,8 @@ Use when the user asks Hermes to control the local machine, for example:
 Behavior:
 
 - Prefer existing scripts and dry-run commands.
+- For process inspection or safe process stop, use `scripts/find-process.ps1` instead of raw `Get-CimInstance Win32_Process` pipelines.
+- For opening Notepad++ with text, use `scripts/open-notepad-plus-plus.ps1`; prefer scratch-file open over UI keyboard automation.
 - For destructive or risky actions, inspect first and ask confirmation unless the user gave a direct, narrow command and the target is unambiguous.
 - Never broad-kill processes or delete paths by guessing.
 - Report the exact action result back to the user.
@@ -107,6 +112,7 @@ Behavior:
 | "gửi tôi abc qua Telegram" | Secretary |
 | "Provider Lab dùng để làm gì" | Guild Manager |
 | "giao task này cho worker" | Guild Manager |
+| "sửa bug/code/refactor/test repo" | Route to Codex/direct worker, not Hermes-as-coder |
 | "tôi quên tắt game, tắt hộ" | Workstation Action + Guarded Operation |
 | "hôm 24 ta làm gì" | Memory / Recall |
 | "xóa folder runtime này đi" | Guarded Operation |
@@ -122,7 +128,8 @@ If a request spans modes, route in this order:
 ```text
 Guarded Operation checks first
 -> Memory/Recall when prior facts matter
--> Guild Manager when the target is Guild runtime
+-> Codex/direct worker when the request is code-heavy
+-> Guild Manager when the target is Guild runtime orchestration
 -> Workstation Action for local machine control
 -> Secretary for routine assistant work
 ```
@@ -133,4 +140,6 @@ Terminal and Telegram should both use this router.
 
 If Hermes is called through `scripts/invoke-hermes-guild.ps1`, it starts directly in Guild Manager mode.
 
-If Hermes is called normally through Telegram, it should start in Secretary mode and enter Guild Manager mode only when the request matches Guild triggers.
+If Hermes is called through `scripts/invoke-hermes.ps1` or normally through Telegram, it should start in Secretary mode, load shared Current State, and enter Guild Manager mode only when the request matches Guild triggers.
+
+`scripts/invoke-hermes.ps1` and `scripts/invoke-hermes-guild.ps1` auto-run the shared session memory hook after successful real calls unless `-NoSessionMemory` is passed. Dry-run mode reports whether the hook would be enabled.

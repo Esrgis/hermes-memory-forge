@@ -10,7 +10,9 @@ param(
 
     [switch]$NoExport,
 
-    [switch]$NoOpen
+    [switch]$NoOpen,
+
+    [string]$DbPath
 )
 
 $ErrorActionPreference = "Stop"
@@ -23,7 +25,7 @@ $dashboardJson = Join-Path $workspace "_runtime\dashboard\guild-dashboard.json"
 $dashboardLogDir = Join-Path $workspace "_runtime\dashboard"
 $serverStdoutLog = Join-Path $dashboardLogDir "guild-dashboard-server.out.log"
 $serverStderrLog = Join-Path $dashboardLogDir "guild-dashboard-server.err.log"
-$workerDb = Join-Path $env:LOCALAPPDATA "hermes\flock\worker_team.sqlite"
+$workerDb = if ($DbPath) { $DbPath } else { Join-Path $env:LOCALAPPDATA "hermes\flock\worker_team.sqlite" }
 
 if (-not (Test-Path -LiteralPath $htmlPath)) {
     throw "Missing dashboard HTML: $htmlPath"

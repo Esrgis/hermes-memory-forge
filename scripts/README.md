@@ -15,6 +15,8 @@ These are intended to be reusable with parameters:
 - `search-content.ps1`
 - `preview-file.ps1`
 - `inspect-workspace.ps1`
+- `find-process.ps1`
+- `open-notepad-plus-plus.ps1`
 
 ## Incubator / Local Automation
 
@@ -26,6 +28,7 @@ These are useful on the current workstation, but should be treated as examples u
 - `get-guild-provider-adapter.ps1`
 - `configure-guild-worker.ps1`
 - `invoke-guild-provider-adapter.ps1`
+- `invoke-hermes.ps1`
 - `invoke-hermes-guild.ps1`
 - `invoke-hermes-opencode-task.ps1`
 - `run-guild-worker-agent.ps1`
@@ -34,12 +37,66 @@ These are useful on the current workstation, but should be treated as examples u
 - `build-obsidian-memory-index.ps1`
 - `search-obsidian-memory.ps1`
 - `build-daily-brief.py`
+- `content_factory.py`
 - `send-daily-brief-home.ps1`
 - `send-game-checkin.ps1`
 - `mark-game-checkin.ps1`
 - `hermes-healthcheck.ps1`
 
 Do not move these scripts while Hermes cron jobs or local shortcuts may still reference their current paths.
+
+## Hermes Entrypoints
+
+- `invoke-hermes.ps1`: Secretary-mode Hermes wrapper. It injects shared Current State and runtime routing context.
+- `invoke-hermes-guild.ps1`: Guild-manager Hermes wrapper. It injects manager bootstrap, shared Current State, Guild config, and provider contracts.
+- Both wrappers auto-run `close-session-memory.ps1 -Apply` after successful real calls. Use `-DryRun` to inspect injection/hook state without model calls, or `-NoSessionMemory` for intentionally stateless calls.
+
+## Session Checkpoint Memory
+
+Use checkpoint events to preserve flow ownership without writing raw chat logs. Events stay in `_runtime/session-checkpoints/` until flushed.
+
+Flow:
+
+```text
+milestone -> add-session-checkpoint.ps1 -> _runtime/session-checkpoints/*.json
+substantial slice -> flush-session-checkpoints.ps1 -DryRun
+clean candidate -> flush-session-checkpoints.ps1 -Apply
+-> Daily/YYYY-MM-DD.md + System/Assistant/Shared/Current State.md
+```
+
+Examples:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\add-session-checkpoint.ps1 -Kind decision -Summary "Use Guild Runtime contract-first; keep Flock as reference." -MemoryValue high
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\add-session-checkpoint.ps1 -Kind test -Summary "Notepad++ dry-run returned created_file=false and would_create_file=true." -Evidence "open-notepad-plus-plus.ps1 -DryRun -Json" -MemoryValue medium
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\flush-session-checkpoints.ps1 -DryRun
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\flush-session-checkpoints.ps1 -Apply
+```
+
+Rules:
+
+- Store timestamped distilled events, not raw chat logs.
+- Low/noise events remain skipped unless `-IncludeLow` is used.
+- Flush uses `close-session-memory.ps1`, so Obsidian writes stay allowlisted.
+
+See `docs/core/SESSION_CHECKPOINT_MEMORY.md` for the full flow and promotion rules.
+
+## Content Factory MVP
+
+`content_factory.py` is a local-first MVP queue for TikTok/Shorts candidates with human approval. It intentionally uses SQLite and runtime artifacts under `_runtime/content-factory/` instead of the full Guild worker runtime.
+
+Useful commands:
+
+```powershell
+python .\scripts\content_factory.py init --json
+python .\scripts\content_factory.py create-job --topic "AI workflow" --niche "local-first automation" --language vi --json
+python .\scripts\content_factory.py generate-script --job-id JOB_ID --json
+python .\scripts\content_factory.py render-placeholder --job-id JOB_ID --json
+python .\scripts\content_factory.py send-approval --job-id JOB_ID --dry-run --json
+python .\scripts\content_factory.py mark-decision --job-id JOB_ID --decision approved --json
+```
+
+See `docs/content-factory/MVP.md` and `docs/content-factory/n8n/` for the n8n workflow skeleton.
 
 ## Guild UI Demo (Canonical Entrypoints)
 
@@ -157,6 +214,38 @@ search text   -> search-content.ps1     -> rg, scoped PowerShell
 preview file  -> preview-file.ps1       -> bat, Get-Content
 inspect root  -> inspect-workspace.ps1  -> eza, Get-ChildItem
 navigation    -> zoxide is for the human shell, not agent automation
+```
+
+## Process Inspection / Safe Stop
+
+`find-process.ps1` is the standard bounded route for Windows process lookup. It wraps `Get-CimInstance Win32_Process` so Hermes/agents do not need ad hoc process pipelines.
+
+Default behavior is read-only. Stop actions are guarded:
+
+- no broad process listing without `-ProcessId`, `-Name`, or `-Pattern`
+- `-Stop` refuses multiple matches unless `-AllowMultiple` is passed
+- Hermes/gateway/agent runtime processes are protected unless `-AllowHermes` is explicitly passed
+- use `-DryRun` before stopping anything ambiguous
+
+Examples:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\find-process.ps1 -Pattern "hermes_cli.main gateway run" -LeafOnly -Json
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\find-process.ps1 -Name "notepad" -Json
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\find-process.ps1 -ProcessId 1234 -Stop -DryRun -Json
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\find-process.ps1 -ProcessId 1234 -Stop -Json
+```
+
+## Open Notepad++
+
+`open-notepad-plus-plus.ps1` is the standard route for asking Hermes to open Notepad++ with prepared text. It writes a UTF-8 scratch file under `_runtime/notepad-plus-plus/` and opens that file in Notepad++, avoiding brittle keyboard automation such as `Ctrl+N` and `SendKeys`.
+
+Examples:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\open-notepad-plus-plus.ps1 -Text "Nội dung cần ghi" -Title "ghi-chu" -Json
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\open-notepad-plus-plus.ps1 -Text "Nội dung cần ghi" -Title "ghi-chu" -DryRun -Json
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\open-notepad-plus-plus.ps1 -InputFile .\Prompt.md -Json
 ```
 
 Enable/check the runtime manifest for Hermes or other agents:

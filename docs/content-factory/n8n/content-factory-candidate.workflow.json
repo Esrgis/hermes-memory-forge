@@ -1,0 +1,103 @@
+{
+  "id": "content-factory-candidate-dry-run",
+  "name": "Content Factory - Candidate Dry Run",
+  "active": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "manual-trigger",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [0, 0]
+    },
+    {
+      "parameters": {
+        "command": "python .\\scripts\\content_factory.py init --json"
+      },
+      "id": "init-db",
+      "name": "Init SQLite",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [240, 0]
+    },
+    {
+      "parameters": {
+        "command": "python .\\scripts\\content_factory.py create-job --topic \"AI workflow\" --niche \"local-first automation\" --language vi --style \"thang than, ngan gon\" --json"
+      },
+      "id": "create-job",
+      "name": "Create Job",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [480, 0]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const raw = $input.first().json.stdout;\nconst parsed = JSON.parse(raw);\nreturn [{ json: { job_id: parsed.job.id } }];"
+      },
+      "id": "extract-job-id",
+      "name": "Extract Job ID",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [720, 0]
+    },
+    {
+      "parameters": {
+        "command": "=python .\\scripts\\content_factory.py generate-script --job-id {{$json.job_id}} --json"
+      },
+      "id": "generate-script",
+      "name": "Generate Script",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [960, 0]
+    },
+    {
+      "parameters": {
+        "command": "=python .\\scripts\\content_factory.py render-placeholder --job-id {{$node[\"Extract Job ID\"].json.job_id}} --json"
+      },
+      "id": "render-placeholder",
+      "name": "Render Placeholder",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [1200, 0]
+    },
+    {
+      "parameters": {
+        "command": "=python .\\scripts\\content_factory.py send-approval --job-id {{$node[\"Extract Job ID\"].json.job_id}} --dry-run --json"
+      },
+      "id": "send-approval-dry-run",
+      "name": "Send Approval Dry Run",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [1440, 0]
+    }
+  ],
+  "connections": {
+    "Manual Trigger": {
+      "main": [[{ "node": "Init SQLite", "type": "main", "index": 0 }]]
+    },
+    "Init SQLite": {
+      "main": [[{ "node": "Create Job", "type": "main", "index": 0 }]]
+    },
+    "Create Job": {
+      "main": [[{ "node": "Extract Job ID", "type": "main", "index": 0 }]]
+    },
+    "Extract Job ID": {
+      "main": [[{ "node": "Generate Script", "type": "main", "index": 0 }]]
+    },
+    "Generate Script": {
+      "main": [[{ "node": "Render Placeholder", "type": "main", "index": 0 }]]
+    },
+    "Render Placeholder": {
+      "main": [[{ "node": "Send Approval Dry Run", "type": "main", "index": 0 }]]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": []
+}

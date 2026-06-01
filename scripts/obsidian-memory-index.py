@@ -5,7 +5,7 @@ import re
 import sqlite3
 import sys
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
@@ -15,7 +15,10 @@ DEFAULT_INDEX_PATH = (
     if os.environ.get("LOCALAPPDATA")
     else Path.home() / ".hermes" / "blackboard" / "obsidian_memory_index.sqlite"
 )
-TZ = ZoneInfo("Asia/Ho_Chi_Minh")
+try:
+    TZ = ZoneInfo("Asia/Ho_Chi_Minh")
+except Exception:
+    TZ = timezone(timedelta(hours=7), name="Asia/Ho_Chi_Minh")
 HEADING_RE = re.compile(r"^(#{1,6})\s+(.+?)\s*$")
 DEFAULT_EXCLUDE_PARTS = {
     ".obsidian",
