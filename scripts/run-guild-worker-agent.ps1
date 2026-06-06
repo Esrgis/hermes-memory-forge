@@ -855,7 +855,24 @@ function Test-GuildArtifactGrounding {
     if ($taskRequest.Contains("guild") -and $textLower.Contains("dashboard") -and -not $textLower.Contains("guild")) {
         $errors += "Artifact appears to be a generic dashboard template instead of a Guild-scoped deliverable."
     }
-    if (($taskRequest.Contains("config") -or $taskRequest.Contains("route") -or $taskRequest.Contains("provider")) -and ($textLower.Contains("conceptual") -or $textLower.Contains("typical application architecture") -or $textLower.Contains("src/frontend") -or $textLower.Contains("src/backend"))) {
+    $hasKnownHermesRouteOrPath = (
+        $textLower.Contains("/api/task/retry-blocked") -or
+        $textLower.Contains("docs/incubation/guild-dashboard.html") -or
+        $textLower.Contains("scripts/guild-dashboard-server.py") -or
+        $textLower.Contains("_runtime/flock/worker_team_prototype.py") -or
+        $textLower.Contains("scripts/run-guild-worker-agent.ps1") -or
+        $textLower.Contains("config/guild/")
+    )
+    $hasInventedArchitecture = (
+        $textLower.Contains("typical application architecture") -or
+        $textLower.Contains("src/frontend") -or
+        $textLower.Contains("src/backend") -or
+        $textLower.Contains("/api/providers/retry-block") -or
+        $textLower.Contains("/dashboard/retry-provider-block") -or
+        $textLower.Contains("enable_blocked_provider_retry") -or
+        $textLower.Contains("task_execution_adapter")
+    )
+    if (($taskRequest.Contains("config") -or $taskRequest.Contains("route") -or $taskRequest.Contains("provider")) -and ($hasInventedArchitecture -or ($textLower.Contains("conceptual") -and -not $hasKnownHermesRouteOrPath))) {
         $errors += "Artifact appears to be a conceptual architecture map instead of exact HermesGuildCore repo paths."
     }
     if ($taskRequest.Contains("retry provider block") -or $taskRequest.Contains("retry-provider-block")) {
