@@ -96,12 +96,22 @@ $capabilities = Read-CompactFile -RelativePath "config\guild\capability-adapters
 $cartridges = Read-CompactFile -RelativePath "config\guild\model-cartridges.json" -MaxChars 8000
 $transports = Read-CompactFile -RelativePath "config\guild\provider-transports.json" -MaxChars 8000
 $cognition = Read-CompactFile -RelativePath "_obsidian_vault\System\Assistant\Shared\Cognition Reflexes.md" -MaxChars 12000
+$skillGuildPlanner = Read-CompactFile -RelativePath "skills\guild-planner\SKILL.md" -MaxChars 8000
+$skillGuildPlannerSchema = Read-CompactFile -RelativePath "skills\guild-planner\references\planner-schema.md" -MaxChars 8000
+$skillGuildRuntimeDebug = Read-CompactFile -RelativePath "skills\guild-runtime-debug\SKILL.md" -MaxChars 7000
+$skillGuildWebappTesting = Read-CompactFile -RelativePath "skills\guild-webapp-testing\SKILL.md" -MaxChars 7000
+$skillGuildReleaseNotes = Read-CompactFile -RelativePath "skills\guild-release-notes\SKILL.md" -MaxChars 6000
 
 $fullPrompt = @"
 You are Hermes operating as the HermesGuildCore Guild manager.
 Use the injected context below as your manager boot contract.
 Do not expose secrets. Do not broad crawl. Prefer bounded workspace scripts.
 Answer in Vietnamese unless the user explicitly asks otherwise.
+Use the Guild skills below when their triggers match:
+- guild-planner for task decomposition, plan preview, worker skill mapping, join_review, fix loops, or planner skill-pack behavior.
+- guild-runtime-debug when a run looks fake, too fast, stuck, duplicated, misrouted, or needs truth from logs/artifacts.
+- guild-webapp-testing before dashboard UI or Playwright testing; do not open UI or start dashboard servers without explicit approval.
+- guild-release-notes for user-facing update summaries, changelogs, and checkpoint-friendly release notes.
 
 === Hermes Manager Bootstrap ===
 $managerBootstrap
@@ -135,6 +145,21 @@ $transports
 
 === Shared Cognition Reflexes ===
 $cognition
+
+=== Guild Skill: guild-planner ===
+$skillGuildPlanner
+
+=== Guild Planner Schema Reference ===
+$skillGuildPlannerSchema
+
+=== Guild Skill: guild-runtime-debug ===
+$skillGuildRuntimeDebug
+
+=== Guild Skill: guild-webapp-testing ===
+$skillGuildWebappTesting
+
+=== Guild Skill: guild-release-notes ===
+$skillGuildReleaseNotes
 
 === User Request ===
 $Prompt
@@ -193,7 +218,12 @@ if ($DryRun) {
             "docs/core/HERMES_ROUTER.md",
             "docs/workers/PROVIDER_ADAPTERS.md",
             "config/guild/*.json",
-            "_obsidian_vault/System/Assistant/Shared/Cognition Reflexes.md"
+            "_obsidian_vault/System/Assistant/Shared/Cognition Reflexes.md",
+            "skills/guild-planner/SKILL.md",
+            "skills/guild-planner/references/planner-schema.md",
+            "skills/guild-runtime-debug/SKILL.md",
+            "skills/guild-webapp-testing/SKILL.md",
+            "skills/guild-release-notes/SKILL.md"
         )
     }
     return

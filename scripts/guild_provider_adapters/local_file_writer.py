@@ -32,9 +32,17 @@ class LocalFileWriterAdapter(ProviderAdapter):
             target.parent.mkdir(parents=True, exist_ok=True)
             target.write_text(render_task_file(task, output_file), encoding="utf-8")
 
+        task_id = str(task.get("task_id") or "")
+        title = str(task.get("title") or "")
+        request = str(task.get("request") or "")
+        required_skill = str(task.get("required_skill") or "")
+        summary = (
+            f"Local file writer produced {', '.join(relative_paths)} "
+            f"for task {task_id} titled {title}; request: {request}; skill: {required_skill}."
+        )
         artifact = {
             "ok": True,
-            "summary": f"Local file writer produced {', '.join(relative_paths)}.",
+            "summary": summary,
             "files_changed": relative_paths,
             "commands_run": ["local-file-writer:write_task_output"],
             "test_result": "not_required",
@@ -46,7 +54,7 @@ class LocalFileWriterAdapter(ProviderAdapter):
             adapter=context.adapter_name,
             profile=context.profile_name,
             agent_id=agent_id(context),
-            summary=f"Local file writer wrote {', '.join(relative_paths)}.",
+            summary=summary,
             text=json.dumps(artifact, separators=(",", ":")),
             files_changed=relative_paths,
             commands_run=["local-file-writer:write_task_output"],
@@ -77,7 +85,13 @@ def extract_task(message: str) -> dict[str, Any] | None:
 
 def infer_output_files(task: dict[str, Any]) -> list[str]:
     request = str(task.get("request") or "")
+    match = re.search(r"Assigned output file:\s*([A-Za-z0-9_.-]+)", request)
+    if match:
+        return [match.group(1)]
     match = re.search(r"Write your visible deliverable to\s+([A-Za-z0-9_.-]+)", request)
+    if match:
+        return [match.group(1)]
+    match = re.search(r"Write or correct\s+([A-Za-z0-9_.-]+)\s+inside the quest workspace", request)
     if match:
         return [match.group(1)]
     task_type = str(task.get("task_type") or "")

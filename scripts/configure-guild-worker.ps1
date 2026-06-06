@@ -2,7 +2,7 @@
 param(
     [string]$Profile = "builder",
 
-    [ValidateSet("auto-ammo", "opencode", "openrouter", "gemini", "groq")]
+    [ValidateSet("auto-ammo", "opencode", "openrouter", "gemini", "groq", "9router")]
     [string]$Adapter = "opencode",
 
     [string]$Provider,
@@ -40,7 +40,7 @@ if (-not (Test-Path -LiteralPath $adaptersPath) -and (Test-Path -LiteralPath $le
 
 $profilesConfig = Get-Content -LiteralPath $profilesPath -Raw | ConvertFrom-Json
 $adaptersConfig = Get-Content -LiteralPath $adaptersPath -Raw | ConvertFrom-Json
-$allowedAdapters = @("auto-ammo", "opencode", "openrouter", "gemini", "groq")
+$allowedAdapters = @("auto-ammo", "gemini", "opencode", "openrouter", "groq", "9router")
 
 function ConvertTo-Hashtable {
     param([Parameter(Mandatory = $true)]$Value)
@@ -82,7 +82,7 @@ if ($List) {
         [pscustomobject]@{
             adapter = $adapterName
             kind = $adapterData.kind
-            implemented = ($adapterName -in @("auto-ammo", "opencode", "openrouter", "gemini", "groq"))
+            implemented = ($adapterName -in @("auto-ammo", "opencode", "openrouter", "gemini", "groq", "9router"))
             notes = $adapterData.notes
         }
     }
@@ -91,10 +91,11 @@ if ($List) {
         adapters = $adapters
         examples = @(
             '.\scripts\configure-guild-worker.ps1 -Profile builder -Adapter auto-ammo -Capability code-edit-worker -TestNow',
+            '.\scripts\configure-guild-worker.ps1 -Profile builder -Adapter gemini -Model gemini-2.5-flash -TestNow',
             '.\scripts\configure-guild-worker.ps1 -Profile builder -Adapter opencode -TestNow',
             '.\scripts\configure-guild-worker.ps1 -Profile builder -Adapter openrouter -TestNow',
-            '.\scripts\configure-guild-worker.ps1 -Profile tester -Adapter gemini -Model gemini-2.5-flash -TestNow',
-            '.\scripts\configure-guild-worker.ps1 -Profile builder -Adapter groq -Model openai/gpt-oss-20b -TestNow'
+            '.\scripts\configure-guild-worker.ps1 -Profile reviewer -Adapter groq -Model openai/gpt-oss-20b -TestNow',
+            '.\scripts\configure-guild-worker.ps1 -Profile builder -Adapter 9router -Model openrouter/qwen/qwen3-coder:free -TestNow'
         )
     })
     return
@@ -124,7 +125,7 @@ $selection = [ordered]@{
     model = if ($Model) { $Model } else { $null }
     capability = if ($Capability) { $Capability } else { $null }
     adapter_kind = $adapterData.kind
-    implemented = ($Adapter -in @("auto-ammo", "opencode", "openrouter", "gemini", "groq"))
+    implemented = ($Adapter -in @("auto-ammo", "opencode", "openrouter", "gemini", "groq", "9router"))
     config_path = $configPath
     secret_policy = $adapterData.secret_policy
     notes = "Secrets are not stored here. Provider credentials must come from external provider config or environment."

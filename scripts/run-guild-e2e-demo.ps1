@@ -12,7 +12,12 @@ param(
 
     [switch]$OpenDashboard,
 
-    [switch]$SkipProviderPreflight
+    [switch]$SkipProviderPreflight,
+
+    [ValidateRange(10, 1800)]
+    [int]$WorkerTimeoutSeconds = 120,
+
+    [switch]$PlanOnly
 )
 
 $ErrorActionPreference = "Stop"
@@ -22,7 +27,22 @@ $dashboardScript = Join-Path $workspace "scripts\open-guild-dashboard.ps1"
 $workerScript = Join-Path $workspace "scripts\run-guild-worker-agent.ps1"
 $adapterScript = Join-Path $workspace "scripts\invoke-guild-provider-adapter.ps1"
 $logPath = Join-Path $workspace "_runtime\dashboard\e2e-demo-run.log"
-New-Item -ItemType Directory -Force -Path (Split-Path -Parent $logPath) | Out-Null
+
+function Resolve-DemoPowerShell {
+    $pwsh = Get-Command pwsh -ErrorAction SilentlyContinue
+    if ($pwsh) {
+        return $pwsh.Source
+    }
+    $powershell = Get-Command powershell -ErrorAction SilentlyContinue
+    if ($powershell) {
+        return $powershell.Source
+    }
+    $windowsPowerShell = Join-Path $env:WINDIR "System32\WindowsPowerShell\v1.0\powershell.exe"
+    if (Test-Path -LiteralPath $windowsPowerShell) {
+        return $windowsPowerShell
+    }
+    throw "PowerShell executable is required."
+}
 
 function Write-DemoLog {
     param([string]$Message)
@@ -31,10 +51,47 @@ function Write-DemoLog {
     Write-Host $line
 }
 
-$dbPath = Join-Path $env:TEMP "hermes-guild-e2e-demo.sqlite"
-if (Test-Path -LiteralPath $dbPath) {
-    Remove-Item -LiteralPath $dbPath -Force
+function Invoke-WorkerTickWithTimeout {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$Profile
+    )
+
+    $pwsh = Resolve-DemoPowerShell
+    $safeProfile = $Profile -replace '[^A-Za-z0-9_.-]', '_'
+    $stdoutPath = Join-Path $workspace "_runtime\dashboard\e2e-$QuestChainId-$safeProfile.out.json"
+    $stderrPath = Join-Path $workspace "_runtime\dashboard\e2e-$QuestChainId-$safeProfile.err.log"
+    Remove-Item -LiteralPath $stdoutPath, $stderrPath -Force -ErrorAction SilentlyContinue
+
+    $workerArgs = @(
+        "-NoProfile",
+        "-ExecutionPolicy", "Bypass",
+        "-File", $workerScript,
+        "-QuestChainId", $QuestChainId,
+        "-Profile", $Profile,
+        "-Adapter", $Adapter,
+        "-DbPath", $dbPath,
+        "-Once",
+        "-Json"
+    )
+    $process = Start-Process -FilePath $pwsh -ArgumentList $workerArgs -WindowStyle Hidden -RedirectStandardOutput $stdoutPath -RedirectStandardError $stderrPath -PassThru
+    if (-not $process.WaitForExit($WorkerTimeoutSeconds * 1000)) {
+        Stop-Process -Id $process.Id -Force -ErrorAction SilentlyContinue
+        throw "Worker $Profile timed out after $WorkerTimeoutSeconds seconds. stdout=$stdoutPath stderr=$stderrPath"
+    }
+
+    $stdout = if (Test-Path -LiteralPath $stdoutPath) { Get-Content -LiteralPath $stdoutPath -Raw } else { "" }
+    $stderr = if (Test-Path -LiteralPath $stderrPath) { Get-Content -LiteralPath $stderrPath -Raw } else { "" }
+    if ($process.ExitCode -ne 0) {
+        throw "Worker $Profile failed with exit code $($process.ExitCode). stdout=$stdout stderr=$stderr"
+    }
+    if ([string]::IsNullOrWhiteSpace($stdout)) {
+        throw "Worker $Profile returned empty output. stderr=$stderr"
+    }
+    return ($stdout | ConvertFrom-Json)
 }
+
+$dbPath = Join-Path $env:TEMP "hermes-guild-e2e-demo.sqlite"
 
 if (-not $QuestChainId) {
     $stamp = Get-Date -Format "yyyyMMdd-HHmmss"
@@ -43,6 +100,24 @@ if (-not $QuestChainId) {
 
 if ($QuestChainId -notlike "quest-*") {
     $QuestChainId = "quest-$QuestChainId"
+}
+
+if ($PlanOnly) {
+    $command = ".\scripts\run-guild-e2e-demo.ps1 -QuestChainId $QuestChainId -Adapter $Adapter -Port $Port -SkipProviderPreflight -WorkerTimeoutSeconds $WorkerTimeoutSeconds"
+    [pscustomobject]@{
+        ok = $true
+        plan_only = $true
+        quest_chain_id = $QuestChainId
+        demo_command = $command
+        status_command = ".\scripts\show-guild-demo-status.ps1 -QuestChainId $QuestChainId -Port $Port"
+        note = "Run the demo command yourself, then paste the status command output or dashboard symptoms back to Codex."
+    }
+    return
+}
+
+New-Item -ItemType Directory -Force -Path (Split-Path -Parent $logPath) | Out-Null
+if (Test-Path -LiteralPath $dbPath) {
+    Remove-Item -LiteralPath $dbPath -Force
 }
 
 if (-not $SkipProviderPreflight -and $Adapter -notin @("local-file-writer", "local-dry-run")) {
@@ -92,11 +167,7 @@ $profiles = @("worker-a", "worker-b", "worker-c", "reviewer")
 $workerResults = @()
 foreach ($profile in $profiles) {
     Write-DemoLog "Running worker $profile with adapter $Adapter"
-    $raw = & $workerScript -QuestChainId $QuestChainId -Profile $profile -Adapter $Adapter -DbPath $dbPath -Once -Json
-    if ($LASTEXITCODE -ne 0) {
-        throw "Worker $profile failed with exit code $LASTEXITCODE. Output: $($raw -join "`n")"
-    }
-    $workerResults += ($raw | ConvertFrom-Json)
+    $workerResults += Invoke-WorkerTickWithTimeout -Profile $profile
 }
 
 $finalizeBody = @{ quest_chain_id = $QuestChainId } | ConvertTo-Json

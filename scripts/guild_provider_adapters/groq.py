@@ -65,15 +65,17 @@ def post_openai_compatible(
     provider_label: str,
     command_label: str,
 ) -> AdapterResult:
+    headers = {
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+        "User-Agent": "HermesGuildCore/0.1",
+    }
+    if api_key:
+        headers["Authorization"] = f"Bearer {api_key}"
     request = urllib.request.Request(
         endpoint,
         data=json.dumps(payload).encode("utf-8"),
-        headers={
-            "Authorization": f"Bearer {api_key}",
-            "Content-Type": "application/json",
-            "Accept": "application/json",
-            "User-Agent": "HermesGuildCore/0.1",
-        },
+        headers=headers,
         method="POST",
     )
 

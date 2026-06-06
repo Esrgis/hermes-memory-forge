@@ -12,10 +12,12 @@ if __package__ in {None, ""}:
     from guild_provider_adapters.base import AdapterContext
     from guild_provider_adapters.capabilities import resolve_capability
     from guild_provider_adapters.registry import get_adapter
+    from guild_provider_adapters.validation import validate_artifact_text
 else:
     from .base import AdapterContext
     from .capabilities import resolve_capability
     from .registry import get_adapter
+    from .validation import validate_artifact_text
 
 
 def load_json(path: Path) -> dict[str, Any]:
@@ -37,14 +39,23 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="Invoke a Guild provider adapter.")
     parser.add_argument("--adapter", default="local-dry-run")
     parser.add_argument("--profile", default="builder")
-    parser.add_argument("--message", required=True)
+    parser.add_argument("--message")
+    parser.add_argument("--message-file")
     parser.add_argument("--title", default="guild-worker-adapter")
     parser.add_argument("--workspace", default=str(Path(__file__).resolve().parents[2]))
     parser.add_argument("--provider")
     parser.add_argument("--model")
     parser.add_argument("--capability")
     parser.add_argument("--task-type")
+    parser.add_argument("--expect-term", action="append", default=[])
+    parser.add_argument("--forbidden-term", action="append", default=[])
+    parser.add_argument("--skip-artifact-validation", action="store_true")
     args = parser.parse_args()
+
+    if args.message_file:
+        args.message = Path(args.message_file).read_text(encoding="utf-8")
+    if not args.message:
+        parser.error("--message or --message-file is required")
 
     workspace = Path(args.workspace).resolve()
     config_root = workspace / "config" / "guild"
@@ -75,6 +86,11 @@ def main() -> int:
     except KeyError as exc:
         available = ", ".join(sorted(adapters.get("adapters", {}).keys()))
         raise SystemExit(f"Unknown adapter '{adapter_name}'. Available adapters: {available}") from exc
+    adapter_config = dict(adapter_config)
+    if args.expect_term:
+        adapter_config["expect_terms"] = args.expect_term
+    if args.forbidden_term:
+        adapter_config["forbidden_terms"] = args.forbidden_term
 
     try:
         capability_name, capability_config = resolve_capability(
@@ -96,6 +112,7 @@ def main() -> int:
         workspace=str(workspace),
         provider=args.provider,
         model=args.model,
+        task_type=args.task_type,
         capability_name=capability_name,
         capability_config=capability_config,
         ammo_config=adapters.get("adapters", {}),
@@ -103,6 +120,17 @@ def main() -> int:
         transport_config=transports.get("transports", {}),
     )
     result = get_adapter(adapter_name).invoke(context)
+    if not args.skip_artifact_validation and adapter_name not in {
+        "local-dry-run",
+        "invalid-output-smoke",
+    }:
+        validation = validate_artifact_text(context, result)
+        result.artifact_validation = validation
+        if not validation.valid:
+            result.ok = False
+            result.blocked_reason = validation.blocked_reason
+            result.summary = "Adapter artifact validation failed."
+            result.test_result = "failed"
     print(json.dumps(result.to_dict(), ensure_ascii=False))
     return 0
 

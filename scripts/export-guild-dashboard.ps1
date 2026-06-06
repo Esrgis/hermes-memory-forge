@@ -48,5 +48,22 @@ if ($LASTEXITCODE -ne 0) {
     throw "Dashboard export failed with exit code $LASTEXITCODE"
 }
 
-$json | Set-Content -LiteralPath $outputFullPath -Encoding UTF8
+$tempPath = "$outputFullPath.tmp.$PID.$([guid]::NewGuid().ToString('N'))"
+$json | Set-Content -LiteralPath $tempPath -Encoding UTF8
+$replaced = $false
+for ($attempt = 1; $attempt -le 20; $attempt++) {
+    try {
+        Move-Item -LiteralPath $tempPath -Destination $outputFullPath -Force
+        $replaced = $true
+        break
+    } catch {
+        if ($attempt -eq 20) {
+            throw
+        }
+        Start-Sleep -Milliseconds ([Math]::Min(150 * $attempt, 2000))
+    }
+}
+if (-not $replaced) {
+    throw "Dashboard export replacement failed: $outputFullPath"
+}
 Write-Output $outputFullPath

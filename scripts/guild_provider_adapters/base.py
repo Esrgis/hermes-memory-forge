@@ -15,6 +15,7 @@ class AdapterContext:
     workspace: str
     provider: str | None = None
     model: str | None = None
+    task_type: str | None = None
     capability_name: str | None = None
     capability_config: dict[str, Any] = field(default_factory=dict)
     ammo_config: dict[str, Any] = field(default_factory=dict)
@@ -41,6 +42,7 @@ class AdapterResult:
     transport: str | None = None
     capability: str | None = None
     attempts: list[Any] = field(default_factory=list)
+    artifact_validation: Any = None
 
     def to_dict(self) -> dict[str, Any]:
         data = {
@@ -68,6 +70,11 @@ class AdapterResult:
             data["capability"] = self.capability
         if self.attempts:
             data["attempts"] = self.attempts
+        if self.artifact_validation is not None:
+            if hasattr(self.artifact_validation, "to_dict"):
+                data["artifact_validation"] = self.artifact_validation.to_dict()
+            else:
+                data["artifact_validation"] = self.artifact_validation
         return data
 
 

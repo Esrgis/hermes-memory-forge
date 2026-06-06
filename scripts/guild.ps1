@@ -6,7 +6,11 @@ param(
 
     [switch]$NoOpen,
 
-    [switch]$NoExport
+    [switch]$NoExport,
+
+    [switch]$KeepExisting,
+
+    [switch]$HiddenServer
 )
 
 $ErrorActionPreference = "Stop"
@@ -27,6 +31,12 @@ if ($NoOpen) {
 }
 if ($NoExport) {
     $launcherArgs.NoExport = $true
+}
+if (-not $KeepExisting) {
+    $launcherArgs.StopExisting = $true
+}
+if (-not $HiddenServer) {
+    $launcherArgs.VisibleServer = $true
 }
 
 & $openDashboard @launcherArgs

@@ -7,7 +7,9 @@ from .invalid_output import InvalidOutputAdapter
 from .local_dry_run import LocalDryRunAdapter
 from .local_file_writer import LocalFileWriterAdapter
 from .opencode import OpenCodeAdapter
+from .openai_compatible import NineRouterAdapter, OpenAICompatibleAdapter
 from .openrouter import OpenRouterAdapter
+from .provider_exhausted_smoke import ProviderExhaustedSmokeAdapter
 
 
 class UnimplementedAdapter(ProviderAdapter):
@@ -34,6 +36,8 @@ def get_backend_adapter(name: str) -> ProviderAdapter:
         return LocalFileWriterAdapter()
     if name == "invalid-output-smoke":
         return InvalidOutputAdapter()
+    if name == "provider-exhausted-smoke":
+        return ProviderExhaustedSmokeAdapter()
     if name == "opencode":
         return OpenCodeAdapter()
     if name == "gemini":
@@ -42,6 +46,10 @@ def get_backend_adapter(name: str) -> ProviderAdapter:
         return GroqAdapter()
     if name == "openrouter":
         return OpenRouterAdapter()
+    if name in {"9router", "nine-router", "nine_router"}:
+        return NineRouterAdapter()
+    if name in {"openai-compatible", "openai_compatible"}:
+        return OpenAICompatibleAdapter()
     return UnimplementedAdapter()
 
 

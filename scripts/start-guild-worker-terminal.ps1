@@ -22,13 +22,19 @@ param(
 
     [string]$Model,
 
+    [string]$Capability,
+
     [string]$DbPath,
 
     [switch]$UseConfiguredProvider,
 
+    [switch]$Visible,
+
     [switch]$Once,
 
-    [switch]$DryRun
+    [switch]$DryRun,
+
+    [switch]$Json
 )
 
 $ErrorActionPreference = "Stop"
@@ -62,7 +68,21 @@ $encodedProfile = $Profile.Replace("'", "''")
 $encodedAdapter = $Adapter.Replace("'", "''")
 $encodedProvider = if ($Provider) { $Provider.Replace("'", "''") } else { "" }
 $encodedModel = if ($Model) { $Model.Replace("'", "''") } else { "" }
+$encodedCapability = if ($Capability) { $Capability.Replace("'", "''") } else { "" }
 $encodedDbPath = if ($DbPath) { $DbPath.Replace("'", "''") } else { "" }
+$safeQuest = ($QuestChainId -replace '[^A-Za-z0-9_.-]', '-')
+$safeProfile = ($Profile -replace '[^A-Za-z0-9_.-]', '-')
+$questStopPath = Join-Path $workspace ("_runtime\guild-worker-agent\quest-stops\{0}.stop" -f $safeQuest)
+$encodedQuestStopPath = $questStopPath.Replace("'", "''")
+$sessionStamp = Get-Date -Format "yyyyMMdd-HHmmss-fff"
+$sessionId = "$safeQuest-$safeProfile-$sessionStamp"
+$sessionRoot = Join-Path $workspace "_runtime\guild-worker-agent\terminal-sessions"
+$sessionDir = Join-Path $sessionRoot $sessionId
+$stdoutPath = Join-Path $sessionDir "stdout.log"
+$stderrPath = Join-Path $sessionDir "stderr.log"
+$metadataPath = Join-Path $sessionDir "session.json"
+$loopScriptPath = Join-Path $sessionDir "worker-loop.ps1"
+$hiddenRunnerPath = Join-Path $sessionDir "run-hidden.ps1"
 
 $tickCommand = @"
 Remove-Module PSReadLine -Force -ErrorAction SilentlyContinue
@@ -71,9 +91,16 @@ Write-Host 'Guild worker terminal: $encodedAgent / profile $encodedProfile'
 Write-Host 'Quest chain: $encodedQuest'
 Write-Host 'Rank/skills: $AgentRank / $encodedSkills'
 Write-Host 'Adapter: $encodedAdapter'
+if ('$encodedCapability') { Write-Host 'Capability: $encodedCapability' }
+if ('$encodedProvider') { Write-Host 'Preferred ammo: $encodedProvider' }
 Write-Host 'Press Ctrl+C to stop.'
 `$idleCount = 0
 while (`$true) {
+    if (Test-Path -LiteralPath '$encodedQuestStopPath') {
+        Write-Host ''
+        Write-Host ('[{0}] quest stop marker found; exiting worker loop' -f (Get-Date -Format 'HH:mm:ss')) -ForegroundColor Yellow
+        break
+    }
     `$workerArgs = @{
         Profile = '$encodedProfile'
         Adapter = '$encodedAdapter'
@@ -83,6 +110,7 @@ while (`$true) {
     }
     if ('$encodedProvider') { `$workerArgs.Provider = '$encodedProvider' }
     if ('$encodedModel') { `$workerArgs.Model = '$encodedModel' }
+    if ('$encodedCapability') { `$workerArgs.Capability = '$encodedCapability' }
     if ('$encodedDbPath') { `$workerArgs.DbPath = '$encodedDbPath' }
     if ('$UseConfiguredProvider' -eq 'True') { `$workerArgs.UseConfiguredProvider = `$true }
     `$result = .\scripts\run-guild-worker-agent.ps1 @workerArgs
@@ -132,18 +160,40 @@ if (-not $pwsh) {
     throw "PowerShell executable is required to launch a worker terminal."
 }
 
+$process = $null
 if (-not $DryRun) {
-    Start-Process -FilePath $pwsh.Source -ArgumentList @(
-        "-NoExit",
-        "-NoProfile",
-        "-ExecutionPolicy", "Bypass",
-        "-Command", $tickCommand
-    ) | Out-Null
+    New-Item -ItemType Directory -Force -Path $sessionDir | Out-Null
+    Set-Content -LiteralPath $loopScriptPath -Value $tickCommand -Encoding UTF8
+    if ($Visible) {
+        $process = Start-Process -FilePath $pwsh.Source -ArgumentList @(
+            "-NoExit",
+            "-NoProfile",
+            "-ExecutionPolicy", "Bypass",
+            "-File", $loopScriptPath
+        ) -PassThru
+    } else {
+        $escapedLoop = $loopScriptPath.Replace("'", "''")
+        $escapedStdout = $stdoutPath.Replace("'", "''")
+        $hiddenRunner = @"
+Set-Location -LiteralPath '$encodedWorkspace'
+& '$escapedLoop' *>> '$escapedStdout'
+"@
+        Set-Content -LiteralPath $hiddenRunnerPath -Value $hiddenRunner -Encoding UTF8
+        $psi = [System.Diagnostics.ProcessStartInfo]::new()
+        $psi.FileName = $pwsh.Source
+        $psi.Arguments = "-NoProfile -ExecutionPolicy Bypass -File `"$hiddenRunnerPath`""
+        $psi.WorkingDirectory = $workspace
+        $psi.UseShellExecute = $false
+        $psi.CreateNoWindow = $true
+        $process = [System.Diagnostics.Process]::Start($psi)
+    }
 }
 
-[pscustomobject]@{
+$result = [pscustomobject]@{
     launched = -not $DryRun
     dry_run = [bool]$DryRun
+    visible = [bool]$Visible
+    session_id = $sessionId
     profile = $Profile
     agent_id = $AgentId
     agent_rank = $AgentRank
@@ -151,6 +201,22 @@ if (-not $DryRun) {
     adapter = $Adapter
     provider = $Provider
     model = $Model
+    capability = $Capability
     quest_chain_id = $QuestChainId
     interval_seconds = $IntervalSeconds
+    process_id = if ($process) { $process.Id } else { $null }
+    stdout_log = if ($DryRun -or $Visible) { $null } else { $stdoutPath }
+    stderr_log = if ($DryRun -or $Visible) { $null } else { $stderrPath }
+    metadata_path = if ($DryRun -or $Visible) { $null } else { $metadataPath }
+    loop_script = if ($DryRun) { $null } else { $loopScriptPath }
+}
+
+if (-not $DryRun -and -not $Visible) {
+    $result | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath $metadataPath -Encoding UTF8
+}
+
+if ($Json) {
+    $result | ConvertTo-Json -Depth 8
+} else {
+    $result
 }

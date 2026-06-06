@@ -23,7 +23,11 @@ class AmmoLadderAdapter(ProviderAdapter):
 
         ladder = resolve_ammo_ladder(context.capability_config)
         if context.provider:
-            ladder = [context.provider]
+            preferred = str(context.provider)
+            if preferred in ladder:
+                ladder = [preferred, *[item for item in ladder if item != preferred]]
+            else:
+                ladder = [preferred]
         if not ladder:
             return AdapterResult(
                 ok=False,
@@ -66,6 +70,7 @@ class AmmoLadderAdapter(ProviderAdapter):
                 workspace=context.workspace,
                 provider=provider,
                 model=str(model) if model else None,
+                task_type=context.task_type,
                 capability_name=context.capability_name,
                 capability_config=context.capability_config,
                 ammo_config=context.ammo_config,
