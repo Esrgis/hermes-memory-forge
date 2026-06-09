@@ -13,6 +13,14 @@
       "requires_key": false,
       "notes": "No model call. Writes scoped quest files so the dashboard demo produces real artifacts without provider keys."
     },
+    "9router-local": {
+      "kind": "openai_compatible_http",
+      "backend_adapter": "openai-compatible",
+      "requires_key": false,
+      "base_url": "http://127.0.0.1:20128/v1",
+      "label": "9Router local",
+      "notes": "Local 9Router OpenAI-compatible endpoint. 9Router owns provider keys, quota, combo routing, and fallback."
+    },
     "opencode-cli": {
       "kind": "cli",
       "backend_adapter": "opencode",

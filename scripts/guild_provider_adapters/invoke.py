@@ -120,17 +120,24 @@ def main() -> int:
         transport_config=transports.get("transports", {}),
     )
     result = get_adapter(adapter_name).invoke(context)
-    if not args.skip_artifact_validation and adapter_name not in {
+    should_validate_artifact = result.ok and not result.blocked_reason
+    if should_validate_artifact and not args.skip_artifact_validation and adapter_name not in {
         "local-dry-run",
         "invalid-output-smoke",
     }:
         validation = validate_artifact_text(context, result)
         result.artifact_validation = validation
         if not validation.valid:
+            original_summary = result.summary
             result.ok = False
             result.blocked_reason = validation.blocked_reason
-            result.summary = "Adapter artifact validation failed."
+            result.summary = f"Adapter artifact validation failed after provider result: {original_summary}"
             result.test_result = "failed"
+            if hasattr(validation, "to_dict"):
+                validation_data = validation.to_dict()
+            else:
+                validation_data = validation
+            result.known_risks.append({"validation": validation_data, "provider_summary": original_summary})
     print(json.dumps(result.to_dict(), ensure_ascii=False))
     return 0
 

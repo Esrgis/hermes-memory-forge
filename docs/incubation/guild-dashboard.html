@@ -6,25 +6,26 @@
   <title>Hermes Guild Blackboard</title>
   <style>
     :root {
-      --nav: #151725;
-      --nav-2: #20243a;
-      --glass: rgba(21, 31, 48, 0.76);
-      --glass-2: rgba(14, 20, 33, 0.72);
-      --card: #fffdf8;
-      --ink: #202027;
-      --muted: #6d7280;
-      --line: rgba(255, 255, 255, 0.18);
-      --line-dark: #e3e0d8;
-      --ready: #f2b632;
-      --claimed: #7c8cff;
-      --blocked: #ef5b4c;
-      --done: #2fb47c;
-      --accent: #ee2b74;
-      --blue: #1168b4;
-      --shadow: 0 18px 40px rgba(0, 0, 0, 0.22);
-      --card-shadow: 0 10px 26px rgba(0, 0, 0, 0.18);
+      --wood-dark: #29160f;
+      --wood-mid: #4a2d1c;
+      --wood-light: #7a4f2c;
+      --paper: #f6ead6;
+      --paper-2: #eadabc;
+      --ink: #2a231d;
+      --muted: #6a5748;
+      --line: rgba(245, 236, 217, 0.16);
+      --line-dark: #cbb593;
+      --ready: #c9a24d;
+      --claimed: #7c9a6e;
+      --blocked: #b86a4a;
+      --done: #5d9b6a;
+      --accent: #8d6340;
+      --blue: #6b8f92;
+      --shadow: 0 18px 38px rgba(34, 18, 10, 0.36);
+      --card-shadow: 0 10px 22px rgba(59, 35, 20, 0.24);
       --mono: ui-monospace, "Cascadia Mono", Consolas, monospace;
-      --sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --sans: "Trebuchet MS", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --display: "Palatino Linotype", "Book Antiqua", Georgia, serif;
     }
 
     * { box-sizing: border-box; }
@@ -32,30 +33,30 @@
     body {
       margin: 0;
       min-height: 100vh;
-      color: #f7f8fb;
+      color: #f4ead5;
       font-family: var(--sans);
       background:
-        linear-gradient(90deg, rgba(13, 23, 38, 0.28) 0 8px, transparent 8px 92px),
-        linear-gradient(0deg, rgba(255, 255, 255, 0.08) 0 2px, transparent 2px 118px),
-        linear-gradient(135deg, #0d4b8d 0%, #1576c9 38%, #10213e 100%);
+        linear-gradient(90deg, rgba(255, 255, 255, 0.03) 0 12px, transparent 12px 108px),
+        linear-gradient(0deg, rgba(255, 255, 255, 0.03) 0 1px, transparent 1px 132px),
+        linear-gradient(135deg, #28180f 0%, #6a4121 46%, #a66d2d 100%);
       overflow: auto;
     }
 
     button,
     .file-label {
-      border: 1px solid rgba(255, 255, 255, 0.24);
-      background: rgba(255, 255, 255, 0.1);
-      color: #fff;
-      border-radius: 8px;
-      min-height: 38px;
+      border: 1px solid rgba(255, 243, 215, 0.22);
+      background: linear-gradient(180deg, rgba(175, 126, 58, 0.96), rgba(117, 73, 34, 0.98));
+      color: #fff6df;
+      border-radius: 7px;
+      min-height: 36px;
       padding: 0 12px;
-      font: 700 0.78rem var(--mono);
+      font: 800 0.76rem var(--mono);
       cursor: pointer;
     }
 
     button:hover,
     .file-label:hover {
-      background: rgba(255, 255, 255, 0.18);
+      background: linear-gradient(180deg, rgba(194, 146, 69, 0.98), rgba(132, 84, 39, 0.98));
     }
 
     input[type="file"] { display: none; }
@@ -63,7 +64,7 @@
     .app {
       display: grid;
       grid-template-columns: 72px minmax(0, 1fr);
-      grid-template-rows: 56px 52px auto minmax(0, 1fr);
+      grid-template-rows: 54px 48px auto minmax(0, 1fr);
       min-height: 100vh;
     }
 
@@ -72,9 +73,11 @@
       grid-row: 1;
       display: grid;
       place-items: center;
-      background: var(--accent);
-      font-size: 1.3rem;
+      background: linear-gradient(180deg, #d0a24d, #9a6430);
+      color: #fff8e2;
+      font-size: 1.2rem;
       font-weight: 900;
+      font-family: var(--display);
     }
 
     .topbar {
@@ -86,8 +89,9 @@
       gap: 18px;
       min-width: 0;
       padding: 0 22px;
-      background: rgba(8, 13, 26, 0.86);
-      box-shadow: 0 2px 24px rgba(0, 0, 0, 0.22);
+      background: linear-gradient(180deg, rgba(92, 58, 31, 0.98), rgba(61, 37, 20, 0.98));
+      box-shadow: 0 2px 24px rgba(0, 0, 0, 0.24);
+      border-bottom: 1px solid rgba(245, 236, 217, 0.12);
     }
 
     .tabs {
@@ -98,21 +102,32 @@
       overflow: hidden;
     }
 
+    .console-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+      color: #fffbe7;
+      font: 900 0.86rem var(--mono);
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
     .tab {
       display: flex;
       align-items: center;
       gap: 9px;
       height: 64px;
       padding: 0 16px;
-      color: rgba(255, 255, 255, 0.76);
+      color: rgba(255, 245, 220, 0.78);
       font-weight: 800;
       white-space: nowrap;
       border-bottom: 3px solid transparent;
     }
 
     .tab.active {
-      color: #fff;
-      border-color: #fff;
+      color: #fffbe7;
+      border-color: #f1d98f;
     }
 
     .icon {
@@ -121,7 +136,7 @@
       display: grid;
       place-items: center;
       border-radius: 5px;
-      background: rgba(255, 255, 255, 0.18);
+      background: rgba(255, 245, 220, 0.16);
       font: 900 0.72rem var(--mono);
     }
 
@@ -136,7 +151,7 @@
     .sidebar {
       grid-column: 1;
       grid-row: 2 / 4;
-      background: rgba(17, 18, 31, 0.92);
+      background: linear-gradient(180deg, rgba(82, 52, 27, 0.98), rgba(49, 29, 17, 0.98));
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -149,12 +164,16 @@
       min-height: 56px;
       display: grid;
       place-items: center;
-      color: rgba(255, 255, 255, 0.42);
+      color: rgba(244, 234, 213, 0.46);
       font: 800 0.68rem var(--mono);
       text-align: center;
     }
 
     .side-item.active { color: #fff; }
+
+    .sidebar {
+      display: none;
+    }
 
     .subbar {
       grid-column: 2;
@@ -165,8 +184,8 @@
       gap: 18px;
       min-width: 0;
       padding: 0 24px;
-      background: rgba(17, 47, 90, 0.84);
-      backdrop-filter: blur(14px);
+      background: rgba(79, 49, 24, 0.86);
+      backdrop-filter: blur(10px);
     }
 
     .board-title {
@@ -175,6 +194,7 @@
       align-items: center;
       gap: 16px;
       font-weight: 900;
+      font-family: var(--display);
     }
 
     .board-title span {
@@ -187,7 +207,7 @@
       display: flex;
       align-items: center;
       gap: 10px;
-      color: rgba(255, 255, 255, 0.82);
+      color: rgba(255, 245, 220, 0.86);
       font: 800 0.78rem var(--mono);
       white-space: nowrap;
     }
@@ -205,14 +225,14 @@
       display: grid;
       place-items: center;
       border-radius: 50%;
-      background: #fff;
-      color: var(--ink);
-      border: 2px solid rgba(255, 255, 255, 0.55);
+      background: #fff1d1;
+      color: var(--wood-dark);
+      border: 2px solid rgba(255, 248, 231, 0.72);
       font: 900 0.72rem var(--mono);
     }
 
     .avatar.accent {
-      background: var(--accent);
+      background: linear-gradient(180deg, #d19c47, #9a6430);
       color: #fff;
     }
 
@@ -233,27 +253,28 @@
       grid-column: 2;
       grid-row: 3;
       display: grid;
-      grid-template-columns: minmax(360px, 1.25fr) minmax(280px, 0.75fr);
-      gap: 10px;
-      padding: 10px 18px 0;
-      background: rgba(12, 23, 42, 0.62);
-      border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+      grid-template-columns: minmax(320px, 1.05fr) minmax(320px, 1fr) minmax(300px, 0.95fr);
+      gap: 12px;
+      padding: 10px 18px 12px;
+      background: rgba(102, 74, 31, 0.56);
+      border-bottom: 1px solid rgba(245, 236, 217, 0.14);
     }
 
     .quest-form,
     .hermes-log,
+    .terminal-panel,
     .provider-lab {
       min-width: 0;
       border-radius: 8px;
-      border: 1px solid var(--line);
-      background: rgba(8, 13, 26, 0.72);
-      padding: 10px;
+      border: 1px solid rgba(245, 236, 217, 0.18);
+      background: linear-gradient(180deg, rgba(127, 89, 35, 0.94), rgba(86, 58, 23, 0.94));
+      padding: 8px;
     }
 
     .quest-grid {
       display: grid;
-      grid-template-columns: 1fr 140px 140px;
-      gap: 8px;
+      grid-template-columns: 1fr 132px 132px;
+      gap: 7px;
     }
 
     .quest-field {
@@ -266,7 +287,7 @@
 
     .quest-field label,
     .hermes-log-title {
-      color: rgba(255, 255, 255, 0.76);
+      color: #fff1cb;
       font: 800 0.68rem var(--mono);
       text-transform: uppercase;
     }
@@ -276,11 +297,11 @@
     .quest-field textarea {
       width: 100%;
       min-height: 32px;
-      border: 1px solid rgba(255, 255, 255, 0.18);
+      border: 1px solid rgba(255, 244, 219, 0.18);
       border-radius: 7px;
       padding: 8px 10px;
-      background: rgba(255, 255, 255, 0.08);
-      color: #fff;
+      background: rgba(255, 244, 219, 0.09);
+      color: #fff8e7;
       font: 0.78rem var(--mono);
     }
 
@@ -290,27 +311,28 @@
     }
 
     #questRequest {
-      min-height: 132px;
+      min-height: 168px;
     }
 
     .quest-actions {
       display: flex;
       flex-wrap: wrap;
-      gap: 10px;
+      gap: 8px;
       margin-top: 8px;
     }
 
-    .side-stack {
+    .runtime-stack {
       min-width: 0;
       display: grid;
-      gap: 10px;
+      gap: 8px;
+      align-content: start;
     }
 
     .hermes-log {
       display: flex;
       flex-direction: column;
       gap: 8px;
-      min-height: 116px;
+      min-height: 96px;
     }
 
     .event-log,
@@ -318,7 +340,14 @@
       display: flex;
       flex-direction: column;
       gap: 8px;
-      min-height: 92px;
+      min-height: 72px;
+    }
+
+    .terminal-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      min-height: 220px;
     }
 
     .hermes-lines {
@@ -326,7 +355,7 @@
       gap: 6px;
       max-height: 94px;
       overflow: auto;
-      color: rgba(255, 255, 255, 0.82);
+      color: rgba(255, 246, 221, 0.86);
       font: 0.75rem var(--mono);
     }
 
@@ -345,9 +374,43 @@
       border-left: 3px solid rgba(124, 140, 255, 0.9);
     }
 
+    .terminal-tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .terminal-tab {
+      min-height: 30px;
+      border-radius: 7px;
+      border: 1px solid rgba(255, 244, 219, 0.18);
+      background: rgba(255, 244, 219, 0.08);
+      color: #fff8e7;
+      font: 700 0.7rem var(--mono);
+      cursor: pointer;
+    }
+
+    .terminal-tab.active {
+      border-color: rgba(47, 180, 124, 0.78);
+      background: rgba(47, 180, 124, 0.18);
+    }
+
+    .terminal-output {
+      max-height: 236px;
+      min-height: 146px;
+      overflow: auto;
+      white-space: pre-wrap;
+      border-radius: 7px;
+      border: 1px solid rgba(255, 244, 219, 0.14);
+      background: rgba(31, 25, 18, 0.45);
+      color: rgba(255, 246, 221, 0.88);
+      padding: 8px;
+      font: 0.7rem var(--mono);
+    }
+
     .provider-lab {
       display: grid;
-      gap: 8px;
+      gap: 7px;
     }
 
     .provider-grid {
@@ -368,16 +431,16 @@
 
     .provider-status {
       min-height: 22px;
-      color: rgba(255, 255, 255, 0.82);
+      color: rgba(255, 246, 221, 0.86);
       font: 0.72rem var(--mono);
       overflow-wrap: anywhere;
     }
 
     .columns {
       display: grid;
-      grid-template-columns: repeat(4, minmax(270px, 1fr));
-      gap: 18px;
-      min-width: 1120px;
+      grid-template-columns: repeat(4, minmax(250px, 1fr));
+      gap: 12px;
+      min-width: 1040px;
       align-items: start;
     }
 
@@ -386,10 +449,10 @@
       display: flex;
       flex-direction: column;
       border-radius: 8px;
-      background: var(--glass);
-      border: 1px solid var(--line);
+      background: linear-gradient(180deg, rgba(145, 108, 50, 0.9), rgba(86, 55, 28, 0.94));
+      border: 1px solid rgba(245, 236, 217, 0.16);
       box-shadow: var(--shadow);
-      backdrop-filter: blur(16px);
+      backdrop-filter: blur(12px);
       overflow: hidden;
     }
 
@@ -398,7 +461,7 @@
       align-items: center;
       justify-content: space-between;
       gap: 12px;
-      padding: 18px 18px 8px;
+      padding: 14px 14px 6px;
     }
 
     .column-name {
@@ -406,8 +469,9 @@
       align-items: center;
       gap: 9px;
       min-width: 0;
-      font-size: 1.1rem;
+      font-size: 1rem;
       font-weight: 900;
+      font-family: var(--display);
     }
 
     .dot {
@@ -415,7 +479,7 @@
       height: 12px;
       flex: 0 0 auto;
       border-radius: 50%;
-      border: 2px solid rgba(255, 255, 255, 0.72);
+      border: 2px solid rgba(255, 247, 233, 0.75);
       background: var(--ready);
     }
 
@@ -429,28 +493,60 @@
       display: grid;
       place-items: center;
       border-radius: 999px;
-      background: rgba(255, 255, 255, 0.14);
+      background: rgba(255, 247, 219, 0.22);
       font: 900 0.72rem var(--mono);
     }
 
     .lane {
       display: grid;
-      gap: 12px;
-      padding: 14px;
+      gap: 8px;
+      padding: 10px;
     }
 
     .task-card {
-      min-height: 138px;
+      min-height: 112px;
       display: flex;
       flex-direction: column;
-      gap: 12px;
-      padding: 16px;
+      gap: 8px;
+      padding: 12px;
       border-radius: 7px;
-      background: var(--card);
+      background: linear-gradient(180deg, var(--paper), var(--paper-2));
       color: var(--ink);
       box-shadow: var(--card-shadow);
-      border: 1px solid rgba(255, 255, 255, 0.68);
+      border: 1px solid rgba(109, 78, 51, 0.2);
       animation: rise 280ms ease both;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .task-card.review-card {
+      background:
+        linear-gradient(90deg, rgba(78, 92, 83, 0.28), transparent 18%),
+        linear-gradient(180deg, #f1e1c2, #d7c194);
+      border-color: rgba(76, 91, 82, 0.48);
+      box-shadow: 0 12px 26px rgba(44, 54, 48, 0.3);
+    }
+
+    .task-card.review-card::before {
+      content: "";
+      position: absolute;
+      inset: 0 auto 0 0;
+      width: 6px;
+      background: linear-gradient(180deg, #4f675d, #b5a35d);
+    }
+
+    .task-card.review-card::after {
+      content: "MEETING";
+      position: absolute;
+      top: 10px;
+      right: -24px;
+      width: 92px;
+      transform: rotate(35deg);
+      background: #4f675d;
+      color: #fff8df;
+      text-align: center;
+      font: 900 0.56rem var(--mono);
+      letter-spacing: 0.04em;
     }
 
     .card-top {
@@ -462,36 +558,37 @@
 
     .task-title {
       margin: 0;
-      font-size: 1.02rem;
-      line-height: 1.22;
+      font-size: 0.92rem;
+      line-height: 1.16;
       font-weight: 900;
       overflow-wrap: anywhere;
+      font-family: var(--display);
     }
 
     .rank {
-      min-width: 32px;
-      height: 28px;
+      min-width: 28px;
+      height: 26px;
       display: grid;
       place-items: center;
       border-radius: 50%;
-      background: #1d2234;
+      background: linear-gradient(180deg, #5d3a26, #3b2318);
       color: #fff;
-      font: 900 0.75rem var(--mono);
+      font: 900 0.7rem var(--mono);
     }
 
     .meta-row {
       display: flex;
       flex-wrap: wrap;
-      gap: 8px;
+      gap: 6px;
       color: var(--muted);
-      font: 800 0.72rem var(--mono);
+      font: 800 0.68rem var(--mono);
     }
 
     .hold-meter {
-      height: 4px;
+      height: 3px;
       overflow: hidden;
       border-radius: 999px;
-      background: #e7e4dd;
+      background: rgba(109, 78, 51, 0.14);
     }
 
     .hold-bar {
@@ -512,27 +609,33 @@
       display: inline-flex;
       align-items: center;
       border-radius: 999px;
-      padding: 0 8px;
-      background: #ece8df;
-      color: #4d5360;
+      padding: 0 7px;
+      background: rgba(110, 82, 59, 0.1);
+      color: #654e3b;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
 
     .tag.hot {
-      background: #1d2234;
-      color: #fff;
+      background: linear-gradient(180deg, #6d4730, #4a2d1e);
+      color: #fff6e6;
     }
 
     .tag.warn {
-      background: #fee4df;
-      color: #9c2418;
+      background: #f4d7c8;
+      color: #8e3d27;
     }
 
     .tag.good {
-      background: #dcf7ea;
-      color: #176b45;
+      background: #dbe9d5;
+      color: #356243;
+    }
+
+    .tag.review {
+      background: #d9dec3;
+      color: #314d43;
+      border: 1px solid rgba(49, 77, 67, 0.22);
     }
 
     .card-foot {
@@ -541,6 +644,28 @@
       justify-content: space-between;
       gap: 10px;
       margin-top: auto;
+    }
+
+    .task-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      justify-content: flex-end;
+    }
+
+    .task-action {
+      border: 1px solid rgba(142, 61, 39, 0.35);
+      border-radius: 999px;
+      padding: 5px 8px;
+      background: #f7dfc6;
+      color: #74391f;
+      cursor: pointer;
+      font: 900 0.62rem var(--mono);
+      letter-spacing: 0.02em;
+    }
+
+    .task-action:hover {
+      background: #f0c28e;
     }
 
     .task-id {
@@ -553,24 +678,24 @@
     }
 
     .mini-avatar {
-      width: 30px;
-      height: 30px;
+      width: 26px;
+      height: 26px;
       display: grid;
       place-items: center;
       flex: 0 0 auto;
       border-radius: 50%;
       color: #fff;
-      background: var(--accent);
+      background: linear-gradient(180deg, #8d6340, #5f3b25);
       font: 900 0.66rem var(--mono);
     }
 
     .empty {
-      min-height: 118px;
+      min-height: 104px;
       display: grid;
       place-items: center;
-      border: 1px dashed rgba(255, 255, 255, 0.24);
+      border: 1px dashed rgba(245, 236, 217, 0.26);
       border-radius: 8px;
-      color: rgba(255, 255, 255, 0.58);
+      color: rgba(244, 234, 213, 0.66);
       font: 800 0.76rem var(--mono);
     }
 
@@ -585,8 +710,8 @@
       gap: 12px;
       padding: 16px;
       border-radius: 10px;
-      background: rgba(12, 17, 29, 0.95);
-      border: 1px solid var(--line);
+      background: linear-gradient(180deg, rgba(96, 63, 31, 0.98), rgba(39, 24, 16, 0.98));
+      border: 1px solid rgba(245, 236, 217, 0.16);
       box-shadow: var(--shadow);
       z-index: 5;
     }
@@ -605,11 +730,11 @@
       width: 100%;
       min-height: 250px;
       resize: vertical;
-      border: 1px solid rgba(255, 255, 255, 0.18);
+      border: 1px solid rgba(245, 236, 217, 0.18);
       border-radius: 8px;
       padding: 12px;
-      background: rgba(255, 255, 255, 0.08);
-      color: #fff;
+      background: rgba(255, 244, 219, 0.1);
+      color: #fff7e9;
       font: 0.78rem var(--mono);
     }
 
@@ -686,11 +811,8 @@
     <div class="brand">G</div>
 
     <nav class="topbar">
-      <div class="tabs" aria-label="Guild navigation">
-        <div class="tab"><span class="icon">P</span>Projects</div>
-        <div class="tab active"><span class="icon">B</span>Blackboard</div>
-        <div class="tab"><span class="icon">T</span>Team</div>
-        <div class="tab"><span class="icon">A</span>Artifacts</div>
+        <div class="tabs" aria-label="Guild navigation">
+        <div class="console-title"><span class="icon">B</span>Guild Operations Console</div>
       </div>
       <div class="actions">
         <label class="file-label" for="fileInput">Load JSON</label>
@@ -717,6 +839,7 @@
         <span id="boardName">Guild Blackboard</span>
         <span class="count-strip"><span id="taskCount">0</span> tasks</span>
         <span class="count-strip"><span id="artifactCount">0</span> artifacts</span>
+        <span class="count-strip" id="providerUsage">0 calls / 0 tokens</span>
       </div>
       <div class="avatars" id="agentStrip"></div>
     </section>
@@ -730,15 +853,15 @@
           </div>
           <div class="quest-field">
             <label for="questAdapter">Adapter</label>
-            <select id="questAdapter">
-              <option value="local-file-writer" selected>local-file-writer</option>
-              <option value="auto-rank">auto-rank</option>
+            <select id="questAdapter" autocomplete="off">
+              <option value="auto-rank" selected>auto-rank (real workers)</option>
               <option value="auto-ammo">auto-ammo</option>
-              <option value="local-dry-run">local-dry-run</option>
               <option value="opencode">opencode</option>
-              <option value="gemini">gemini</option>
-              <option value="groq">groq</option>
               <option value="openrouter">openrouter</option>
+              <option value="groq">groq</option>
+              <option value="gemini">gemini</option>
+              <option value="local-file-writer">local-file-writer (smoke only)</option>
+              <option value="local-dry-run">local-dry-run (smoke only)</option>
             </select>
           </div>
           <div class="quest-field">
@@ -747,7 +870,11 @@
           </div>
           <div class="quest-field wide">
             <label for="questRequest">Prompt for Hermes</label>
-            <textarea id="questRequest">Make a one-hour Guild demo: split this prompt into requirements, risk analysis, and verification modules; each worker must write its scoped output file, then publish a final review artifact.</textarea>
+            <textarea id="questRequest">Build a polished Hermes Guild task board demo with 3 parallel real-worker modules: data model, render UI, and interaction notes.
+
+Use auto-rank and real worker terminals. Each worker must write one concrete markdown file in the quest workspace. The reviewer must read the upstream files and write review.md plus final-summary.md.
+
+Keep the output presentation-ready, bounded, and easy to explain to a mentor.</textarea>
           </div>
           <div class="quest-field wide">
             <label for="questAllowed">Allowed files</label>
@@ -755,10 +882,12 @@
           </div>
         </div>
         <div class="quest-actions">
-          <button id="assignQuest" type="submit">Giao Task Cho Hermes</button>
+          <button id="assignQuest" type="submit">Preview Plan</button>
+          <button id="confirmQuest" type="button" disabled>Confirm Run</button>
+          <button id="stopQuest" type="button" disabled>Stop Run</button>
         </div>
       </form>
-      <div class="side-stack">
+      <div class="runtime-stack">
         <section class="hermes-log" aria-label="Hermes routing log">
           <div class="hermes-log-title">Hermes Routing Log</div>
           <div class="hermes-lines" id="hermesLines">
@@ -771,14 +900,67 @@
             <div class="event-line">No events yet.</div>
           </div>
         </section>
+        <section class="terminal-panel" aria-label="Worker terminals">
+          <div class="hermes-log-title">Worker Terminals</div>
+          <div class="terminal-tabs" id="terminalTabs"></div>
+          <div class="terminal-output-wrapper" style="position: relative;">
+  <button class="copy-btn" style="position: absolute; top: 4px; right: 8px; background: rgba(255,255,255,0.1); border: none; color: #fff; font-size: 0.75rem; padding: 2px 6px; cursor: pointer;" onclick="copyTerminal()">Copy</button>
+  <div class="terminal-output" id="terminalOutput">No worker session yet.</div>
+</div>
+        </section>
+        <script>
+          // Copy terminal output to clipboard
+          function copyTerminal() {
+            const el = document.getElementById('terminalOutput');
+            if (!el) return;
+            const text = el.textContent;
+            navigator.clipboard.writeText(text).then(() => {
+              const btn = document.querySelector('.copy-btn');
+              const original = btn ? btn.textContent : '';
+              if (btn) btn.textContent = 'Copied!';
+              setTimeout(() => { if (btn) btn.textContent = original; }, 1500);
+            }).catch(err => console.error('Copy failed', err));
+          }
+        </script>
         <section class="meeting-rounds" aria-label="Meeting rounds">
           <div class="hermes-log-title">Meeting Rounds</div>
           <div class="hermes-lines" id="meetingLines">
             <div class="meeting-line">No meeting round yet.</div>
           </div>
         </section>
+      </div>
         <section class="provider-lab" aria-label="Provider lab">
           <div class="hermes-log-title">Provider Lab</div>
+          <div class="provider-grid">
+            <div class="quest-field">
+              <label for="quickProviderName">New Provider</label>
+              <input id="quickProviderName" placeholder="provider name">
+            </div>
+            <div class="quest-field">
+              <label for="quickProviderEnvKey">Env Key</label>
+              <input id="quickProviderEnvKey" placeholder="PROVIDER_API_KEY">
+            </div>
+            <div class="quest-field wide">
+              <label for="quickProviderBaseUrl">Base URL</label>
+              <input id="quickProviderBaseUrl" placeholder="https://api.provider.com/v1">
+            </div>
+            <div class="quest-field">
+              <label for="quickProviderModel">Model</label>
+              <input id="quickProviderModel" placeholder="model id">
+            </div>
+            <div class="quest-field">
+              <label for="quickProviderCapability">Pool</label>
+              <select id="quickProviderCapability"></select>
+            </div>
+            <div class="quest-field wide">
+              <label for="quickProviderSecret">Secret</label>
+              <input id="quickProviderSecret" type="password" autocomplete="off" placeholder="optional key">
+            </div>
+          </div>
+          <div class="provider-actions">
+            <button id="quickAddProvider" type="button">Save Provider</button>
+            <button id="quickAddAndTestProvider" type="button">Save + Test</button>
+          </div>
           <div class="provider-grid">
             <div class="quest-field">
               <label for="providerTransport">Transport</label>
@@ -812,7 +994,6 @@
           </div>
           <div class="provider-status" id="providerStatus">Loading providers...</div>
         </section>
-      </div>
     </section>
 
     <section class="board" aria-label="Task board">
@@ -876,6 +1057,11 @@
     let activeQuestChainId = null;
     let finalizeInFlight = false;
     let providerLabConfig = null;
+    let pendingPlanPreview = null;
+    let previewInFlight = false;
+    let confirmInFlight = false;
+    let selectedTerminalSessionId = null;
+    let terminalSessionCache = [];
 
     const el = (id) => document.getElementById(id);
     const escapeHtml = (value) => String(value ?? "").replace(/[&<>"']/g, (char) => ({
@@ -921,11 +1107,99 @@
         .join("");
     }
 
+    function questPayload() {
+      const payload = {
+        title: el("questTitle").value,
+        request: el("questRequest").value,
+        quest_chain_id: el("questId").value || questIdFromTitle(el("questTitle").value),
+        allowed_files: el("questAllowed").value,
+        adapter: el("questAdapter").value
+      };
+      el("questId").value = payload.quest_chain_id;
+      return payload;
+    }
+
+    function previewDashboardFromTasks(value) {
+      const tasks = Array.isArray(value.tasks) ? value.tasks : [];
+      const statusCounts = {};
+      const typeCounts = {};
+      tasks.forEach((task) => {
+        const status = String(task.status || "unknown");
+        const type = String(task.task_type || "unknown");
+        statusCounts[status] = (statusCounts[status] || 0) + 1;
+        typeCounts[type] = (typeCounts[type] || 0) + 1;
+      });
+      return {
+        schema_version: "guild_dashboard_read_v0",
+        task_count: tasks.length,
+        artifact_count: 0,
+        status_counts: statusCounts,
+        type_counts: typeCounts,
+        chains: [{
+          quest_chain_id: value.quest_chain_id,
+          task_count: tasks.length,
+          status_counts: statusCounts,
+          next_open_tasks: tasks.filter((task) => String(task.status || "") === "open"),
+          blocked_review_tasks: tasks.filter((task) => String(task.task_type || "") === "join_review")
+        }],
+        tasks,
+        artifacts: [],
+        filters: { quest_chain_id: value.quest_chain_id }
+      };
+    }
+
     function renderLineList(elementId, lines, className, emptyText) {
       const items = Array.isArray(lines) ? lines.filter(Boolean) : [];
       el(elementId).innerHTML = (items.length ? items : [emptyText])
         .map((line) => `<div class="${className}">${escapeHtml(line)}</div>`)
         .join("");
+    }
+
+    function terminalSessionLabel(session) {
+      const profile = session.profile || session.agent_id || "worker";
+      const adapter = session.provider || session.adapter || "adapter";
+      const pid = session.process_id ? ` #${session.process_id}` : "";
+      return `${profile}:${adapter}${pid}`;
+    }
+
+    function terminalSessionText(session) {
+      const stdout = session.stdout?.lines || [];
+      const stderr = session.stderr?.lines || [];
+      const header = [
+        `session: ${session.session_id || "unknown"}`,
+        `quest: ${session.quest_chain_id || "unknown"}`,
+        `profile: ${session.profile || session.agent_id || "worker"}`,
+        `adapter: ${session.adapter || "unknown"}`,
+        `visible: ${session.visible ? "yes" : "no"}`
+      ];
+      const blocks = [...header, "", "stdout:"];
+      blocks.push(...(stdout.length ? stdout : ["(no stdout yet)"]));
+      if (stderr.length) {
+        blocks.push("", "stderr:");
+        blocks.push(...stderr);
+      }
+      return blocks.join("\n");
+    }
+
+    function renderTerminalSessions(sessions) {
+      const items = Array.isArray(sessions) ? sessions : [];
+      terminalSessionCache = items;
+      if (!items.length) {
+        selectedTerminalSessionId = null;
+        el("terminalTabs").innerHTML = "";
+        el("terminalOutput").textContent = "No worker session yet.";
+        return;
+      }
+      if (!selectedTerminalSessionId || !items.some((session) => session.session_id === selectedTerminalSessionId)) {
+        selectedTerminalSessionId = items[0].session_id;
+      }
+      el("terminalTabs").innerHTML = items.map((session, index) => {
+        const sessionId = session.session_id || `session-${index}`;
+        const active = sessionId === selectedTerminalSessionId ? " active" : "";
+        return `<button class="terminal-tab${active}" type="button" data-session-id="${escapeHtml(sessionId)}">${escapeHtml(terminalSessionLabel(session))}</button>`;
+      }).join("");
+      const selected = items.find((session) => session.session_id === selectedTerminalSessionId) || items[0];
+      el("terminalOutput").textContent = terminalSessionText(selected);
     }
 
     function taskShort(task) {
@@ -952,9 +1226,75 @@
         ? data.repair_summary.repaired_tasks
         : [];
       if (repaired.length) events.push(`Repaired modules: ${repaired.join(" / ")}.`);
+      const failed = terminalFailedTasks(data);
+      if (failed.length) events.push(`Run stopped on failed tasks: ${failed.join(" / ")}.`);
+      const usage = providerUsageLabel(data);
+      if (usage) events.push(`Provider usage: ${usage}.`);
       const finalArtifact = artifacts.find((artifact) => String(artifact.summary || "").includes("hermes_finalized"));
       if (finalArtifact) events.push("Final assembly done and durable artifact published.");
       return events;
+    }
+
+    function parseBackendEventLine(line) {
+      try {
+        const record = JSON.parse(line);
+        const details = record.details || {};
+        const eventName = record.event || "event";
+        const task = details.task_title || details.task_id || "";
+        const profile = details.profile || details.agent_id || "";
+        const reason = details.blocked_reason || details.reason || details.error || "";
+        const layer = details.layer || "";
+        const phase = details.phase || "";
+        const severity = String(details.severity || "").toUpperCase();
+        const io = details.input && details.output
+          ? ` input=${details.input.source || "?"} output=${details.output.status || details.output.blocked_reason || details.output.ok || "recorded"}`
+          : "";
+        if (eventName === "worker_task_claimed") {
+          return `${severity || "INFO"} ${layer || "worker"}/${phase || "claim"} CLAIMED ${profile}: ${task} (${details.task_id || "task"})${io}`;
+        }
+        if (eventName === "worker_task_done") {
+          return `${severity || "INFO"} ${layer || "worker"}/${phase || "complete"} DONE ${profile}: ${task} (${details.task_id || "task"})${io}`;
+        }
+        if (eventName === "worker_task_blocked") {
+          return `${severity || "WARN"} ${layer || "worker"}/${phase || "complete"} BLOCKED ${profile}: ${task} (${details.task_id || "task"}) reason=${reason || "blocked"}${io}`;
+        }
+        if (eventName === "worker_task_failed" || eventName === "worker_adapter_invocation_failed" || eventName === "worker_adapter_result_parse_failed") {
+          return `${severity || "ERROR"} ${layer || "runtime"}/${phase || "bug"} BUG ${profile}: ${task || details.task_id || "task"} reason=${reason || eventName}${io}`;
+        }
+        const parts = [eventName];
+        if (layer || phase) parts.push(`layer=${layer || "unknown"}/${phase || "unknown"}`);
+        if (severity) parts.push(`severity=${severity}`);
+        if (details.quest_chain_id) parts.push(`quest=${details.quest_chain_id}`);
+        if (details.task_id) parts.push(`task=${details.task_id}`);
+        if (details.profile || details.agent_id) parts.push(`worker=${details.profile || details.agent_id}`);
+        if (details.adapter) parts.push(`adapter=${details.adapter}`);
+        if (details.worker_adapters) parts.push(`workers=${details.worker_adapters.join("/")}`);
+        if (details.returncode !== undefined) parts.push(`exit=${details.returncode}`);
+        if (details.error) parts.push(`error=${details.error}`);
+        if (details.reason) parts.push(`reason=${details.reason}`);
+        if (details.blocked_reason) parts.push(`blocked=${details.blocked_reason}`);
+        return parts.join(" | ");
+      } catch (_error) {
+        return line;
+      }
+    }
+
+    async function loadBackendEvents(data) {
+      const quest = activeQuestChainId || boardName(data);
+      if (!quest || quest === "Guild Blackboard") return;
+      try {
+        const response = await fetch(`/api/demo/status?quest_chain_id=${encodeURIComponent(quest)}`, { cache: "no-store" });
+        if (!response.ok) return;
+        const value = await response.json();
+        renderTerminalSessions(value.logs?.terminal_sessions || []);
+        const lines = value.logs?.guild_events?.lines || [];
+        if (!lines.length) return;
+        const backend = lines.slice(-18).map(parseBackendEventLine);
+        const frontend = buildEventLog(data);
+        renderLineList("eventLines", [...backend, ...frontend], "event-line", "No events yet.");
+      } catch (_error) {
+        // Older dashboard servers do not expose /api/demo/status.
+      }
     }
 
     function buildMeetingRounds(data) {
@@ -977,6 +1317,29 @@
       return lines;
     }
 
+    function terminalFailedTasks(data) {
+      const repair = data && data.repair_summary ? data.repair_summary : {};
+      const failed = Array.isArray(repair.unrepaired_failed_tasks) ? repair.unrepaired_failed_tasks : [];
+      const active = Array.isArray(repair.active_tasks) ? repair.active_tasks : [];
+      const finalDone = Boolean(repair.final_artifact_done);
+      return failed.length && !active.length && !finalDone ? failed : [];
+    }
+
+    function isTerminalFailure(data) {
+      return terminalFailedTasks(data).length > 0;
+    }
+
+    function providerUsageLabel(data) {
+      const usage = data && data.provider_usage ? data.provider_usage : null;
+      if (!usage) return "";
+      const calls = Number(usage.provider_calls || 0);
+      const tokens = Number(usage.total_tokens || 0);
+      const cost = Number(usage.total_cost || 0);
+      const parts = [`${calls} calls`, `${tokens.toLocaleString()} tokens`];
+      if (cost > 0) parts.push(`$${cost.toFixed(6)}`);
+      return parts.join(" / ");
+    }
+
     function setProviderStatus(message) {
       el("providerStatus").textContent = message;
     }
@@ -996,6 +1359,9 @@
       const capabilityNames = Object.keys(capabilities);
       el("providerCapability").innerHTML = capabilityNames
         .map((name) => `<option value="${escapeHtml(name)}" ${name === "deterministic-smoke" ? "selected" : ""}>${escapeHtml(name)}</option>`)
+        .join("");
+      el("quickProviderCapability").innerHTML = capabilityNames
+        .map((name) => `<option value="${escapeHtml(name)}" ${name === "code-edit-worker" ? "selected" : ""}>${escapeHtml(name)}</option>`)
         .join("");
       if (transports["openrouter-http"]) el("providerTransport").value = "openrouter-http";
       updateProviderChoices();
@@ -1093,6 +1459,19 @@
       return reason.replace(/_/g, " ");
     }
 
+    function retryableBlockedReason(task) {
+      const reason = String(task.persistent_blocked_reason || task.block_reason || "");
+      const retryable = new Set([
+        "adapter_not_implemented",
+        "provider_error_event",
+        "provider_exhausted",
+        "provider_failed",
+        "provider_missing",
+        "provider_timeout"
+      ]);
+      return retryable.has(reason) ? reason : null;
+    }
+
     function taskStatus(task) {
       return String(task.display_status || task.status || "").toLowerCase();
     }
@@ -1109,12 +1488,14 @@
 
     function renderCard(task, index, artifactsByTask) {
       const status = taskStatus(task) || "unknown";
+      const taskType = String(task.task_type || "task");
+      const isReview = taskType === "join_review";
       const owner = task.assignee_id || task.owner_area || task.required_skill || "guild";
       const hold = holdPercent(task);
       const artifacts = artifactsByTask.get(task.task_id) || [];
       const hasEvidence = artifacts.length > 0;
       const meta = [
-        task.task_type || "task",
+        taskType,
         task.required_rank ? `rank ${task.required_rank}` : null,
         task.required_skill || null,
         task.repair_state === "repaired" ? "repaired" : null,
@@ -1124,10 +1505,17 @@
       const review = task.plan_review_status ? `plan:${task.plan_review_status}` : "plan:-";
       const artifact = task.output_artifact ? `artifact ${task.output_artifact}` : "artifact -";
       const block = blockLabel(task);
-      const tags = meta.map((item, tagIndex) => `<span class="tag ${tagIndex === 0 ? "hot" : ""}">${escapeHtml(item)}</span>`).join("");
+      const retryReason = status === "blocked" ? retryableBlockedReason(task) : null;
+      const tags = meta.map((item, tagIndex) => {
+        const tagClass = isReview && tagIndex === 0 ? "review" : (tagIndex === 0 ? "hot" : "");
+        return `<span class="tag ${tagClass}">${escapeHtml(item)}</span>`;
+      }).join("");
+      const actions = retryReason
+        ? `<button class="task-action retry-blocked-task" type="button" data-task-id="${escapeHtml(task.task_id || "")}" data-quest-chain-id="${escapeHtml(task.quest_chain_id || activeQuestChainId || "")}" data-blocked-reason="${escapeHtml(retryReason)}">Retry provider block</button>`
+        : "";
 
       return `
-        <article class="task-card ${escapeHtml(status)}" style="--hold: ${hold}%; animation-delay: ${index * 35}ms">
+        <article class="task-card ${escapeHtml(status)} ${isReview ? "review-card" : ""}" style="--hold: ${hold}%; animation-delay: ${index * 35}ms">
           <div class="card-top">
             <h3 class="task-title">${escapeHtml(task.title || task.task_id || "Untitled task")}</h3>
             <div class="rank">${escapeHtml(task.required_rank || "-")}</div>
@@ -1146,7 +1534,10 @@
           </div>
           <div class="card-foot">
             <div class="task-id">#${escapeHtml(task.sequence_no || "?")} ${escapeHtml(task.task_id || "")}</div>
-            <div class="mini-avatar" title="${escapeHtml(owner)}">${escapeHtml(initials(owner))}</div>
+            <div class="task-actions">
+              ${actions}
+              <div class="mini-avatar" title="${escapeHtml(owner)}">${escapeHtml(initials(owner))}</div>
+            </div>
           </div>
         </article>
       `;
@@ -1186,10 +1577,13 @@
 
       el("taskCount").textContent = data.task_count ?? tasks.length;
       el("artifactCount").textContent = data.artifact_count ?? (Array.isArray(data.artifacts) ? data.artifacts.length : 0);
+      el("providerUsage").textContent = providerUsageLabel(data) || "0 calls / 0 tokens";
       el("boardName").textContent = boardName(data);
+      el("stopQuest").disabled = !activeQuestChainId || isTerminalFailure(data);
       renderAgents(tasks);
       renderLineList("eventLines", buildEventLog(data), "event-line", "No events yet.");
       renderLineList("meetingLines", buildMeetingRounds(data), "meeting-line", "No meeting round yet.");
+      loadBackendEvents(data);
 
       el("columns").innerHTML = columnDefs.map((column) => {
         const columnTasks = grouped[column.id] || [];
@@ -1211,28 +1605,30 @@
 
     async function maybeFinalizeWithHermes(data) {
       if (finalizeInFlight || !activeQuestChainId) return;
+      const failed = terminalFailedTasks(data);
+      if (failed.length) {
+        setAutoRefresh(false);
+        logHermes([
+          "Run stopped before final assembly.",
+          `Failed tasks: ${failed.join(" / ")}`,
+          "No more finalize calls will be sent for this quest."
+        ]);
+        return;
+      }
       const tasks = Array.isArray(data.tasks) ? data.tasks : [];
-      const buildTasks = tasks.filter((task) => String(task.task_id || "").match(/-build-\d+$/));
+      const fanInTypes = new Set(["execution", "verification", "analysis", "fix"]);
+      const buildTasks = tasks.filter((task) => fanInTypes.has(String(task.task_type || "")));
       const reviewTask = tasks.find((task) => String(task.task_type || "") === "join_review");
       if (!buildTasks.length || !reviewTask) return;
       const finalArtifact = (Array.isArray(data.artifacts) ? data.artifacts : [])
         .find((artifact) => String(artifact.summary || "").includes("hermes_finalized"));
       if (reviewTask.status === "done" && finalArtifact) return;
-      const terminalStatuses = new Set(["done", "failed", "cancelled"]);
-      if (!buildTasks.every((task) => terminalStatuses.has(task.status))) return;
+      if (reviewTask.status !== "done") return;
       finalizeInFlight = true;
-      const failedBuilds = buildTasks.filter((task) => task.status !== "done");
-      logHermes(failedBuilds.length
-        ? [
-            "Hermes meeting detected a failed module.",
-            "Creating bounded repair tasks for the responsible worker.",
-            "Review will wait for repair artifacts."
-          ]
-        : [
-            reviewTask.status === "done" ? "Reviewer output detected." : "Three worker outputs detected.",
-            "Hermes is checking the quest workspace.",
-            "Writing or validating review.md, final-summary.md, and final-artifact.json..."
-          ]);
+      logHermes([
+        "Reviewer output detected.",
+        "Hermes is validating review.md, final-summary.md, and final-artifact.json..."
+      ]);
       try {
         const response = await fetch("/api/hermes/finalize", {
           method: "POST",
@@ -1240,7 +1636,18 @@
           body: JSON.stringify({ quest_chain_id: activeQuestChainId })
         });
         const value = await response.json();
-        if (value.ok && value.dashboard) {
+          if (value.ok && value.dashboard) {
+          if (value.terminal || value.reason === "join_review_failed" || isTerminalFailure(value.dashboard)) {
+            const failedAfterFinalize = terminalFailedTasks(value.dashboard);
+            setAutoRefresh(false);
+            logHermes([
+              "Hermes finalizer stopped.",
+              `Reason: ${value.reason || "terminal_failure"}`,
+              `Failed tasks: ${(failedAfterFinalize.length ? failedAfterFinalize : [value.review_task_id]).filter(Boolean).join(" / ")}`
+            ]);
+            render(value.dashboard);
+            return;
+          }
           if (value.ready === false && value.repair) {
             logHermes([
               "Hermes meeting queued repair work.",
@@ -1256,7 +1663,7 @@
           logHermes([
             "Hermes final check completed.",
             `Files: ${(value.files || []).join(" / ")}`,
-            "Blackboard review task marked done.",
+            "Reviewer output validated; final artifact assembled.",
             telegramLine
           ]);
           render(value.dashboard);
@@ -1276,11 +1683,15 @@
     el("clearButton").addEventListener("click", () => {
       activeQuestChainId = null;
       finalizeInFlight = false;
+      pendingPlanPreview = null;
+      el("confirmQuest").disabled = true;
+      el("stopQuest").disabled = true;
       setAutoRefresh(false);
       el("questId").value = "";
       logHermes(["Output cleared. Ready for a fresh Hermes quest."]);
       renderLineList("eventLines", [], "event-line", "No events yet.");
       renderLineList("meetingLines", [], "meeting-line", "No meeting round yet.");
+      renderTerminalSessions([]);
       const data = emptyDashboard();
       el("jsonInput").value = JSON.stringify(data, null, 2);
       render(data);
@@ -1371,6 +1782,82 @@
       setAutoRefresh(enabled);
     });
 
+    el("columns").addEventListener("click", async (event) => {
+      const button = event.target.closest(".retry-blocked-task");
+      if (!button) return;
+      const taskId = button.dataset.taskId;
+      const questChainId = button.dataset.questChainId || activeQuestChainId;
+      const blockedReason = button.dataset.blockedReason || "provider block";
+      if (!taskId) return;
+      button.disabled = true;
+      logHermes([
+        `Retrying blocked task ${taskId}.`,
+        `Reason was ${blockedReason}; this only reopens the task and does not wake workers.`
+      ]);
+      try {
+        const response = await fetch("/api/task/retry-blocked", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ task_id: taskId, quest_chain_id: questChainId })
+        });
+        const value = await response.json();
+        if (!value.ok) throw new Error(value.retry?.reason || value.error || "retry failed");
+        if (value.dashboard) {
+          el("jsonInput").value = JSON.stringify(value.dashboard, null, 2);
+          render(value.dashboard);
+        } else {
+          await loadDefaultDashboard({ fallbackToSample: false });
+        }
+        logHermes([
+          `Reopened ${taskId} as open.`,
+          "Run or wake workers explicitly when ready; no provider call was started by this button."
+        ]);
+      } catch (error) {
+        logHermes([`Retry blocked task failed: ${error.message}`]);
+      } finally {
+        button.disabled = false;
+      }
+    });
+
+    el("terminalTabs").addEventListener("click", (event) => {
+      const button = event.target.closest(".terminal-tab");
+      if (!button) return;
+      selectedTerminalSessionId = button.dataset.sessionId;
+      renderTerminalSessions(terminalSessionCache);
+    });
+
+    el("stopQuest").addEventListener("click", async () => {
+      setAutoRefresh(false);
+      finalizeInFlight = false;
+      if (!activeQuestChainId) {
+        el("stopQuest").disabled = true;
+        return;
+      }
+      logHermes(["Stopping quest polling and cancelling unclaimed/active board tasks..."]);
+      try {
+        const response = await fetch("/api/quest/stop", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ quest_chain_id: activeQuestChainId })
+        });
+        const value = await response.json();
+        if (!value.ok) throw new Error(value.error || "stop failed");
+        logHermes([
+          "Stop Run applied.",
+          `Cancelled board tasks: ${(value.cancelled || []).join(" / ") || "none"}`,
+          "Already-running provider processes may finish their current call; no new board work will be claimed."
+        ]);
+        await loadDefaultDashboard({ fallbackToSample: false });
+      } catch (error) {
+        logHermes([
+          `Stop Run failed: ${error.message}`,
+          "Auto refresh and finalizer polling are still off in this browser session."
+        ]);
+      } finally {
+        el("stopQuest").disabled = true;
+      }
+    });
+
     el("providerTransport").addEventListener("change", updateProviderChoices);
 
     el("providerCartridge").addEventListener("change", () => {
@@ -1436,7 +1923,7 @@
       }
     });
 
-    el("testProviderNow").addEventListener("click", async () => {
+    async function testSelectedProvider() {
       const cartridge = el("providerCartridge").value;
       const model = el("providerModel").value;
       const capability = el("providerCapability").value;
@@ -1454,31 +1941,128 @@
       } catch (error) {
         setProviderStatus(`Test failed: ${error.message}`);
       }
-    });
+    }
+
+    el("testProviderNow").addEventListener("click", testSelectedProvider);
+
+    function quickProviderPayload() {
+      return {
+        label: el("quickProviderName").value,
+        base_url: el("quickProviderBaseUrl").value,
+        model: el("quickProviderModel").value,
+        env_key: el("quickProviderEnvKey").value,
+        secret: el("quickProviderSecret").value,
+        capability: el("quickProviderCapability").value,
+        add_to_ladder: true
+      };
+    }
+
+    async function saveQuickProvider({ testAfter = false } = {}) {
+      const payload = quickProviderPayload();
+      setProviderStatus(`Saving ${payload.label || "provider"}...`);
+      try {
+        const response = await fetch("/api/provider-lab/quick-add", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+        const result = await response.json();
+        if (!result.ok) throw new Error((result.errors || [result.error || "save failed"]).join("; "));
+        providerLabConfig = {
+          ok: true,
+          transports: result.config.transports,
+          cartridges: result.config.cartridges,
+          capabilities: result.config.capabilities,
+          secret_status: result.config.secret_status
+        };
+        renderProviderLab();
+        el("providerTransport").value = result.transport;
+        updateProviderChoices();
+        el("providerCartridge").value = result.cartridge;
+        el("providerCapability").value = result.capability;
+        el("providerModel").value = payload.model;
+        el("quickProviderSecret").value = "";
+        const repaired = result.repairs && result.repairs.length ? ` repaired: ${result.repairs.join(", ")}` : "";
+        setProviderStatus(`Saved ${result.cartridge}; added to ${result.capability}.${repaired}`);
+        if (testAfter) await testSelectedProvider();
+      } catch (error) {
+        setProviderStatus(`Quick save failed: ${error.message}`);
+      }
+    }
+
+    el("quickAddProvider").addEventListener("click", () => saveQuickProvider({ testAfter: false }));
+    el("quickAddAndTestProvider").addEventListener("click", () => saveQuickProvider({ testAfter: true }));
 
     el("questForm").addEventListener("submit", async (event) => {
       event.preventDefault();
-      const payload = {
-        title: el("questTitle").value,
-        request: el("questRequest").value,
-        quest_chain_id: el("questId").value || questIdFromTitle(el("questTitle").value),
-        allowed_files: el("questAllowed").value,
-        adapter: el("questAdapter").value
-      };
-      el("questId").value = payload.quest_chain_id;
+      if (previewInFlight) return;
+      previewInFlight = true;
+      el("assignQuest").disabled = true;
+      const payload = questPayload();
       const localDemo = ["local-dry-run", "local-file-writer"].includes(payload.adapter);
+      if (localDemo && !window.confirm(`${payload.adapter} is smoke-only and will not use a real model. Continue?`)) {
+        el("questAdapter").value = "auto-rank";
+        return;
+      }
       const providerNote = localDemo
-        ? `Using ${payload.adapter} so the demo stays deterministic and keyless.`
-        : `Using provider adapter ${payload.adapter}; credentials/model quirks may block the run.`;
+        ? `SMOKE MODE: ${payload.adapter} is deterministic and not model-generated.`
+        : `REAL PROVIDER MODE: ${payload.adapter} will use configured provider workers; credentials/model quirks may block the run.`;
       logHermes([
-        "Sending prompt to Hermes S-rank manager.",
-        "Waiting for Hermes to create a bounded worker plan.",
-        "Posting Hermes-derived tasks to blackboard...",
+        "Preparing plan preview only.",
+        "No workers will be started until Confirm Run.",
         providerNote,
-        "Waking workers automatically after board update..."
+        "Waiting for planner skill pack..."
       ]);
       try {
-        const questEndpoint = localDemo ? "/api/quest/manual" : "/api/hermes/quest";
+        const response = await fetch("/api/hermes/plan-preview", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+        const value = await response.json();
+        if (!value.ok) throw new Error(value.error || "plan preview failed");
+        pendingPlanPreview = { payload, value };
+        el("questId").value = value.quest_chain_id;
+        el("confirmQuest").disabled = false;
+        logHermes([
+          ...value.events,
+          `Router mode: ${value.router_mode || "hermes-planner-skill-pack-v0"}`,
+          `Template: ${value.hermes?.template || "custom"}`,
+          `Quest chain: ${value.quest_chain_id}`,
+          `Previewed ${value.tasks.length} tasks. Confirm Run will create the blackboard tasks and wake workers.`
+        ]);
+        render(previewDashboardFromTasks(value));
+      } catch (error) {
+        pendingPlanPreview = null;
+        el("confirmQuest").disabled = true;
+        logHermes([`Failed to preview plan: ${error.message}`]);
+      } finally {
+        previewInFlight = false;
+        el("assignQuest").disabled = false;
+      }
+    });
+
+    el("confirmQuest").addEventListener("click", async () => {
+      if (confirmInFlight) return;
+      if (!pendingPlanPreview) {
+        logHermes(["No plan preview is ready."]);
+        return;
+      }
+      confirmInFlight = true;
+      el("confirmQuest").disabled = true;
+      const payload = {
+        ...pendingPlanPreview.payload,
+        quest_chain_id: pendingPlanPreview.value.quest_chain_id,
+        planner: pendingPlanPreview.value.planner
+      };
+      const localDemo = ["local-dry-run", "local-file-writer"].includes(payload.adapter);
+      logHermes([
+        "Confirm Run received.",
+        "Creating blackboard tasks from the previewed plan.",
+        "Waking workers after board update..."
+      ]);
+      try {
+        const questEndpoint = "/api/hermes/quest";
         const response = await fetch(questEndpoint, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -1488,6 +2072,7 @@
         if (!value.ok) throw new Error(value.error || "quest creation failed");
         activeQuestChainId = value.quest_chain_id;
         el("questId").value = value.quest_chain_id;
+        el("stopQuest").disabled = false;
         const wakeResponse = await fetch("/api/wake", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -1496,7 +2081,8 @@
             adapter: el("questAdapter").value,
             profiles: value.wake_profiles || [],
             interval_seconds: 2,
-            include_hermes_terminal: true
+            include_hermes_terminal: false,
+            visible_terminals: false
           })
         });
         const wakeValue = await wakeResponse.json();
@@ -1510,14 +2096,24 @@
           `Quest chain: ${value.quest_chain_id}`,
           `Created ${value.tasks.length} tasks and refreshed dashboard.`,
           `Worker adapters: ${adapterPlan.join(" / ")}`,
-          `Workers: ${launched.join(" / ")}`
+          `Worker sessions: ${launched.join(" / ")}`,
+          "Worker logs are in the Worker Terminals tabs; no extra terminal windows were opened."
         ]);
+        pendingPlanPreview = null;
+        el("confirmQuest").disabled = true;
         render(wakeValue.dashboard || value.dashboard);
         setAutoRefresh(true);
       } catch (error) {
-        logHermes([`Failed to assign task: ${error.message}`]);
+        logHermes([`Failed to run confirmed plan: ${error.message}`]);
+        if (pendingPlanPreview) el("confirmQuest").disabled = false;
+      } finally {
+        confirmInFlight = false;
       }
     });
+
+    if (new URLSearchParams(window.location.search).get("smoke") !== "1") {
+      el("questAdapter").value = "auto-rank";
+    }
 
     loadProviderLab();
     loadDefaultDashboard();

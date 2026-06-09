@@ -1,0 +1,207 @@
+{
+  "schema_version": "guild_planner_skills_v0",
+  "default_template": "standard-build",
+  "max_execution_tasks": 4,
+  "templates": {
+    "mentor-single-real-demo": {
+      "description": "Golden-path mentor demo: one real worker writes one polished Markdown artifact, then reviewer summarizes it.",
+      "match_keywords": ["mentor demo", "golden path", "single worker", "one worker", "demo chắc", "demo mentor", "mentor"],
+      "tracks": [
+        {
+          "id": "A",
+          "title": "Polished demo artifact",
+          "task_type": "execution",
+          "required_rank": "C",
+          "required_skill": "implementation",
+          "owner_area": "demo-artifact",
+          "output_file": "mentor-demo.md",
+          "output_artifact": "mentor_demo_artifact",
+          "instruction": "Create a polished Markdown demo artifact for Hermes Guild. The file must be presentation-ready for a mentor: include a short title, one-paragraph goal, a compact architecture flow, a visible input/output contract, a sample task board, and a concise risk/next-step section. Keep it concrete, attractive, and bounded."
+        }
+      ],
+      "review": {
+        "title": "Mentor demo review",
+        "instruction": "Review mentor-demo.md for clarity, completeness, and demo readiness. Write review.md and final-summary.md. Do not invent missing runtime claims; summarize what the artifact demonstrates."
+      }
+    },
+    "three-part-local-demo": {
+      "description": "Deterministic three-worker local-file-writer demo with visible parallel worker files.",
+      "match_keywords": ["local-file-writer", "song song", "3 phần", "ba phần", "exactly 3 worker", "3 worker tracks", "build-1.md", "build-2.md", "build-3.md", "final-artifact.json", "data model", "render ui", "interaction notes", "task board"],
+      "tracks": [
+        {
+          "id": "A",
+          "title": "Data model",
+          "task_type": "execution",
+          "required_rank": "C",
+          "required_skill": "requirements",
+          "owner_area": "data-model",
+          "output_file": "build-1.md",
+          "output_artifact": "implementation_result_1",
+          "instruction": "Define the Markdown task board data model, including task fields, status values, sample records, and acceptance notes."
+        },
+        {
+          "id": "B",
+          "title": "Render UI",
+          "task_type": "execution",
+          "required_rank": "C",
+          "required_skill": "risk-analysis",
+          "owner_area": "render-ui",
+          "output_file": "build-2.md",
+          "output_artifact": "implementation_result_2",
+          "instruction": "Describe the visible Markdown task board layout, card rendering rules, empty-state behavior, and UI mismatch risks."
+        },
+        {
+          "id": "C",
+          "title": "Interaction notes",
+          "task_type": "execution",
+          "required_rank": "C",
+          "required_skill": "verification",
+          "owner_area": "interactions",
+          "output_file": "build-3.md",
+          "output_artifact": "implementation_result_3",
+          "instruction": "Document interaction notes, smallest verification checks, expected worker outputs, and remaining risks."
+        }
+      ],
+      "review": {
+        "title": "Join review",
+        "instruction": "Review build-1.md, build-2.md, and build-3.md for integration consistency. Write review.md and final-summary.md."
+      }
+    },
+    "standard-build": {
+      "description": "Build or modify a small usable app feature.",
+      "match_keywords": ["build", "make", "create", "app", "ui", "feature", "demo"],
+      "tracks": [
+        {
+          "id": "A",
+          "title": "Define contract",
+          "task_type": "contract",
+          "required_rank": "C",
+          "required_skill": "planning",
+          "owner_area": "product",
+          "output_file": "plan.md",
+          "output_artifact": "app_spec",
+          "instruction": "Clarify the user request into scope, acceptance criteria, allowed files, and output contract."
+        },
+        {
+          "id": "B",
+          "title": "Implement",
+          "task_type": "execution",
+          "required_rank": "C",
+          "required_skill": "implementation",
+          "owner_area": "implementation",
+          "output_file": "implementation.md",
+          "output_artifact": "implementation_result",
+          "instruction": "Produce the scoped implementation or implementation plan and list exact files changed."
+        },
+        {
+          "id": "C",
+          "title": "Verify",
+          "task_type": "verification",
+          "required_rank": "C",
+          "required_skill": "verification",
+          "owner_area": "quality",
+          "output_file": "verification.md",
+          "output_artifact": "verification_report",
+          "instruction": "Define and run the smallest useful verification checks, then record evidence and remaining risks."
+        }
+      ],
+      "review": {
+        "title": "Join review",
+        "instruction": "Review the contract, implementation, and verification outputs. Request bounded fixes for mismatches; otherwise write review.md and final-summary.md."
+      }
+    },
+    "debug-fix": {
+      "description": "Diagnose and fix suspicious, failing, or broken behavior.",
+      "match_keywords": ["bug", "fix", "broken", "error", "fail", "debug", "sai", "lỗi", "không chạy"],
+      "tracks": [
+        {
+          "id": "A",
+          "title": "Reproduce",
+          "task_type": "verification",
+          "required_rank": "C",
+          "required_skill": "verification",
+          "owner_area": "quality",
+          "output_file": "repro.md",
+          "output_artifact": "repro_report",
+          "instruction": "Reproduce or bound the failure with the smallest command, log, or code path. Capture expected versus actual behavior."
+        },
+        {
+          "id": "B",
+          "title": "Root cause",
+          "task_type": "analysis",
+          "required_rank": "C",
+          "required_skill": "risk-analysis",
+          "owner_area": "diagnosis",
+          "output_file": "root-cause.md",
+          "output_artifact": "root_cause_report",
+          "instruction": "Trace the likely source file/function and explain the smallest safe fix, including risks."
+        },
+        {
+          "id": "C",
+          "title": "Patch",
+          "task_type": "execution",
+          "required_rank": "C",
+          "required_skill": "implementation",
+          "owner_area": "implementation",
+          "output_file": "patch.md",
+          "output_artifact": "patch_result",
+          "instruction": "Apply or specify the bounded patch and record files changed plus verification command."
+        }
+      ],
+      "review": {
+        "title": "Regression review",
+        "instruction": "Check that the patch addresses the reproduced issue without widening scope. Write review.md and final-summary.md."
+      }
+    },
+    "config-provider": {
+      "description": "Configure provider routing, runtime settings, or smoke paths.",
+      "match_keywords": ["provider", "router", "9router", "config", "adapter", "key", "quota", "fallback"],
+      "tracks": [
+        {
+          "id": "A",
+          "title": "Map config",
+          "task_type": "analysis",
+          "required_rank": "C",
+          "required_skill": "requirements",
+          "owner_area": "runtime",
+          "output_file": "config-map.md",
+          "output_artifact": "config_map",
+          "instruction": "Map exact HermesGuildCore repo files and runtime routes affected. Use concrete paths such as docs/incubation/guild-dashboard.html, scripts/guild-dashboard-server.py, _runtime/flock/worker_team_prototype.py, scripts/run-guild-worker-agent.ps1, config/guild/capability-adapters.json, config/guild/provider-adapters.json, and config/guild/planner-skills.json when relevant. Include the word requirements in the requirements summary. Do not invent src/frontend or src/backend paths. Do not expose secrets."
+        },
+        {
+          "id": "B",
+          "title": "Apply config",
+          "task_type": "execution",
+          "required_rank": "C",
+          "required_skill": "implementation",
+          "owner_area": "runtime",
+          "output_file": "config-change.md",
+          "output_artifact": "config_change",
+          "instruction": "Describe the smallest reversible config/runtime change using exact HermesGuildCore repo paths. For Retry provider block, the real route is POST /api/task/retry-blocked and the relevant files are scripts/guild-dashboard-server.py, _runtime/flock/worker_team_prototype.py, docs/incubation/guild-dashboard.html, and scripts/run-guild-worker-agent.ps1. Do not invent flags such as enable_blocked_provider_retry, task_execution_adapter, /api/providers/retry-block, or /dashboard/retry-provider-block. Preserve local smoke fallback."
+        },
+        {
+          "id": "C",
+          "title": "Smoke route",
+          "task_type": "verification",
+          "required_rank": "C",
+          "required_skill": "verification",
+          "owner_area": "quality",
+          "output_file": "smoke.md",
+          "output_artifact": "smoke_report",
+          "instruction": "Run or specify only bounded non-demo smoke checks using exact HermesGuildCore commands and routes. For Retry provider block, use POST /api/task/retry-blocked and verify that it reopens a blocked task without waking workers. Mention the actual route/file evidence, record whether the route is real provider, local smoke, or blocked, and do not invent dashboard URLs or API routes."
+        }
+      ],
+      "review": {
+        "title": "Provider route review",
+        "instruction": "Verify the route labels are honest, fallback behavior is bounded, and no secrets are exposed. Write review.md and final-summary.md."
+      }
+    }
+  },
+  "rules": [
+    "Prefer plan-only preview before waking workers.",
+    "Do not split tiny requests just to use every worker.",
+    "Each worker task must declare output_file, output_artifact, required_skill, and concrete evidence.",
+    "Use join_review for fan-in decisions and bounded fix task proposals.",
+    "Keep provider routing as capability ammo, not hardcoded worker identity."
+  ]
+}

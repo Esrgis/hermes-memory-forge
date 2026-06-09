@@ -14,7 +14,16 @@
       "secret_policy": "external",
       "command": "runtime-selected ammo ladder",
       "intended_profiles": ["builder", "tester", "reviewer"],
-      "notes": "Gun selector. Keeps capability permissions fixed and tries provider/model ammo from config/guild/capability-adapters.json."
+      "notes": "Gun selector. Keeps capability permissions fixed and tries direct provider/model ammo from config/guild/capability-adapters.json. 9Router is explicit only."
+    },
+    "9router": {
+      "kind": "local_router_adapter",
+      "secret_policy": "external",
+      "command": "OpenAI-compatible chat.completions through 127.0.0.1:20128",
+      "transport": "9router-local",
+      "default_model": "openrouter/qwen/qwen3-coder:free",
+      "intended_profiles": ["builder", "tester", "reviewer"],
+      "notes": "Explicit local 9Router adapter. Use this when testing router-managed provider combos; it is intentionally not part of the default auto-rank ladder."
     },
     "groq": {
       "kind": "hosted_model",
@@ -71,6 +80,13 @@
       "command": null,
       "intended_profiles": ["builder", "tester", "reviewer"],
       "notes": "Test-only adapter that returns malformed artifact JSON so worker-agent validation can prove invalid_adapter_output handling."
+    },
+    "provider-exhausted-smoke": {
+      "kind": "test_only",
+      "secret_policy": "none",
+      "command": null,
+      "intended_profiles": ["builder", "tester", "reviewer"],
+      "notes": "Test-only adapter that simulates provider_exhausted so worker-agent status policy can prove provider infra failures stay blocked/retryable."
     }
   }
 }

@@ -96,6 +96,7 @@ def post_openai_compatible(
             if exc.code == 429 and attempt < max_attempts:
                 time.sleep(retry_delay_seconds(exc, error_text))
                 continue
+            blocked_reason = classify_http_provider_failure(exc.code)
             return AdapterResult(
                 ok=False,
                 adapter=context.adapter_name,
@@ -105,9 +106,10 @@ def post_openai_compatible(
                 commands_run=[command_label],
                 test_result="failed",
                 known_risks=[safe_error(error_text, api_key)],
-                blocked_reason="provider_failed",
+                blocked_reason=blocked_reason,
             )
         except OSError as exc:
+            blocked_reason = classify_transport_failure(exc)
             return AdapterResult(
                 ok=False,
                 adapter=context.adapter_name,
@@ -116,7 +118,8 @@ def post_openai_compatible(
                 summary=f"{provider_label} request failed: {exc}",
                 commands_run=[command_label],
                 test_result="failed",
-                blocked_reason="provider_failed",
+                known_risks=[safe_error(str(exc), api_key)],
+                blocked_reason=blocked_reason,
             )
     else:
         return AdapterResult(
@@ -172,6 +175,27 @@ def safe_error(value: str, api_key: str | None) -> str:
     if api_key:
         result = result.replace(api_key, "[REDACTED]")
     return result[:2000]
+
+
+def classify_http_provider_failure(status_code: int) -> str:
+    if status_code in {401, 403}:
+        return "provider_auth_failed"
+    if status_code == 429:
+        return "provider_rate_limited"
+    if status_code in {500, 502, 503, 504}:
+        return "provider_service_unavailable"
+    return "provider_failed"
+
+
+def classify_transport_failure(exc: OSError) -> str:
+    text = str(exc).lower()
+    if "10061" in text or "connection refused" in text or "actively refused" in text:
+        return "provider_service_unavailable"
+    if "timed out" in text or "timeout" in text:
+        return "provider_timeout"
+    if "name or service not known" in text or "getaddrinfo failed" in text:
+        return "provider_service_unavailable"
+    return "provider_failed"
 
 
 def retry_delay_seconds(exc: urllib.error.HTTPError, error_text: str) -> float:

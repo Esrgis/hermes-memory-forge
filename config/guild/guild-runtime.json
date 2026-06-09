@@ -32,14 +32,21 @@
   "scheduler": {
     "rank_policy": "minimum_rank",
     "skill_policy": "exact_required_skill",
+    "claim_cooldown_seconds": 3,
     "build_provider_role": "worker",
     "exclude_profiles": ["hermes-codex", "tester", "reviewer"],
-    "preferred_adapters": {
-      "worker-a": "opencode",
-      "worker-b": "openrouter",
-      "worker-c": "groq"
+    "provider_policy": "capability_pool",
+    "auto_rank_adapter": "auto-ammo",
+    "build_capability": "code-edit-worker",
+    "review_capability": "join-review-worker",
+    "ammo_rotation": "round_robin",
+    "legacy_preferred_adapters": {
+      "worker-a": "gemini",
+      "worker-b": "opencode",
+      "worker-c": "openrouter",
+      "reviewer": "groq"
     },
-    "fallback_adapter_ladder": ["opencode", "openrouter", "groq"]
+    "fallback_adapter_ladder": ["gemini", "opencode", "openrouter", "groq"]
   },
   "review": {
     "required_rank": "B",

@@ -17,6 +17,30 @@
       "structured_output_reliability": "high",
       "notes": "Deterministic demo cartridge that writes scoped worker deliverables into guild-workspaces."
     },
+    "9router:builder-cheap": {
+      "transport": "9router-local",
+      "model": "openrouter/qwen/qwen3-coder:free",
+      "cost_tier": "free_or_9router_managed",
+      "latency": "medium",
+      "structured_output_reliability": "medium",
+      "notes": "9Router-managed builder combo/model. Provider keys, quota, and fallback live in 9Router."
+    },
+    "9router:reviewer-stable": {
+      "transport": "9router-local",
+      "model": "openrouter/openai/gpt-oss-120b:free",
+      "cost_tier": "free_or_9router_managed",
+      "latency": "medium",
+      "structured_output_reliability": "medium",
+      "notes": "9Router-managed reviewer combo/model. Prefer stable structured review output."
+    },
+    "9router:free-fallback": {
+      "transport": "9router-local",
+      "model": "openrouter/minimax/minimax-m2.5:free",
+      "cost_tier": "free_or_9router_managed",
+      "latency": "medium",
+      "structured_output_reliability": "medium",
+      "notes": "9Router-managed free fallback cartridge."
+    },
     "opencode:deepseek-v4-flash-free": {
       "transport": "opencode-cli",
       "model": "opencode/deepseek-v4-flash-free",
