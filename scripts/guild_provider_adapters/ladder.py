@@ -26,7 +26,12 @@ class AmmoLadderAdapter(ProviderAdapter):
         ladder = resolve_ammo_ladder(context.capability_config, context.combo_config)
         if context.provider:
             preferred = str(context.provider)
-            if preferred in ladder:
+            if preferred.startswith("combo:"):
+                combo_name = preferred[6:]
+                combo_items = resolve_ammo_ladder({"ammo_ladder": [preferred]}, context.combo_config)
+                if combo_items:
+                    ladder = combo_items
+            elif preferred in ladder:
                 ladder = [preferred, *[item for item in ladder if item != preferred]]
             else:
                 ladder = [preferred]

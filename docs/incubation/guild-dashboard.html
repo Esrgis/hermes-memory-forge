@@ -1196,14 +1196,8 @@
           <div class="quest-field">
             <label for="questAdapter">Adapter</label>
             <select id="questAdapter" autocomplete="off">
-              <option value="auto-rank" selected>auto-rank (real workers)</option>
-              <option value="auto-ammo">auto-ammo</option>
-              <option value="opencode">opencode</option>
-              <option value="openrouter">openrouter</option>
-              <option value="groq">groq</option>
-              <option value="gemini">gemini</option>
-              <option value="local-file-writer">local-file-writer (smoke only)</option>
-              <option value="local-dry-run">local-dry-run (smoke only)</option>
+              <option value="auto-ammo" selected>real workers (auto-rank + auto-ammo)</option>
+              <option value="local-dry-run">smoke only (local-dry-run)</option>
             </select>
           </div>
           <div class="quest-field">
@@ -1871,7 +1865,7 @@ Keep the output presentation-ready, bounded, and easy to explain to a mentor.</t
       const providerName = String(provider.name || "").toLowerCase();
       const exactMatch = Object.entries(transports).find(([, t]) => t.provider_id === providerId);
         if (exactMatch) return { name: exactMatch[0], transport: exactMatch[1] };
-        // fallback to fuzzy match cũ
+        // fallback to fuzzy match cu
       const match = Object.entries(transports).find(([name, transport]) => {
         const haystack = [name, transport.label, transport.backend_adapter].join(" ").toLowerCase();
         return haystack.includes(providerId) || (providerName && haystack.includes(providerName));
@@ -2953,7 +2947,7 @@ Keep the output presentation-ready, bounded, and easy to explain to a mentor.</t
         el("modalProviderSecret").value = "";
         const repaired = result.repairs && result.repairs.length ? ` repaired: ${result.repairs.join(", ")}` : "";
         setProviderStatus(`Connected ${result.cartridge}; added to ${result.capability}.${repaired}`);
-        setProviderModalStatus("Connected ✓", "good");
+        setProviderModalStatus("Connected OK", "good");
         if (testAfter) await testSelectedProvider();
         if (listAfter) el("modalListModels").click();
       } catch (error) {

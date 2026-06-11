@@ -44,6 +44,7 @@ class GroqAdapter(ProviderAdapter):
                 {"role": "user", "content": context.message},
             ],
             "temperature": 0,
+            "max_tokens": 4096,
         }
         return post_openai_compatible(
             context=context,
@@ -220,4 +221,3 @@ def normalize_json_text(value: str) -> str:
         if lines[-1].strip() == "```":
             return "\n".join(lines[1:-1]).strip()
     return text
-

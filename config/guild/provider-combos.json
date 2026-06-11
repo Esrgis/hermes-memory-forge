@@ -14,15 +14,27 @@
       "items": [
         {
           "cartridge": "gemini:gemini-2.5-flash",
-          "on_flags": ["provider_service_unavailable", "provider_rate_limited", "provider_timeout"]
+          "on_flags": [
+            "provider_service_unavailable",
+            "provider_rate_limited",
+            "provider_timeout"
+          ]
         },
         {
           "cartridge": "opencode:deepseek-v4-flash-free",
-          "on_flags": ["provider_service_unavailable", "provider_rate_limited", "provider_timeout"]
+          "on_flags": [
+            "provider_service_unavailable",
+            "provider_rate_limited",
+            "provider_timeout"
+          ]
         },
         {
           "cartridge": "openrouter:poolside-laguna-free",
-          "on_flags": ["provider_service_unavailable", "provider_rate_limited", "provider_timeout"]
+          "on_flags": [
+            "provider_service_unavailable",
+            "provider_rate_limited",
+            "provider_timeout"
+          ]
         }
       ]
     },
@@ -33,8 +45,20 @@
       "notes": "Current reviewer route as a named combo; add additional reviewer cartridges here before changing join-review-worker defaults.",
       "items": [
         {
+          "cartridge": "gemini:gemini-2.5-flash",
+          "on_flags": [
+            "provider_service_unavailable",
+            "provider_rate_limited",
+            "provider_timeout"
+          ]
+        },
+        {
           "cartridge": "groq:gpt-oss-20b",
-          "on_flags": ["provider_service_unavailable", "provider_rate_limited", "provider_timeout"]
+          "on_flags": [
+            "provider_service_unavailable",
+            "provider_rate_limited",
+            "provider_timeout"
+          ]
         }
       ]
     },

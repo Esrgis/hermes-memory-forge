@@ -19,9 +19,7 @@
         "exhausted": "blocked_reason=provider_exhausted"
       },
       "ammo_ladder": [
-        "gemini:gemini-2.5-flash",
-        "opencode:deepseek-v4-flash-free",
-        "openrouter:poolside-laguna-free",
+        "combo:coding-stack",
         "cerebras"
       ],
       "notes": "Default gun for bounded execution workers. Auto-rank uses direct providers first: Gemini, then OpenCode, then OpenRouter Poolside for the third build worker. 9Router is kept as an explicit adapter/route, not the automatic fallback path."
@@ -44,7 +42,7 @@
         "exhausted": "blocked_reason=provider_exhausted"
       },
       "ammo_ladder": [
-        "groq:gpt-oss-20b"
+        "combo:review-stack"
       ],
       "notes": "Fan-in review gun. It can inspect upstream artifacts but still cannot read secrets or unrelated board context. Groq is the default reviewer path. OpenRouter Poolside is excluded from artifact-JSON review ladders because it is not reliable for compact artifact output; 9Router remains explicit only."
     },
