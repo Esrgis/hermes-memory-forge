@@ -72,6 +72,14 @@
       "latency": "medium",
       "structured_output_reliability": "low_to_medium",
       "notes": "Gemini cartridge kept as fallback; prior CLI path was unreliable."
+    },
+    "cerebras": {
+      "transport": "cerebras-http",
+      "model": "",
+      "cost_tier": "unknown",
+      "latency": "unknown",
+      "structured_output_reliability": "unknown",
+      "notes": "Quick-added cartridge for Cerebras."
     }
   }
 }

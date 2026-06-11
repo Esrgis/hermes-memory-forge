@@ -64,8 +64,10 @@ def main() -> int:
     adapters = load_json(first_existing(config_root / "provider-adapters.json", legacy_root / "provider-adapters.json"))
     cartridges_path = config_root / "model-cartridges.json"
     transports_path = config_root / "provider-transports.json"
+    combos_path = config_root / "provider-combos.json"
     cartridges = load_json(cartridges_path) if cartridges_path.is_file() else {"cartridges": {}}
     transports = load_json(transports_path) if transports_path.is_file() else {"transports": {}}
+    combos = load_json(combos_path) if combos_path.is_file() else {"combos": {}}
     capabilities_path = first_existing(
         config_root / "capability-adapters.json",
         legacy_root / "capability-adapters.json",
@@ -116,6 +118,7 @@ def main() -> int:
         capability_name=capability_name,
         capability_config=capability_config,
         ammo_config=adapters.get("adapters", {}),
+        combo_config=combos.get("combos", {}),
         cartridge_config=cartridges.get("cartridges", {}),
         transport_config=transports.get("transports", {}),
     )

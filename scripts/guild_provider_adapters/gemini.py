@@ -4,7 +4,7 @@ import os
 import shutil
 import subprocess
 
-from .base import AdapterContext, AdapterResult, ProviderAdapter, agent_id
+from .base import AdapterContext, AdapterResult, ProviderAdapter, agent_id, GUILD_WORKER_SYSTEM_PROMPT
 from .groq import normalize_json_text, post_openai_compatible
 
 
@@ -115,8 +115,7 @@ class GeminiCliAdapter(ProviderAdapter):
                 {
                     "role": "system",
                     "content": (
-                        "Return only compact JSON matching the worker artifact schema. "
-                        "Do not include markdown fences."
+                        GUILD_WORKER_SYSTEM_PROMPT
                     ),
                 },
                 {"role": "user", "content": context.message},
@@ -131,3 +130,4 @@ class GeminiCliAdapter(ProviderAdapter):
             provider_label="Gemini",
             command_label=f"gemini openai.chat.completions model={model}",
         )
+

@@ -1,0 +1,54 @@
+{
+  "schema_version": "guild_provider_combos_v0",
+  "source_inspiration": {
+    "project": "9Router",
+    "license": "MIT",
+    "notes": "Guild-native named provider/model fallback chains inspired by 9Router combos. Runtime support expands combo names into cartridge ladders; default capability ladders are unchanged until explicitly switched."
+  },
+  "combos": {
+    "coding-stack": {
+      "kind": "llm",
+      "capability": "code-edit-worker",
+      "label": "Coding fallback stack",
+      "notes": "Default real-provider coding order expressed as a named combo.",
+      "items": [
+        {
+          "cartridge": "gemini:gemini-2.5-flash",
+          "on_flags": ["provider_service_unavailable", "provider_rate_limited", "provider_timeout"]
+        },
+        {
+          "cartridge": "opencode:deepseek-v4-flash-free",
+          "on_flags": ["provider_service_unavailable", "provider_rate_limited", "provider_timeout"]
+        },
+        {
+          "cartridge": "openrouter:poolside-laguna-free",
+          "on_flags": ["provider_service_unavailable", "provider_rate_limited", "provider_timeout"]
+        }
+      ]
+    },
+    "review-stack": {
+      "kind": "llm",
+      "capability": "join-review-worker",
+      "label": "Review fallback stack",
+      "notes": "Current reviewer route as a named combo; add additional reviewer cartridges here before changing join-review-worker defaults.",
+      "items": [
+        {
+          "cartridge": "groq:gpt-oss-20b",
+          "on_flags": ["provider_service_unavailable", "provider_rate_limited", "provider_timeout"]
+        }
+      ]
+    },
+    "deterministic-demo-stack": {
+      "kind": "llm",
+      "capability": "scoped-demo-writer",
+      "label": "Deterministic demo stack",
+      "notes": "No-provider demo path for proving file output and final assembly without paid/quota provider calls.",
+      "items": [
+        {
+          "cartridge": "local:file-writer",
+          "on_flags": []
+        }
+      ]
+    }
+  }
+}

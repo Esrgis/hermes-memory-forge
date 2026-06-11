@@ -77,13 +77,39 @@ function Test-RetryableInfrastructureBlockedReason {
 
     $retryableReasons = @(
         "adapter_not_implemented",
+        "provider_auth_failed",
         "provider_error_event",
         "provider_failed",
         "provider_missing",
+        "provider_rate_limited",
+        "provider_service_unavailable",
         "provider_timeout",
         "provider_exhausted"
     )
     return $retryableReasons -contains ([string]$Reason)
+}
+
+function Add-GuildEventLog {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$Event,
+        [Parameter(Mandatory = $true)]
+        [hashtable]$Details
+    )
+
+    try {
+        $logDir = Join-Path $workspace "_runtime\dashboard"
+        New-Item -ItemType Directory -Force -Path $logDir | Out-Null
+        $record = [ordered]@{
+            ts = (Get-Date).ToString("yyyy-MM-ddTHH:mm:sszzz")
+            event = $Event
+            details = $Details
+        }
+        $line = $record | ConvertTo-Json -Depth 12 -Compress
+        Add-Content -LiteralPath (Join-Path $logDir "guild-events.jsonl") -Value $line -Encoding UTF8
+    } catch {
+        # Logging must never break worker execution.
+    }
 }
 
 if (-not (Test-Path -LiteralPath $python)) {
@@ -229,6 +255,70 @@ function Test-DeclaredFilesWithinAllowedScope {
         blocked_reason = if ($errors.Count -eq 0) { $null } else { "files_outside_allowed_scope" }
         errors = $errors
     }
+}
+
+function Test-GuildFileOutputsWithinAllowedScope {
+    param(
+        [Parameter(Mandatory = $true)]
+        [object]$WorkerOutput,
+        [Parameter(Mandatory = $true)]
+        [string]$AllowedFiles
+    )
+
+    $fieldNames = @($WorkerOutput.PSObject.Properties.Name)
+    if ($fieldNames -notcontains "file_outputs" -or $null -eq $WorkerOutput.file_outputs) {
+        return [pscustomobject]@{
+            valid = $true
+            blocked_reason = $null
+            errors = @()
+        }
+    }
+
+    if (-not (Test-ArtifactArrayField -Value $WorkerOutput.file_outputs)) {
+        return [pscustomobject]@{
+            valid = $false
+            blocked_reason = "invalid_adapter_output"
+            errors = @("file_outputs must be an array.")
+        }
+    }
+
+    $errors = @()
+    $paths = @()
+    foreach ($item in $WorkerOutput.file_outputs) {
+        $itemFields = @($item.PSObject.Properties.Name)
+        if ($itemFields -notcontains "path") {
+            $errors += "Each file_outputs item must include path."
+            continue
+        }
+        $relative = ([string]$item.path).Trim() -replace '\\', '/'
+        if ([string]::IsNullOrWhiteSpace($relative)) {
+            $errors += "file_outputs contains an empty path."
+            continue
+        }
+        if ([System.IO.Path]::IsPathRooted($relative) -or $relative.Contains("..")) {
+            $errors += "file_outputs path is outside workspace scope: $relative"
+            continue
+        }
+        $paths += $relative
+    }
+
+    if ($errors.Count -gt 0) {
+        return [pscustomobject]@{
+            valid = $false
+            blocked_reason = "files_outside_allowed_scope"
+            errors = $errors
+        }
+    }
+
+    if ($paths.Count -eq 0) {
+        return [pscustomobject]@{
+            valid = $true
+            blocked_reason = $null
+            errors = @()
+        }
+    }
+
+    return Test-DeclaredFilesWithinAllowedScope -FilesChanged $paths -AllowedFiles $AllowedFiles
 }
 
 function Get-GuildQuestWorkspacePrefix {
@@ -380,7 +470,11 @@ function Write-GuildWorkerFileOutputs {
     foreach ($item in $WorkerOutput.file_outputs) {
         $itemFields = @($item.PSObject.Properties.Name)
         if ($itemFields -notcontains "path" -or $itemFields -notcontains "content") {
-            $errors += "Each file_outputs item must include path and content."
+            $missing = @()
+            if ($itemFields -notcontains "path") { $missing += "path" }
+            if ($itemFields -notcontains "content") { $missing += "content" }
+            $hint = if ($itemFields -contains "summary" -and $itemFields -notcontains "content") { " (got 'summary' instead of 'content' -- file_outputs[].content must be the full file text, not a description)" } else { "" }
+            $errors += "file_outputs item missing required field(s): $($missing -join ', ')$hint"
             continue
         }
         $relative = [string]$item.path
@@ -477,6 +571,7 @@ function Normalize-GuildArtifactTestResult {
         "not_needed" { return "not_required" }
         "not applicable" { return "not_required" }
         "n/a" { return "not_required" }
+        "" { return "not_required" }
         default { return $Value }
     }
 }
@@ -958,6 +1053,30 @@ if (-not $claim.claimed) {
 }
 
 $task = $claim.task
+Add-GuildEventLog -Event "worker_task_claimed" -Details @{
+    schema_version = "guild_event_v1"
+    layer = "worker-agent"
+    phase = "claim"
+    severity = "info"
+    quest_chain_id = $task.quest_chain_id
+    task_id = $task.task_id
+    task_title = $task.title
+    task_type = $task.task_type
+    profile = $Profile
+    agent_id = $profileData.agent_id
+    adapter = $Adapter
+    provider = $Provider
+    model = $Model
+    input = @{
+        source = "blackboard.claim-next"
+        quest_chain_id = $task.quest_chain_id
+        task_id = $task.task_id
+    }
+    output = @{
+        claimed = $true
+        visible_scope = if ($task.task_type -eq "join_review") { "join_review" } else { "task_only" }
+    }
+}
 $taskJson = $task | ConvertTo-Json -Depth 20
 $visibleScope = if ($task.task_type -eq "join_review") { "join_review" } else { "task_only" }
 $mayCreateFixTask = if ($task.task_type -eq "join_review") { "true" } else { "false" }
@@ -1056,11 +1175,70 @@ if ($Capability) {
 if ($task.task_type) {
     $adapterArgs.TaskType = [string]$task.task_type
 }
-$adapterRaw = & $adapterScript @adapterArgs
-if (-not $adapterRaw) {
-    throw "Provider adapter failed with exit code $LASTEXITCODE"
+try {
+    $adapterRaw = & $adapterScript @adapterArgs
+    $adapterExitCode = $LASTEXITCODE
+    if ($adapterExitCode -ne 0) {
+        throw "Provider adapter failed with exit code $adapterExitCode. Output: $($adapterRaw -join "`n")"
+    }
+    if (-not $adapterRaw) {
+        throw "Provider adapter returned no output (exit code 0)."
+    }
+} catch {
+    Add-GuildEventLog -Event "worker_adapter_invocation_failed" -Details @{
+        schema_version = "guild_event_v1"
+        layer = "provider-adapter"
+        phase = "invoke"
+        severity = "error"
+        quest_chain_id = $task.quest_chain_id
+        task_id = $task.task_id
+        task_title = $task.title
+        profile = $Profile
+        agent_id = $profileData.agent_id
+        adapter = $Adapter
+        provider = $Provider
+        model = $Model
+        error = $_.Exception.Message
+        input = @{
+            source = "worker-agent.prompt-packet"
+            task_id = $task.task_id
+            adapter = $Adapter
+        }
+        output = @{
+            ok = $false
+            blocked_reason = "provider_failed"
+        }
+    }
+    throw
 }
-$adapterResult = $adapterRaw | ConvertFrom-Json
+try {
+    $adapterResult = $adapterRaw | ConvertFrom-Json
+} catch {
+    Add-GuildEventLog -Event "worker_adapter_result_parse_failed" -Details @{
+        schema_version = "guild_event_v1"
+        layer = "provider-adapter"
+        phase = "parse"
+        severity = "error"
+        quest_chain_id = $task.quest_chain_id
+        task_id = $task.task_id
+        task_title = $task.title
+        profile = $Profile
+        agent_id = $profileData.agent_id
+        adapter = $Adapter
+        provider = $Provider
+        model = $Model
+        error = $_.Exception.Message
+        input = @{
+            source = "provider-adapter.stdout"
+            task_id = $task.task_id
+        }
+        output = @{
+            ok = $false
+            blocked_reason = "invalid_adapter_output"
+        }
+    }
+    throw
+}
 
 if (Test-GuildQuestStopRequested -QuestId ([string]$task.quest_chain_id)) {
     $result = [pscustomobject]@{
@@ -1108,14 +1286,23 @@ $scopeValidation = if ($workerOutput) {
         errors = @("Adapter output did not produce a worker payload.")
     }
 }
-$fileWrite = if ($workerOutput -and [bool]$artifactValidation.valid -and [bool]$groundingValidation.valid -and [bool]$scopeValidation.valid) {
+$fileOutputScopeValidation = if ($workerOutput) {
+    Test-GuildFileOutputsWithinAllowedScope -WorkerOutput $workerOutput -AllowedFiles ([string]$task.allowed_files)
+} else {
+    [pscustomobject]@{
+        valid = $false
+        blocked_reason = "invalid_adapter_output"
+        errors = @("Adapter output did not produce file_outputs.")
+    }
+}
+$fileWrite = if ($workerOutput -and [bool]$artifactValidation.valid -and [bool]$groundingValidation.valid -and [bool]$scopeValidation.valid -and [bool]$fileOutputScopeValidation.valid) {
     Write-GuildWorkerFileOutputs -WorkerOutput $workerOutput -Workspace $workspace
 } else {
     [pscustomobject]@{
         ok = $false
         skipped = $true
         written = @()
-        errors = @("Skipped file output write because artifact, grounding, or scope validation failed.")
+        errors = @("Skipped file output write because artifact, grounding, scope, or file output scope validation failed.")
     }
 }
 $artifactOk = [bool]$adapterResult.ok `
@@ -1123,6 +1310,7 @@ $artifactOk = [bool]$adapterResult.ok `
     -and [bool]$artifactValidation.valid `
     -and [bool]$groundingValidation.valid `
     -and [bool]$scopeValidation.valid `
+    -and [bool]$fileOutputScopeValidation.valid `
     -and [bool]$fileWrite.ok `
     -and [bool]$workerOutput.ok `
     -and -not $workerOutput.blocked_reason
@@ -1135,6 +1323,8 @@ $effectiveBlockedReason = if ($adapterResult.blocked_reason) {
     $groundingValidation.blocked_reason
 } elseif ($scopeValidation -and -not $scopeValidation.valid) {
     $scopeValidation.blocked_reason
+} elseif ($fileOutputScopeValidation -and -not $fileOutputScopeValidation.valid) {
+    $fileOutputScopeValidation.blocked_reason
 } elseif ($fileWrite -and -not $fileWrite.ok) {
     "file_output_write_failed"
 } elseif ($workerOutput -and $workerOutput.blocked_reason) {
@@ -1158,6 +1348,7 @@ $artifactPayload = [ordered]@{
     adapter_output_validation = $artifactValidation
     artifact_grounding_validation = $groundingValidation
     file_scope_validation = $scopeValidation
+    file_output_scope_validation = $fileOutputScopeValidation
     file_output_write = $fileWrite
     worker_output = $workerOutput
     blocked_reason = $effectiveBlockedReason
@@ -1214,6 +1405,50 @@ if ($artifactOk -and -not $KeepClaimed) {
 
 $unlock = Invoke-GuildCliJson -Arguments (New-GuildArgs -Tail @("unlock-ready", "--limit", "50"))
 
+$finalEvent = if ($artifactOk) {
+    "worker_task_done"
+} elseif ($statusUpdate -and [string]$statusUpdate.status -eq "blocked") {
+    "worker_task_blocked"
+} else {
+    "worker_task_failed"
+}
+Add-GuildEventLog -Event $finalEvent -Details @{
+    schema_version = "guild_event_v1"
+    layer = "worker-agent"
+    phase = "complete"
+    severity = if ($artifactOk) { "info" } elseif ($statusUpdate -and [string]$statusUpdate.status -eq "blocked") { "warn" } else { "error" }
+    quest_chain_id = $task.quest_chain_id
+    task_id = $task.task_id
+    task_title = $task.title
+    task_type = $task.task_type
+    profile = $Profile
+    agent_id = $profileData.agent_id
+    adapter = $Adapter
+    provider = $Provider
+    model = $Model
+    status = if ($statusUpdate -and $statusUpdate.status) { $statusUpdate.status } elseif ($artifactOk) { "done" } else { "failed" }
+    blocked_reason = $effectiveBlockedReason
+    artifact_validation_valid = [bool]$artifactValidation.valid
+    grounding_valid = [bool]$groundingValidation.valid
+    file_scope_valid = [bool]$scopeValidation.valid
+    file_output_scope_valid = [bool]$fileOutputScopeValidation.valid
+    file_write_ok = [bool]$fileWrite.ok
+    payload_path = (Resolve-Path -LiteralPath $payloadPath).Path.Replace($workspace, "").TrimStart("\")
+    input = @{
+        source = "provider-adapter.result"
+        task_id = $task.task_id
+        adapter = $Adapter
+        provider = $Provider
+        model = $Model
+    }
+    output = @{
+        artifact_ok = $artifactOk
+        status = if ($statusUpdate -and $statusUpdate.status) { $statusUpdate.status } elseif ($artifactOk) { "done" } else { "failed" }
+        blocked_reason = $effectiveBlockedReason
+        payload_path = (Resolve-Path -LiteralPath $payloadPath).Path.Replace($workspace, "").TrimStart("\")
+    }
+}
+
 $result = [pscustomobject]@{
     ok = $artifactOk
     claimed = $true
@@ -1235,3 +1470,4 @@ if ($Json) {
 } else {
     $result
 }
+

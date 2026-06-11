@@ -372,6 +372,11 @@ class GuildDashboardServer(SimpleHTTPRequestHandler):
             quest_chain_id = query.get("quest_chain_id", [""])[0]
             self.handle_demo_status(quest_chain_id)
             return
+        if parsed.path == "/api/dev/mtime":
+            html_path = self.workspace / "docs" / "incubation" / "guild-dashboard.html"
+            mtime = html_path.stat().st_mtime if html_path.exists() else 0
+            self.send_json({"mtime": mtime})
+            return
         super().do_GET()
 
     def do_POST(self) -> None:  # noqa: N802
@@ -418,6 +423,9 @@ class GuildDashboardServer(SimpleHTTPRequestHandler):
                 return
             if parsed.path == "/api/provider-lab/quick-add":
                 self.handle_provider_lab_quick_add(body)
+                return
+            if parsed.path == "/api/provider-lab/save-combo":
+                self.handle_provider_lab_save_combo(body)
                 return
             if parsed.path == "/api/hermes/plan-preview":
                 self.handle_hermes_plan_preview(body)
@@ -1581,6 +1589,10 @@ Required JSON schema:
                 "transports": config["transports"],
                 "cartridges": config["cartridges"],
                 "capabilities": config["capabilities"],
+                "provider_capabilities": config["provider_capabilities"],
+                "combos": config["combos"],
+                "failure_flags": config["failure_flags"],
+                "provider_catalog": config["provider_catalog"],
                 "secret_status": provider_secret_status(self.workspace, env_keys),
             }
         )
@@ -1628,6 +1640,7 @@ Required JSON schema:
             {
                 "ok": True,
                 "transport": transport_name,
+                "source": dynamic.get("source") if isinstance(dynamic, dict) else None,
                 "models": models,
                 "dynamic": dynamic,
             }
@@ -1708,6 +1721,10 @@ Required JSON schema:
         result = quick_add_provider(self.workspace, body)
         self.send_json(result, status=200 if result["ok"] else 400)
 
+    def handle_provider_lab_save_combo(self, body: dict[str, Any]) -> None:
+        result = save_provider_combo(self.workspace, body)
+        self.send_json(result, status=200 if result["ok"] else 400)
+
 
 def slugify(value: str) -> str:
     text = "".join(char.lower() if char.isalnum() else "-" for char in value)
@@ -1753,8 +1770,52 @@ def normalize_chat_completions_url(value: str) -> tuple[str, list[str]]:
     return url, repairs
 
 
+def provider_catalog_default_base_url(workspace: Path, provider_id_or_label: str) -> str:
+    known_chat_urls = {
+        "openrouter": "https://openrouter.ai/api/v1/chat/completions",
+        "openai": "https://api.openai.com/v1/chat/completions",
+        "groq": "https://api.groq.com/openai/v1/chat/completions",
+        "deepseek": "https://api.deepseek.com/v1/chat/completions",
+        "mistral": "https://api.mistral.ai/v1/chat/completions",
+        "xai": "https://api.x.ai/v1/chat/completions",
+        "together": "https://api.together.xyz/v1/chat/completions",
+        "fireworks": "https://api.fireworks.ai/inference/v1/chat/completions",
+        "cerebras": "https://api.cerebras.ai/v1/chat/completions",
+        "nebius": "https://api.studio.nebius.com/v1/chat/completions",
+        "hyperbolic": "https://api.hyperbolic.xyz/v1/chat/completions",
+        "siliconflow": "https://api.siliconflow.cn/v1/chat/completions",
+        "vercel-ai-gateway": "https://ai-gateway.vercel.sh/v1/chat/completions",
+    }
+    catalog = load_json_file(
+        workspace / "config" / "guild" / "provider-catalog.9router.json",
+        {"providers": {}, "groups": {}},
+    )
+    providers = catalog.get("providers") or {}
+    needle = clean_config_id(provider_id_or_label, "").replace("-", "")
+    if needle in known_chat_urls:
+      return known_chat_urls[needle]
+    for provider in providers.values():
+        if not isinstance(provider, dict):
+            continue
+        provider_id = clean_config_id(str(provider.get("id") or ""), "").replace("-", "")
+        provider_name = clean_config_id(str(provider.get("name") or ""), "").replace("-", "")
+        if needle and needle not in {provider_id, provider_name} and needle not in provider_id and needle not in provider_name:
+            continue
+        base_urls = provider.get("base_urls") or {}
+        for key in ("llm", "chat", "search", "fetch", "embedding", "image", "tts", "stt"):
+            value = str(base_urls.get(key) or "").strip()
+            if value:
+                return value
+        for key in ("api_key_url", "website"):
+            value = str(provider.get(key) or "").strip()
+            if value:
+                return value
+    return ""
+
+
 def quick_add_provider(workspace: Path, body: dict[str, Any]) -> dict[str, Any]:
     provider_label = str(body.get("label") or body.get("provider") or "").strip()
+    provider_catalog_id = str(body.get("provider_id") or "").strip()
     model = str(body.get("model") or "").strip()
     base_url = str(body.get("base_url") or body.get("chat_completions_url") or "").strip()
     env_key = clean_env_key(str(body.get("env_key") or ""))
@@ -1766,8 +1827,8 @@ def quick_add_provider(workspace: Path, body: dict[str, Any]) -> dict[str, Any]:
     repairs: list[str] = []
     if not provider_label:
         errors.append("provider label is required")
-    if not model:
-        errors.append("model is required")
+    if not base_url and provider_catalog_id:
+        base_url = provider_catalog_default_base_url(workspace, provider_catalog_id)
     if not base_url:
         errors.append("base URL is required")
     if not env_key:
@@ -1848,6 +1909,66 @@ def quick_add_provider(workspace: Path, body: dict[str, Any]) -> dict[str, Any]:
             "capabilities": capabilities,
             "secret_status": provider_secret_status(workspace, env_keys),
         },
+    }
+
+
+def save_provider_combo(workspace: Path, body: dict[str, Any]) -> dict[str, Any]:
+    combo_name = clean_config_id(str(body.get("name") or ""), "combo")
+    label = str(body.get("label") or combo_name).strip()
+    capability = str(body.get("capability") or "code-edit-worker").strip()
+    kind = str(body.get("kind") or "llm").strip()
+    notes = str(body.get("notes") or "").strip()
+    raw_items = body.get("items") or []
+    if isinstance(raw_items, str):
+        raw_items = [item.strip() for item in raw_items.split(",")]
+
+    root = workspace / "config" / "guild"
+    combos_path = root / "provider-combos.json"
+    cartridges_doc = load_json_file(root / "model-cartridges.json", {"cartridges": {}})
+    capabilities_doc = load_json_file(root / "capability-adapters.json", {"capabilities": {}})
+    combos_doc = load_json_file(
+        combos_path,
+        {"schema_version": "guild_provider_combos_v0", "combos": {}},
+    )
+    cartridges = cartridges_doc.get("cartridges") or {}
+    capabilities = capabilities_doc.get("capabilities") or {}
+    errors: list[str] = []
+    if not combo_name:
+        errors.append("combo name is required")
+    if capability not in capabilities:
+        errors.append(f"unknown capability: {capability}")
+    items = []
+    for value in raw_items:
+        cartridge = str(value or "").strip()
+        if not cartridge:
+            continue
+        if cartridge not in cartridges:
+            errors.append(f"unknown cartridge: {cartridge}")
+            continue
+        items.append(
+            {
+                "cartridge": cartridge,
+                "on_flags": ["provider_service_unavailable", "provider_rate_limited", "provider_timeout"],
+            }
+        )
+    if not items:
+        errors.append("at least one cartridge is required")
+    if errors:
+        return {"ok": False, "errors": errors}
+
+    combos = combos_doc.setdefault("combos", {})
+    combos[combo_name] = {
+        "kind": kind,
+        "capability": capability,
+        "label": label,
+        "notes": notes or "Added from Provider Lab combo editor.",
+        "items": items,
+    }
+    save_json_file(combos_path, combos_doc)
+    return {
+        "ok": True,
+        "combo": combo_name,
+        "combos": combos,
     }
 
 
@@ -2196,6 +2317,10 @@ def load_guild_provider_config(workspace: Path) -> dict[str, Any]:
         "transports": load_json_file(root / "provider-transports.json", {"transports": {}}).get("transports", {}),
         "cartridges": load_json_file(root / "model-cartridges.json", {"cartridges": {}}).get("cartridges", {}),
         "capabilities": load_json_file(root / "capability-adapters.json", {"capabilities": {}}).get("capabilities", {}),
+        "provider_capabilities": load_json_file(root / "provider-capabilities.json", {"capabilities": {}}).get("capabilities", {}),
+        "combos": load_json_file(root / "provider-combos.json", {"combos": {}}).get("combos", {}),
+        "failure_flags": load_json_file(root / "failure-flags.json", {"flags": {}}).get("flags", {}),
+        "provider_catalog": load_json_file(root / "provider-catalog.9router.json", {"providers": {}, "groups": {}}),
     }
 
 
@@ -2295,9 +2420,41 @@ def list_static_cartridge_models(cartridges: dict[str, Any], transport_name: str
     return models
 
 
+def derive_models_endpoint(base_url: str) -> str:
+    url = str(base_url or "").strip()
+    if not url:
+        return ""
+    url = url.rstrip("/")
+    if url.endswith("/chat/completions") or url.endswith("/completions"):
+        url = url.rsplit("/", 2)[0]
+    if url.endswith("/models"):
+        return url
+    return f"{url}/models"
+
+
+def build_models_request_headers(api_key: str) -> dict[str, str]:
+    return {
+        "Authorization": f"Bearer {api_key}",
+        "Accept": "application/json",
+        "User-Agent": "HermesGuildCore/1.0",
+    }
+
+
+def load_provider_models_payload(response: Any) -> dict[str, Any]:
+    body = response.read()
+    text = body.decode("utf-8", errors="replace")
+    data = json.loads(text)
+    if not isinstance(data, dict):
+        raise ValueError("models response was not an object")
+    return data
+
+
 def list_provider_models(workspace: Path, transport_name: str, transport: dict[str, Any]) -> dict[str, Any]:
     if transport_name == "local-dry-run":
         return {"ok": True, "source": "deterministic", "models": [{"id": "local-dry-run", "source": "deterministic"}]}
+    transport_kind = str(transport.get("kind") or "").strip()
+    if transport_kind in {"deterministic", "cli"} and transport_name != "opencode-cli":
+        return {"ok": False, "reason": "cli_transport_no_model_endpoint"}
     if transport_name == "opencode-cli":
         completed = subprocess.run(
             ["opencode", "models"],
@@ -2318,49 +2475,79 @@ def list_provider_models(workspace: Path, transport_name: str, transport: dict[s
         return {"ok": True, "source": "opencode", "models": models, "raw_count": len(completed.stdout.splitlines())}
 
     env_keys = [str(key) for key in transport.get("env_keys") or []]
-    api_key = next((read_provider_secret_value(workspace, key) for key in env_keys if read_provider_secret_value(workspace, key)), None)
+    api_key = None
+    for key in env_keys:
+        api_key = read_provider_secret_value(workspace, key)
+        if api_key:
+            break
     if not api_key:
         return {"ok": False, "reason": "provider_missing", "missing_env_keys": env_keys}
+
+    endpoint_candidates = [
+        str(transport.get("models_url") or "").strip(),
+        str(transport.get("chat_completions_url") or "").strip(),
+        str(transport.get("base_url") or "").strip(),
+    ]
+    endpoint = ""
+    for candidate in endpoint_candidates:
+        if candidate:
+            endpoint = derive_models_endpoint(candidate)
+            if endpoint:
+                break
+
+    backend_adapter = str(transport.get("backend_adapter") or "").strip()
+    if not endpoint:
+        fallback_map = {
+            "openrouter": "https://openrouter.ai/api/v1/models",
+            "groq": "https://api.groq.com/openai/v1/models",
+            "openai-compatible": "https://api.openai.com/v1/models",
+            "gemini": "https://generativelanguage.googleapis.com/v1beta/models",
+            "openai": "https://api.openai.com/v1/models",
+        }
+        endpoint = fallback_map.get(backend_adapter, "")
+
     try:
-        if transport_name == "openrouter-http":
-            request = urllib.request.Request(
-                "https://openrouter.ai/api/v1/models",
-                headers={"Authorization": f"Bearer {api_key}", "Accept": "application/json"},
-            )
+        if transport_name == "gemini-api" or backend_adapter == "gemini":
+            url = endpoint or "https://generativelanguage.googleapis.com/v1beta/models"
+            if "googleapis.com" in url and "key=" not in url:
+                url = url + ("&" if "?" in url else "?") + urllib.parse.urlencode({"key": api_key})
+                request = urllib.request.Request(url, headers={"Accept": "application/json", "User-Agent": "HermesGuildCore/1.0"})
+            else:
+                request = urllib.request.Request(url, headers=build_models_request_headers(api_key))
             with urllib.request.urlopen(request, timeout=20) as response:
-                data = json.loads(response.read().decode("utf-8"))
+                data = load_provider_models_payload(response)
+            raw_models = data.get("models", []) if isinstance(data.get("models"), list) else data.get("data", [])
             return {
                 "ok": True,
-                "source": "openrouter",
-                "models": [{"id": item.get("id"), "source": "openrouter"} for item in data.get("data", []) if item.get("id")],
-            }
-        if transport_name == "groq-http":
-            request = urllib.request.Request(
-                "https://api.groq.com/openai/v1/models",
-                headers={"Authorization": f"Bearer {api_key}", "Accept": "application/json"},
-            )
-            with urllib.request.urlopen(request, timeout=20) as response:
-                data = json.loads(response.read().decode("utf-8"))
-            return {
-                "ok": True,
-                "source": "groq",
-                "models": [{"id": item.get("id"), "source": "groq"} for item in data.get("data", []) if item.get("id")],
-            }
-        if transport_name == "gemini-api":
-            url = "https://generativelanguage.googleapis.com/v1beta/models?" + urllib.parse.urlencode({"key": api_key})
-            with urllib.request.urlopen(url, timeout=20) as response:
-                data = json.loads(response.read().decode("utf-8"))
-            return {
-                "ok": True,
-                "source": "gemini",
+                "source": "provider",
                 "models": [
-                    {"id": str(item.get("name") or "").replace("models/", ""), "source": "gemini"}
-                    for item in data.get("models", [])
-                    if item.get("name")
+                    {
+                        "id": str(item.get("name") or item.get("id") or "").replace("models/", ""),
+                        "source": "provider",
+                    }
+                    for item in raw_models
+                    if isinstance(item, dict) and (item.get("name") or item.get("id"))
                 ],
             }
+        if not endpoint:
+            return {"ok": False, "reason": "models_endpoint_unavailable"}
+        request = urllib.request.Request(endpoint, headers=build_models_request_headers(api_key))
+        with urllib.request.urlopen(request, timeout=20) as response:
+            data = load_provider_models_payload(response)
+        raw_models = data.get("data", [])
+        if not isinstance(raw_models, list):
+            raw_models = []
+        return {
+            "ok": True,
+            "source": "provider",
+            "models": [
+                {"id": str(item.get("id") or "").strip(), "source": "provider"}
+                for item in raw_models
+                if isinstance(item, dict) and str(item.get("id") or "").strip()
+            ],
+        }
     except Exception as exc:
-        return {"ok": False, "reason": "provider_failed", "error": str(exc)}
+        return {"ok": False, "reason": "provider_failed", "error": str(exc), "endpoint": endpoint}
     return {"ok": False, "reason": "list_models_not_supported"}
 
 

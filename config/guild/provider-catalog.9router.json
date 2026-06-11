@@ -1,0 +1,3375 @@
+{
+  "schema_version": "guild_provider_catalog_9router_v0",
+  "source": "https://github.com/decolua/9router",
+  "source_license": "MIT",
+  "generated_from": "_runtime/research/9router/src/shared/constants/providers.js",
+  "groups": {
+    "free": [
+      "kiro",
+      "gemini-cli",
+      "qoder",
+      "opencode"
+    ],
+    "free_tier": [
+      "openrouter",
+      "nvidia",
+      "ollama",
+      "vertex",
+      "gemini",
+      "cloudflare-ai",
+      "byteplus"
+    ],
+    "oauth": [
+      "claude",
+      "antigravity",
+      "codex",
+      "github",
+      "cursor",
+      "xai",
+      "kilocode",
+      "cline"
+    ],
+    "apikey": [
+      "glm",
+      "glm-cn",
+      "kimi",
+      "minimax",
+      "minimax-cn",
+      "alicode",
+      "alicode-intl",
+      "xiaomi-mimo",
+      "xiaomi-tokenplan",
+      "volcengine-ark",
+      "openai",
+      "vercel-ai-gateway",
+      "anthropic",
+      "opencode-go",
+      "azure",
+      "deepseek",
+      "commandcode",
+      "groq",
+      "xai",
+      "mistral",
+      "perplexity",
+      "together",
+      "fireworks",
+      "cerebras",
+      "cohere",
+      "nebius",
+      "siliconflow",
+      "hyperbolic",
+      "deepgram",
+      "assemblyai",
+      "nanobanana",
+      "elevenlabs",
+      "cartesia",
+      "playht",
+      "local-device",
+      "google-tts",
+      "edge-tts",
+      "coqui",
+      "tortoise",
+      "inworld",
+      "voyage-ai",
+      "sdwebui",
+      "comfyui",
+      "huggingface",
+      "blackbox",
+      "chutes",
+      "ollama-local",
+      "vertex-partner",
+      "tavily",
+      "brave-search",
+      "serper",
+      "exa",
+      "searxng",
+      "google-pse",
+      "linkup",
+      "searchapi",
+      "youcom",
+      "firecrawl",
+      "fal-ai",
+      "stability-ai",
+      "black-forest-labs",
+      "recraft",
+      "topaz",
+      "runwayml",
+      "aws-polly",
+      "jina-ai",
+      "jina-reader"
+    ],
+    "cookie": [
+      "grok-web",
+      "perplexity-web"
+    ]
+  },
+  "providers": {
+    "kiro": {
+      "id": "kiro",
+      "alias": "kr",
+      "name": "Kiro AI",
+      "group": "free",
+      "auth_modes": [
+        "apikey"
+      ],
+      "auth_type": null,
+      "no_auth": false,
+      "deprecated": true,
+      "deprecation_notice": "⚠️ Risk Notice: This provider uses a subscription/OAuth session not officially licensed for proxy/router use. Account may be restricted or banned. Use at your own risk.",
+      "color": "#FF6B35",
+      "text_icon": "",
+      "website": "https://kiro.dev",
+      "signup_url": "https://kiro.dev",
+      "api_key_url": "",
+      "notice_text": "",
+      "service_kinds": [
+        "llm"
+      ],
+      "passthrough_models": false,
+      "has_provider_specific_data": false,
+      "models_url": "",
+      "models_fetcher_type": "",
+      "default_model": "",
+      "pricing_url": "",
+      "free_tier": "",
+      "base_urls": {
+        "embedding": "",
+        "tts": "",
+        "stt": "",
+        "search": "",
+        "fetch": "",
+        "image": ""
+      }
+    },
+    "gemini-cli": {
+      "id": "gemini-cli",
+      "alias": "gc",
+      "name": "Gemini CLI",
+      "group": "free",
+      "auth_modes": [
+        "apikey"
+      ],
+      "auth_type": null,
+      "no_auth": false,
+      "deprecated": true,
+      "deprecation_notice": "⚠️ Risk Notice: This provider uses a subscription/OAuth session not officially licensed for proxy/router use. Account may be restricted or banned. Use at your own risk.",
+      "color": "#4285F4",
+      "text_icon": "",
+      "website": "https://github.com/google-gemini/gemini-cli",
+      "signup_url": "https://github.com/google-gemini/gemini-cli",
+      "api_key_url": "",
+      "notice_text": "",
+      "service_kinds": [
+        "llm"
+      ],
+      "passthrough_models": false,
+      "has_provider_specific_data": false,
+      "models_url": "",
+      "models_fetcher_type": "",
+      "default_model": "",
+      "pricing_url": "",
+      "free_tier": "",
+      "base_urls": {
+        "embedding": "",
+        "tts": "",
+        "stt": "",
+        "search": "",
+        "fetch": "",
+        "image": ""
+      }
+    },
+    "qoder": {
+      "id": "qoder",
+      "alias": "qd",
+      "name": "Qoder",
+      "group": "free",
+      "auth_modes": [
+        "apikey"
+      ],
+      "auth_type": null,
+      "no_auth": false,
+      "deprecated": true,
+      "deprecation_notice": "⚠️ Risk Notice: This provider uses a subscription/OAuth session not officially licensed for proxy/router use. Account may be restricted or banned. Use at your own risk.",
+      "color": "#EC4899",
+      "text_icon": "",
+      "website": "https://qoder.com",
+      "signup_url": "https://qoder.com",
+      "api_key_url": "",
+      "notice_text": "",
+      "service_kinds": [
+        "llm"
+      ],
+      "passthrough_models": false,
+      "has_provider_specific_data": false,
+      "models_url": "",
+      "models_fetcher_type": "",
+      "default_model": "",
+      "pricing_url": "",
+      "free_tier": "",
+      "base_urls": {
+        "embedding": "",
+        "tts": "",
+        "stt": "",
+        "search": "",
+        "fetch": "",
+        "image": ""
+      }
+    },
+    "opencode": {
+      "id": "opencode",
+      "alias": "oc",
+      "name": "OpenCode Free",
+      "group": "free",
+      "auth_modes": [
+        "apikey"
+      ],
+      "auth_type": null,
+      "no_auth": true,
+      "deprecated": false,
+      "deprecation_notice": "",
+      "color": "#E87040",
+      "text_icon": "OC",
+      "website": "",
+      "signup_url": "",
+      "api_key_url": "",
+      "notice_text": "",
+      "service_kinds": [
+        "llm"
+      ],
+      "passthrough_models": true,
+      "has_provider_specific_data": false,
+      "models_url": "https://opencode.ai/zen/v1/models",
+      "models_fetcher_type": "opencode-free",
+      "default_model": "",
+      "pricing_url": "",
+      "free_tier": "",
+      "base_urls": {
+        "embedding": "",
+        "tts": "",
+        "stt": "",
+        "search": "",
+        "fetch": "",
+        "image": ""
+      }
+    },
+    "openrouter": {
+      "id": "openrouter",
+      "alias": "openrouter",
+      "name": "OpenRouter",
+      "group": "free_tier",
+      "auth_modes": [
+        "apikey"
+      ],
+      "auth_type": null,
+      "no_auth": false,
+      "deprecated": false,
+      "deprecation_notice": "",
+      "color": "#F97316",
+      "text_icon": "OR",
+      "website": "https://openrouter.ai",
+      "signup_url": "",
+      "api_key_url": "https://openrouter.ai/settings/keys",
+      "notice_text": "Free tier: 27+ free models, no credit card needed, 200 req/day. After $10 credit: 1,000 req/day.",
+      "service_kinds": [
+        "llm",
+        "embedding",
+        "tts",
+        "imageToText"
+      ],
+      "passthrough_models": true,
+      "has_provider_specific_data": false,
+      "models_url": "https://openrouter.ai/api/v1/models",
+      "models_fetcher_type": "openrouter-free",
+      "default_model": "",
+      "pricing_url": "",
+      "free_tier": "",
+      "base_urls": {
+        "embedding": "https://openrouter.ai/api/v1/embeddings",
+        "tts": "",
+        "stt": "",
+        "search": "",
+        "fetch": "",
+        "image": ""
+      }
+    },
+    "nvidia": {
+      "id": "nvidia",
+      "alias": "nvidia",
+      "name": "NVIDIA NIM",
+      "group": "free_tier",
+      "auth_modes": [
+        "apikey"
+      ],
+      "auth_type": null,
+      "no_auth": false,
+      "deprecated": false,
+      "deprecation_notice": "",
+      "color": "#76B900",
+      "text_icon": "NV",
+      "website": "https://developer.nvidia.com/nim",
+      "signup_url": "",
+      "api_key_url": "https://build.nvidia.com/settings/api-keys",
+      "notice_text": "Free access for NVIDIA Developer Program members (prototyping & testing).",
+      "service_kinds": [
+        "llm",
+        "tts",
+        "embedding"
+      ],
+      "passthrough_models": false,
+      "has_provider_specific_data": false,
+      "models_url": "",
+      "models_fetcher_type": "",
+      "default_model": "",
+      "pricing_url": "",
+      "free_tier": "",
+      "base_urls": {
+        "embedding": "https://integrate.api.nvidia.com/v1/embeddings",
+        "tts": "https://integrate.api.nvidia.com/v1/audio/speech",
+        "stt": "",
+        "search": "",
+        "fetch": "",
+        "image": ""
+      }
+    },
+    "ollama": {
+      "id": "ollama",
+      "alias": "ollama",
+      "name": "Ollama Cloud",
+      "group": "free_tier",
+      "auth_modes": [
+        "apikey"
+      ],
+      "auth_type": null,
+      "no_auth": false,
+      "deprecated": false,
+      "deprecation_notice": "",
+      "color": "#ffffffff",
+      "text_icon": "OL",
+      "website": "https://ollama.com",
+      "signup_url": "",
+      "api_key_url": "https://ollama.com/settings/keys",
+      "notice_text": "Free tier: light usage, 1 cloud model at a time (limits reset every 5h & 7d). Pro $20/mo · Max $100/mo.",
+      "service_kinds": [
+        "llm"
+      ],
+      "passthrough_models": false,
+      "has_provider_specific_data": false,
+      "models_url": "",
+      "models_fetcher_type": "",
+      "default_model": "",
+      "pricing_url": "",
+      "free_tier": "",
+      "base_urls": {
+        "embedding": "",
+        "tts": "",
+        "stt": "",
+        "search": "",
+        "fetch": "",
+        "image": ""
+      }
+    },
+    "vertex": {
+      "id": "vertex",
+      "alias": "vx",
+      "name": "Vertex AI",
+      "group": "free_tier",
+      "auth_modes": [
+        "apikey"
+      ],
+      "auth_type": null,
+      "no_auth": false,
+      "deprecated": false,
+      "deprecation_notice": "",
+      "color": "#4285F4",
+      "text_icon": "VX",
+      "website": "https://cloud.google.com/vertex-ai",
+      "signup_url": "",
+      "api_key_url": "https://console.cloud.google.com/iam-admin/serviceaccounts",
+      "notice_text": "New Google Cloud accounts get $300 free credits. Requires GCP project + Service Account with Vertex AI API enabled.",
+      "service_kinds": [
+        "llm"
+      ],
+      "passthrough_models": false,
+      "has_provider_specific_data": false,
+      "models_url": "",
+      "models_fetcher_type": "",
+      "default_model": "",
+      "pricing_url": "",
+      "free_tier": "",
+      "base_urls": {
+        "embedding": "",
+        "tts": "",
+        "stt": "",
+        "search": "",
+        "fetch": "",
+        "image": ""
+      }
+    },
+    "gemini": {
+      "id": "gemini",
+      "alias": "gemini",
+      "name": "Gemini",
+      "group": "free_tier",
+      "auth_modes": [
+        "apikey"
+      ],
+      "auth_type": null,
+      "no_auth": false,
+      "deprecated": false,
+      "deprecation_notice": "",
+      "color": "#4285F4",
+      "text_icon": "GE",
+      "website": "https://ai.google.dev",
+      "signup_url": "",
+      "api_key_url": "https://aistudio.google.com/app/apikey",
+      "notice_text": "",
+      "service_kinds": [
+        "llm",
+        "embedding",
+        "image",
+        "imageToText",
+        "webSearch",
+        "tts",
+        "stt"
+      ],
+      "passthrough_models": false,
+      "has_provider_specific_data": false,
+      "models_url": "",
+      "models_fetcher_type": "",
+      "default_model": "gemini-2.5-flash",
+      "pricing_url": "https://ai.google.dev/pricing",
+      "free_tier": "Free tier: 15 RPM, 1M tokens/day on gemini-2.5-flash via AI Studio.",
+      "base_urls": {
+        "embedding": "https://generativelanguage.googleapis.com/v1beta/models",
+        "tts": "https://generativelanguage.googleapis.com/v1beta/models",
+        "stt": "https://generativelanguage.googleapis.com/v1beta/models",
+        "search": "",
+        "fetch": "",
+        "image": ""
+      }
+    },
+    "cloudflare-ai": {
+      "id": "cloudflare-ai",
+      "alias": "cf",
+      "name": "Cloudflare",
+      "group": "free_tier",
+      "auth_modes": [
+        "apikey"
+      ],
+      "auth_type": null,
+      "no_auth": false,
+      "deprecated": false,
+      "deprecation_notice": "",
+      "color": "#F38020",
+      "text_icon": "CF",
+      "website": "https://developers.cloudflare.com/workers-ai/",
+      "signup_url": "",
+      "api_key_url": "https://dash.cloudflare.com/profile/api-tokens",
+      "notice_text": "Workers AI free tier. Requires a Cloudflare API token and Account ID.",
+      "service_kinds": [
+        "llm",
+        "image"
+      ],
+      "passthrough_models": false,
+      "has_provider_specific_data": true,
+      "models_url": "",
+      "models_fetcher_type": "",
+      "default_model": "",
+      "pricing_url": "",
+      "free_tier": "",
+      "base_urls": {
+        "embedding": "",
+        "tts": "",
+        "stt": "",
+        "search": "",
+        "fetch": "",
+        "image": ""
+      }
+    },
+    "byteplus": {
+      "id": "byteplus",
+      "alias": "bpm",
+      "name": "BytePlus ModelArk",
+      "group": "free_tier",
+      "auth_modes": [
+        "apikey"
+      ],
+      "auth_type": null,
+      "no_auth": false,
+      "deprecated": false,
+      "deprecation_notice": "",
+      "color": "#2563EB",
+      "text_icon": "BP",
+      "website": "https://console.byteplus.com/ark",
+      "signup_url": "",
+      "api_key_url": "https://console.byteplus.com/ark/region:ark+ap-southeast-1/apiKey",
+      "notice_text": "Free credits for new accounts. Access to Seed 2.0, Kimi K2 Thinking, GLM 4.7, GPT-OSS-120B models.",
+      "service_kinds": [
+        "llm"
+      ],
+      "passthrough_models": false,
+      "has_provider_specific_data": false,
+      "models_url": "",
+      "models_fetcher_type": "",
+      "default_model": "",
+      "pricing_url": "",
+      "free_tier": "",
+      "base_urls": {
+        "embedding": "",
+        "tts": "",
+        "stt": "",
+        "search": "",
+        "fetch": "",
+        "image": ""
+      }
+    },
+    "claude": {
+      "id": "claude",
+      "alias": "cc",
+      "name": "Claude Code",
+      "group": "oauth",
+      "auth_modes": [
+        "oauth"
+      ],
+      "auth_type": null,
+      "no_auth": false,
+      "deprecated": true,
+      "deprecation_notice": "⚠️ Risk Notice: This provider uses a subscription/OAuth session not officially licensed for proxy/router use. Account may be restricted or banned. Use at your own risk.",
+      "color": "#D97757",
+      "text_icon": "",
+      "website": "https://claude.ai",
+      "signup_url": "https://claude.ai",
+      "api_key_url": "",
+      "notice_text": "",
+      "service_kinds": [
+        "llm"
+      ],
+      "passthrough_models": false,
+      "has_provider_specific_data": false,
+      "models_url": "",
+      "models_fetcher_type": "",
+      "default_model": "",
+      "pricing_url": "",
+      "free_tier": "",
+      "base_urls": {
+        "embedding": "",
+        "tts": "",
+        "stt": "",
+        "search": "",
+        "fetch": "",
+        "image": ""
+      }
+    },
+    "antigravity": {
+      "id": "antigravity",
+      "alias": "ag",
+      "name": "Antigravity",
+      "group": "oauth",
+      "auth_modes": [
+        "oauth"
+      ],
+      "auth_type": null,
+      "no_auth": false,
+      "deprecated": true,
+      "deprecation_notice": "⚠️ Risk Notice: This provider uses a subscription/OAuth session not officially licensed for proxy/router use. Account may be restricted or banned. Use at your own risk.",
+      "color": "#F59E0B",
+      "text_icon": "",
+      "website": "https://antigravity.google",
+      "signup_url": "https://antigravity.google",
+      "api_key_url": "",
+      "notice_text": "",
+      "service_kinds": [
+        "llm"
+      ],
+      "passthrough_models": false,
+      "has_provider_specific_data": false,
+      "models_url": "",
+      "models_fetcher_type": "",
+      "default_model": "",
+      "pricing_url": "",
+      "free_tier": "",
+      "base_urls": {
+        "embedding": "",
+        "tts": "",
+        "stt": "",
+        "search": "",
+        "fetch": "",
+        "image": ""
+      }
+    },
+    "codex": {
+      "id": "codex",
+      "alias": "cx",
+      "name": "OpenAI Codex",
+      "group": "oauth",
+      "auth_modes": [
+        "oauth"
+      ],
+      "auth_type": null,
+      "no_auth": false,
+      "deprecated": true,
+      "deprecation_notice": "⚠️ Risk Notice: This provider uses a subscription/OAuth session not officially licensed for proxy/router use. Account may be restricted or banned. Use at your own risk.",
+      "color": "#3B82F6",
+      "text_icon": "",
+      "website": "https://chatgpt.com/codex",
+      "signup_url": "https://chatgpt.com/codex",
+      "api_key_url": "",
+      "notice_text": "",
+      "service_kinds": [
+        "llm",
+        "image"
+      ],
+      "passthrough_models": false,
+      "has_provider_specific_data": false,
+      "models_url": "",
+      "models_fetcher_type": "",
+      "default_model": "",
+      "pricing_url": "",
+      "free_tier": "",
+      "base_urls": {
+        "embedding": "",
+        "tts": "",
+        "stt": "",
+        "search": "",
+        "fetch": "",
+        "image": ""
+      }
+    },
+    "github": {
+      "id": "github",
+      "alias": "gh",
+      "name": "GitHub Copilot",
+      "group": "oauth",
+      "auth_modes": [
+        "oauth"
+      ],
+      "auth_type": null,
+      "no_auth": false,
+      "deprecated": true,
+      "deprecation_notice": "⚠️ Risk Notice: This provider uses a subscription/OAuth session not officially licensed for proxy/router use. Account may be restricted or banned. Use at your own risk.",
+      "color": "#333333",
+      "text_icon": "",
+      "website": "https://github.com/features/copilot",
+      "signup_url": "https://github.com/features/copilot",
+      "api_key_url": "",
+      "notice_text": "",
+      "service_kinds": [
+        "llm",
+        "embedding"
+      ],
+      "passthrough_models": false,
+      "has_provider_specific_data": false,
+      "models_url": "",
+      "models_fetcher_type": "",
+      "default_model": "",
+      "pricing_url": "",
+      "free_tier": "",
+      "base_urls": {
+        "embedding": "https://models.github.ai/inference/embeddings",
+        "tts": "",
+        "stt": "",
+        "search": "",
+        "fetch": "",
+        "image": ""
+      }
+    },
+    "cursor": {
+      "id": "cursor",
+      "alias": "cu",
+      "name": "Cursor IDE",
+      "group": "oauth",
+      "auth_modes": [
+        "oauth"
+      ],
+      "auth_type": null,
+      "no_auth": false,
+      "deprecated": false,
+      "deprecation_notice": "",
+      "color": "#00D4AA",
+      "text_icon": "",
+      "website": "https://cursor.com",
+      "signup_url": "https://cursor.com",
+      "api_key_url": "",
+      "notice_text": "",
+      "service_kinds": [
+        "llm"
+      ],
+      "passthrough_models": false,
+      "has_provider_specific_data": false,
+      "models_url": "",
+      "models_fetcher_type": "",
+      "default_model": "",
+      "pricing_url": "",
+      "free_tier": "",
+      "base_urls": {
+        "embedding": "",
+        "tts": "",
+        "stt": "",
+        "search": "",
+        "fetch": "",
+        "image": ""
+      }
+    },
+    "xai": {
+      "id": "xai",
+      "alias": "xai",
+      "name": "xAI (Grok)",
+      "group": "apikey",
+      "auth_modes": [
+        "oauth",
+        "apikey"
+      ],
+      "auth_type": null,
+      "no_auth": false,
+      "deprecated": false,
+      "deprecation_notice": "",
+      "color": "#1DA1F2",
+      "text_icon": "XA",
+      "website": "https://x.ai",
+      "signup_url": "",
+      "api_key_url": "https://console.x.ai",
+      "notice_text": "",
+      "service_kinds": [
+        "llm",
+        "imageToText",
+        "webSearch",
+        "image"
+      ],
+      "passthrough_models": false,
+      "has_provider_specific_data": false,
+      "models_url": "",
+      "models_fetcher_type": "",
+      "default_model": "grok-4.20-reasoning",
+      "pricing_url": "https://x.ai/api#pricing",
+      "free_tier": "",
+      "base_urls": {
+        "embedding": "",
+        "tts": "",
+        "stt": "",
+        "search": "",
+        "fetch": "",
+        "image": ""
+      }
+    },
+    "kilocode": {
+      "id": "kilocode",
+      "alias": "kc",
+      "name": "Kilo Code",
+      "group": "oauth",
+      "auth_modes": [
+        "oauth"
+      ],
+      "auth_type": null,
+      "no_auth": false,
+      "deprecated": false,
+      "deprecation_notice": "",
+      "color": "#FF6B35",
+      "text_icon": "KC",
+      "website": "https://kilocode.ai",
+      "signup_url": "https://kilocode.ai",
+      "api_key_url": "",
+      "notice_text": "",
+      "service_kinds": [
+        "llm"
+      ],
+      "passthrough_models": false,
+      "has_provider_specific_data": false,
+      "models_url": "",
+      "models_fetcher_type": "",
+      "default_model": "",
+      "pricing_url": "",
+      "free_tier": "",
+      "base_urls": {
+        "embedding": "",
+        "tts": "",
+        "stt": "",
+        "search": "",
+        "fetch": "",
+        "image": ""
+      }
+    },
+    "cline": {
+      "id": "cline",
+      "alias": "cl",
+      "name": "Cline",
+      "group": "oauth",
+      "auth_modes": [
+        "oauth"
+      ],
+      "auth_type": null,
+      "no_auth": false,
+      "deprecated": false,
+      "deprecation_notice": "",
+      "color": "#5B9BD5",
+      "text_icon": "CL",
+      "website": "https://cline.bot",
+      "signup_url": "https://cline.bot",
+      "api_key_url": "",
+      "notice_text": "",
+      "service_kinds": [
+        "llm"
+      ],
+      "passthrough_models": false,
+      "has_provider_specific_data": false,
+      "models_url": "",
+      "models_fetcher_type": "",
+      "default_model": "",
+      "pricing_url": "",
+      "free_tier": "",
+      "base_urls": {
+        "embedding": "",
+        "tts": "",
+        "stt": "",
+        "search": "",
+        "fetch": "",
+        "image": ""
+      }
+    },
+    "glm": {
+      "id": "glm",
+      "alias": "glm",
+      "name": "GLM Coding",
+      "group": "apikey",
+      "auth_modes": [
+        "apikey"
+      ],
+      "auth_type": null,
+      "no_auth": false,
+      "deprecated": false,
+      "deprecation_notice": "",
+      "color": "#2563EB",
+      "text_icon": "GL",
+      "website": "https://open.bigmodel.cn",
+      "signup_url": "",
+      "api_key_url": "https://open.bigmodel.cn/usercenter/apikeys",
+      "notice_text": "",
+      "service_kinds": [
+        "llm"
+      ],
+      "passthrough_models": false,
+      "has_provider_specific_data": false,
+      "models_url": "",
+      "models_fetcher_type": "",
+      "default_model": "",
+      "pricing_url": "",
+      "free_tier": "",
+      "base_urls": {
+        "embedding": "",
+        "tts": "",
+        "stt": "",
+        "search": "",
+        "fetch": "",
+        "image": ""
+      }
+    },
+    "glm-cn": {
+      "id": "glm-cn",
+      "alias": "glm-cn",
+      "name": "GLM (China)",
+      "group": "apikey",
+      "auth_modes": [
+        "apikey"
+      ],
+      "auth_type": null,
+      "no_auth": false,
+      "deprecated": false,
+      "deprecation_notice": "",
+      "color": "#DC2626",
+      "text_icon": "GC",
+      "website": "https://open.bigmodel.cn",
+      "signup_url": "",
+      "api_key_url": "https://open.bigmodel.cn/usercenter/apikeys",
+      "notice_text": "",
+      "service_kinds": [
+        "llm"
+      ],
+      "passthrough_models": false,
+      "has_provider_specific_data": false,
+      "models_url": "",
+      "models_fetcher_type": "",
+      "default_model": "",
+      "pricing_url": "",
+      "free_tier": "",
+      "base_urls": {
+        "embedding": "",
+        "tts": "",
+        "stt": "",
+        "search": "",
+        "fetch": "",
+        "image": ""
+      }
+    },
+    "kimi": {
+      "id": "kimi",
+      "alias": "kimi",
+      "name": "Kimi",
+      "group": "apikey",
+      "auth_modes": [
+        "apikey"
+      ],
+      "auth_type": null,
+      "no_auth": false,
+      "deprecated": false,
+      "deprecation_notice": "",
+      "color": "#1E3A8A",
+      "text_icon": "KM",
+      "website": "https://kimi.moonshot.cn",
+      "signup_url": "",
+      "api_key_url": "https://platform.moonshot.ai/console/api-keys",
+      "notice_text": "",
+      "service_kinds": [
+        "llm",
+        "webSearch"
+      ],
+      "passthrough_models": false,
+      "has_provider_specific_data": false,
+      "models_url": "",
+      "models_fetcher_type": "",
+      "default_model": "kimi-k2.5",
+      "pricing_url": "https://platform.moonshot.ai/docs/pricing/chat",
+      "free_tier": "",
+      "base_urls": {
+        "embedding": "",
+        "tts": "",
+        "stt": "",
+        "search": "",
+        "fetch": "",
+        "image": ""
+      }
+    },
+    "minimax": {
+      "id": "minimax",
+      "alias": "minimax",
+      "name": "Minimax Coding",
+      "group": "apikey",
+      "auth_modes": [
+        "apikey"
+      ],
+      "auth_type": null,
+      "no_auth": false,
+      "deprecated": false,
+      "deprecation_notice": "",
+      "color": "#7C3AED",
+      "text_icon": "MM",
+      "website": "https://www.minimaxi.com",
+      "signup_url": "",
+      "api_key_url": "https://platform.minimaxi.com/user-center/basic-information/interface-key",
+      "notice_text": "",
+      "service_kinds": [
+        "llm",
+        "image",
+        "imageToText",
+        "webSearch",
+        "tts"
+      ],
+      "passthrough_models": false,
+      "has_provider_specific_data": false,
+      "models_url": "",
+      "models_fetcher_type": "",
+      "default_model": "MiniMax-M2.7",
+      "pricing_url": "https://www.minimaxi.com/document/price",
+      "free_tier": "",
+      "base_urls": {
+        "embedding": "",
+        "tts": "https://api.minimax.io/v1/t2a_v2",
+        "stt": "",
+        "search": "",
+        "fetch": "",
+        "image": ""
+      }
+    },
+    "minimax-cn": {
+      "id": "minimax-cn",
+      "alias": "minimax-cn",
+      "name": "Minimax (China)",
+      "group": "apikey",
+      "auth_modes": [
+        "apikey"
+      ],
+      "auth_type": null,
+      "no_auth": false,
+      "deprecated": false,
+      "deprecation_notice": "",
+      "color": "#DC2626",
+      "text_icon": "MC",
+      "website": "https://www.minimaxi.com",
+      "signup_url": "",
+      "api_key_url": "https://platform.minimaxi.com/user-center/basic-information/interface-key",
+      "notice_text": "",
+      "service_kinds": [
+        "llm",
+        "tts"
+      ],
+      "passthrough_models": false,
+      "has_provider_specific_data": false,
+      "models_url": "",
+      "models_fetcher_type": "",
+      "default_model": "",
+      "pricing_url": "",
+      "free_tier": "",
+      "base_urls": {
+        "embedding": "",
+        "tts": "https://api.minimaxi.com/v1/t2a_v2",
+        "stt": "",
+        "search": "",
+        "fetch": "",
+        "image": ""
+      }
+    },
+    "alicode": {
+      "id": "alicode",
+      "alias": "alicode",
+      "name": "Alibaba",
+      "group": "apikey",
+      "auth_modes": [
+        "apikey"
+      ],
+      "auth_type": null,
+      "no_auth": false,
+      "deprecated": false,
+      "deprecation_notice": "",
+      "color": "#FF6A00",
+      "text_icon": "ALi",
+      "website": "https://bailian.console.aliyun.com",
+      "signup_url": "",
+      "api_key_url": "https://bailian.console.aliyun.com/?apiKey=1",
+      "notice_text": "",
+      "service_kinds": [
+        "llm"
+      ],
+      "passthrough_models": false,
+      "has_provider_specific_data": false,
+      "models_url": "",
+      "models_fetcher_type": "",
+      "default_model": "",
+      "pricing_url": "",
+      "free_tier": "",
+      "base_urls": {
+        "embedding": "",
+        "tts": "",
+        "stt": "",
+        "search": "",
+        "fetch": "",
+        "image": ""
+      }
+    },
+    "alicode-intl": {
+      "id": "alicode-intl",
+      "alias": "alicode-intl",
+      "name": "Alibaba Intl",
+      "group": "apikey",
+      "auth_modes": [
+        "apikey"
+      ],
+      "auth_type": null,
+      "no_auth": false,
+      "deprecated": false,
+      "deprecation_notice": "",
+      "color": "#FF6A00",
+      "text_icon": "ALi",
+      "website": "https://modelstudio.console.alibabacloud.com",
+      "signup_url": "",
+      "api_key_url": "https://modelstudio.console.alibabacloud.com/?apiKey=1",
+      "notice_text": "",
+      "service_kinds": [
+        "llm"
+      ],
+      "passthrough_models": false,
+      "has_provider_specific_data": false,
+      "models_url": "",
+      "models_fetcher_type": "",
+      "default_model": "",
+      "pricing_url": "",
+      "free_tier": "",
+      "base_urls": {
+        "embedding": "",
+        "tts": "",
+        "stt": "",
+        "search": "",
+        "fetch": "",
+        "image": ""
+      }
+    },
+    "xiaomi-mimo": {
+      "id": "xiaomi-mimo",
+      "alias": "mimo",
+      "name": "Xiaomi MiMo",
+      "group": "apikey",
+      "auth_modes": [
+        "apikey"
+      ],
+      "auth_type": null,
+      "no_auth": false,
+      "deprecated": false,
+      "deprecation_notice": "",
+      "color": "#FF6900",
+      "text_icon": "XM",
+      "website": "https://xiaomimimo.com",
+      "signup_url": "",
+      "api_key_url": "https://xiaomimimo.com",
+      "notice_text": "",
+      "service_kinds": [
+        "llm"
+      ],
+      "passthrough_models": false,
+      "has_provider_specific_data": false,
+      "models_url": "",
+      "models_fetcher_type": "",
+      "default_model": "",
+      "pricing_url": "",
+      "free_tier": "",
+      "base_urls": {
+        "embedding": "",
+        "tts": "",
+        "stt": "",
+        "search": "",
+        "fetch": "",
+        "image": ""
+      }
+    },
+    "xiaomi-tokenplan": {
+      "id": "xiaomi-tokenplan",
+      "alias": "xmtp",
+      "name": "Xiaomi MiMo (Token Plan)",
+      "group": "apikey",
+      "auth_modes": [
+        "apikey"
+      ],
+      "auth_type": null,
+      "no_auth": false,
+      "deprecated": false,
+      "deprecation_notice": "",
+      "color": "#FF6700",
+      "text_icon": "XT",
+      "website": "https://mimo.xiaomi.com",
+      "signup_url": "",
+      "api_key_url": "https://mimo.xiaomi.com",
+      "notice_text": "Xiaomi MiMo Token Plan subscription (API key starts with tp-). Token Plan keys are cluster-specific — select the region matching your subscription.",
+      "service_kinds": [
+        "llm"
+      ],
+      "passthrough_models": false,
+      "has_provider_specific_data": true,
+      "models_url": "",
+      "models_fetcher_type": "",
+      "default_model": "",
+      "pricing_url": "",
+      "free_tier": "",
+      "base_urls": {
+        "embedding": "",
+        "tts": "",
+        "stt": "",
+        "search": "",
+        "fetch": "",
+        "image": ""
+      }
+    },
+    "volcengine-ark": {
+      "id": "volcengine-ark",
+      "alias": "ark",
+      "name": "Volcengine Ark",
+      "group": "apikey",
+      "auth_modes": [
+        "apikey"
+      ],
+      "auth_type": null,
+      "no_auth": false,
+      "deprecated": false,
+      "deprecation_notice": "",
+      "color": "#1677FF",
+      "text_icon": "ARK",
+      "website": "https://ark.cn-beijing.volces.com",
+      "signup_url": "",
+      "api_key_url": "https://console.volcengine.com/ark/region:ark+cn-beijing/apiKey",
+      "notice_text": "",
+      "service_kinds": [
+        "llm"
+      ],
+      "passthrough_models": false,
+      "has_provider_specific_data": false,
+      "models_url": "",
+      "models_fetcher_type": "",
+      "default_model": "",
+      "pricing_url": "",
+      "free_tier": "",
+      "base_urls": {
+        "embedding": "",
+        "tts": "",
+        "stt": "",
+        "search": "",
+        "fetch": "",
+        "image": ""
+      }
+    },
+    "openai": {
+      "id": "openai",
+      "alias": "openai",
+      "name": "OpenAI",
+      "group": "apikey",
+      "auth_modes": [
+        "apikey"
+      ],
+      "auth_type": null,
+      "no_auth": false,
+      "deprecated": false,
+      "deprecation_notice": "",
+      "color": "#10A37F",
+      "text_icon": "OA",
+      "website": "https://platform.openai.com",
+      "signup_url": "",
+      "api_key_url": "https://platform.openai.com/api-keys",
+      "notice_text": "",
+      "service_kinds": [
+        "llm",
+        "embedding",
+        "tts",
+        "stt",
+        "image",
+        "imageToText",
+        "webSearch"
+      ],
+      "passthrough_models": false,
+      "has_provider_specific_data": false,
+      "models_url": "",
+      "models_fetcher_type": "",
+      "default_model": "gpt-4o-mini",
+      "pricing_url": "https://openai.com/api/pricing",
+      "free_tier": "",
+      "base_urls": {
+        "embedding": "https://api.openai.com/v1/embeddings",
+        "tts": "https://api.openai.com/v1/audio/speech",
+        "stt": "https://api.openai.com/v1/audio/transcriptions",
+        "search": "",
+        "fetch": "",
+        "image": ""
+      }
+    },
+    "vercel-ai-gateway": {
+      "id": "vercel-ai-gateway",
+      "alias": "vercel",
+      "name": "Vercel AI Gateway",
+      "group": "apikey",
+      "auth_modes": [
+        "apikey"
+      ],
+      "auth_type": null,
+      "no_auth": false,
+      "deprecated": false,
+      "deprecation_notice": "",
+      "color": "#111827",
+      "text_icon": "VG",
+      "website": "https://vercel.com/ai-gateway",
+      "signup_url": "",
+      "api_key_url": "https://vercel.com/dashboard/~/ai-gateway",
+      "notice_text": "Unified OpenAI-compatible endpoint from Vercel. Use your AI Gateway API key, then pick models with provider/model IDs like anthropic/claude-sonnet-4.6 or openai/gpt-5.4.",
+      "service_kinds": [
+        "llm"
+      ],
+      "passthrough_models": true,
+      "has_provider_specific_data": false,
+      "models_url": "",
+      "models_fetcher_type": "",
+      "default_model": "",
+      "pricing_url": "",
+      "free_tier": "",
+      "base_urls": {
+        "embedding": "",
+        "tts": "",
+        "stt": "",
+        "search": "",
+        "fetch": "",
+        "image": ""
+      }
+    },
+    "anthropic": {
+      "id": "anthropic",
+      "alias": "anthropic",
+      "name": "Anthropic",
+      "group": "apikey",
+      "auth_modes": [
+        "apikey"
+      ],
+      "auth_type": null,
+      "no_auth": false,
+      "deprecated": false,
+      "deprecation_notice": "",
+      "color": "#D97757",
+      "text_icon": "AN",
+      "website": "https://console.anthropic.com",
+      "signup_url": "",
+      "api_key_url": "https://console.anthropic.com/settings/keys",
+      "notice_text": "",
+      "service_kinds": [
+        "llm",
+        "imageToText"
+      ],
+      "passthrough_models": false,
+      "has_provider_specific_data": false,
+      "models_url": "",
+      "models_fetcher_type": "",
+      "default_model": "",
+      "pricing_url": "",
+      "free_tier": "",
+      "base_urls": {
+        "embedding": "",
+        "tts": "",
+        "stt": "",
+        "search": "",
+        "fetch": "",
+        "image": ""
+      }
+    },
+    "opencode-go": {
+      "id": "opencode-go",
+      "alias": "ocg",
+      "name": "OpenCode Go",
+      "group": "apikey",
+      "auth_modes": [
+        "apikey"
+      ],
+      "auth_type": null,
+      "no_auth": false,
+      "deprecated": false,
+      "deprecation_notice": "",
+      "color": "#E87040",
+      "text_icon": "OC",
+      "website": "https://opencode.ai/auth",
+      "signup_url": "",
+      "api_key_url": "https://opencode.ai/auth",
+      "notice_text": "OpenCode Go subscription: $5/mo (then $10/mo). Access to Kimi, GLM, Qwen, MiMo, MiniMax models.",
+      "service_kinds": [
+        "llm"
+      ],
+      "passthrough_models": false,
+      "has_provider_specific_data": false,
+      "models_url": "",
+      "models_fetcher_type": "",
+      "default_model": "",
+      "pricing_url": "",
+      "free_tier": "",
+      "base_urls": {
+        "embedding": "",
+        "tts": "",
+        "stt": "",
+        "search": "",
+        "fetch": "",
+        "image": ""
+      }
+    },
+    "azure": {
+      "id": "azure",
+      "alias": "azure",
+      "name": "Azure OpenAI",
+      "group": "apikey",
+      "auth_modes": [
+        "apikey"
+      ],
+      "auth_type": null,
+      "no_auth": false,
+      "deprecated": false,
+      "deprecation_notice": "",
+      "color": "#0078D4",
+      "text_icon": "AZ",
+      "website": "https://azure.microsoft.com/en-us/products/ai-services/openai-service",
+      "signup_url": "",
+      "api_key_url": "https://portal.azure.com/#view/Microsoft_Azure_ProjectOxford/CognitiveServicesHub/~/OpenAI",
+      "notice_text": "",
+      "service_kinds": [
+        "llm"
+      ],
+      "passthrough_models": false,
+      "has_provider_specific_data": true,
+      "models_url": "",
+      "models_fetcher_type": "",
+      "default_model": "",
+      "pricing_url": "",
+      "free_tier": "",
+      "base_urls": {
+        "embedding": "",
+        "tts": "",
+        "stt": "",
+        "search": "",
+        "fetch": "",
+        "image": ""
+      }
+    },
+    "deepseek": {
+      "id": "deepseek",
+      "alias": "ds",
+      "name": "DeepSeek",
+      "group": "apikey",
+      "auth_modes": [
+        "apikey"
+      ],
+      "auth_type": null,
+      "no_auth": false,
+      "deprecated": false,
+      "deprecation_notice": "",
+      "color": "#4D6BFE",
+      "text_icon": "DS",
+      "website": "https://deepseek.com",
+      "signup_url": "",
+      "api_key_url": "https://platform.deepseek.com/api_keys",
+      "notice_text": "",
+      "service_kinds": [
+        "llm"
+      ],
+      "passthrough_models": false,
+      "has_provider_specific_data": false,
+      "models_url": "",
+      "models_fetcher_type": "",
+      "default_model": "",
+      "pricing_url": "",
+      "free_tier": "",
+      "base_urls": {
+        "embedding": "",
+        "tts": "",
+        "stt": "",
+        "search": "",
+        "fetch": "",
+        "image": ""
+      }
+    },
+    "commandcode": {
+      "id": "commandcode",
+      "alias": "cmc",
+      "name": "Command Code",
+      "group": "apikey",
+      "auth_modes": [
+        "apikey"
+      ],
+      "auth_type": null,
+      "no_auth": false,
+      "deprecated": false,
+      "deprecation_notice": "",
+      "color": "#000000",
+      "text_icon": "CC",
+      "website": "https://commandcode.ai",
+      "signup_url": "",
+      "api_key_url": "https://commandcode.ai/studio",
+      "notice_text": "Use your CommandCode CLI API key (starts with user_...) from ~/.commandcode/auth.json or commandcode.ai/studio.",
+      "service_kinds": [
+        "llm"
+      ],
+      "passthrough_models": false,
+      "has_provider_specific_data": false,
+      "models_url": "",
+      "models_fetcher_type": "",
+      "default_model": "",
+      "pricing_url": "",
+      "free_tier": "",
+      "base_urls": {
+        "embedding": "",
+        "tts": "",
+        "stt": "",
+        "search": "",
+        "fetch": "",
+        "image": ""
+      }
+    },
+    "groq": {
+      "id": "groq",
+      "alias": "groq",
+      "name": "Groq",
+      "group": "apikey",
+      "auth_modes": [
+        "apikey"
+      ],
+      "auth_type": null,
+      "no_auth": false,
+      "deprecated": false,
+      "deprecation_notice": "",
+      "color": "#F55036",
+      "text_icon": "GQ",
+      "website": "https://groq.com",
+      "signup_url": "",
+      "api_key_url": "https://console.groq.com/keys",
+      "notice_text": "",
+      "service_kinds": [
+        "llm",
+        "imageToText",
+        "stt"
+      ],
+      "passthrough_models": false,
+      "has_provider_specific_data": false,
+      "models_url": "",
+      "models_fetcher_type": "",
+      "default_model": "",
+      "pricing_url": "",
+      "free_tier": "",
+      "base_urls": {
+        "embedding": "",
+        "tts": "",
+        "stt": "https://api.groq.com/openai/v1/audio/transcriptions",
+        "search": "",
+        "fetch": "",
+        "image": ""
+      }
+    },
+    "mistral": {
+      "id": "mistral",
+      "alias": "mistral",
+      "name": "Mistral",
+      "group": "apikey",
+      "auth_modes": [
+        "apikey"
+      ],
+      "auth_type": null,
+      "no_auth": false,
+      "deprecated": false,
+      "deprecation_notice": "",
+      "color": "#FF7000",
+      "text_icon": "MI",
+      "website": "https://mistral.ai",
+      "signup_url": "",
+      "api_key_url": "https://console.mistral.ai/api-keys",
+      "notice_text": "",
+      "service_kinds": [
+        "llm",
+        "imageToText",
+        "embedding"
+      ],
+      "passthrough_models": false,
+      "has_provider_specific_data": false,
+      "models_url": "",
+      "models_fetcher_type": "",
+      "default_model": "",
+      "pricing_url": "",
+      "free_tier": "",
+      "base_urls": {
+        "embedding": "https://api.mistral.ai/v1/embeddings",
+        "tts": "",
+        "stt": "",
+        "search": "",
+        "fetch": "",
+        "image": ""
+      }
+    },
+    "perplexity": {
+      "id": "perplexity",
+      "alias": "pplx",
+      "name": "Perplexity",
+      "group": "apikey",
+      "auth_modes": [
+        "apikey"
+      ],
+      "auth_type": null,
+      "no_auth": false,
+      "deprecated": false,
+      "deprecation_notice": "",
+      "color": "#20808D",
+      "text_icon": "PP",
+      "website": "https://www.perplexity.ai",
+      "signup_url": "",
+      "api_key_url": "https://www.perplexity.ai/settings/api",
+      "notice_text": "",
+      "service_kinds": [
+        "llm",
+        "webSearch"
+      ],
+      "passthrough_models": false,
+      "has_provider_specific_data": false,
+      "models_url": "",
+      "models_fetcher_type": "",
+      "default_model": "",
+      "pricing_url": "",
+      "free_tier": "",
+      "base_urls": {
+        "embedding": "",
+        "tts": "",
+        "stt": "",
+        "search": "https://api.perplexity.ai/search",
+        "fetch": "",
+        "image": ""
+      }
+    },
+    "together": {
+      "id": "together",
+      "alias": "together",
+      "name": "Together AI",
+      "group": "apikey",
+      "auth_modes": [
+        "apikey"
+      ],
+      "auth_type": null,
+      "no_auth": false,
+      "deprecated": false,
+      "deprecation_notice": "",
+      "color": "#0F6FFF",
+      "text_icon": "TG",
+      "website": "https://www.together.ai",
+      "signup_url": "",
+      "api_key_url": "https://api.together.xyz/settings/api-keys",
+      "notice_text": "",
+      "service_kinds": [
+        "llm",
+        "embedding"
+      ],
+      "passthrough_models": false,
+      "has_provider_specific_data": false,
+      "models_url": "",
+      "models_fetcher_type": "",
+      "default_model": "",
+      "pricing_url": "",
+      "free_tier": "",
+      "base_urls": {
+        "embedding": "https://api.together.xyz/v1/embeddings",
+        "tts": "",
+        "stt": "",
+        "search": "",
+        "fetch": "",
+        "image": ""
+      }
+    },
+    "fireworks": {
+      "id": "fireworks",
+      "alias": "fireworks",
+      "name": "Fireworks AI",
+      "group": "apikey",
+      "auth_modes": [
+        "apikey"
+      ],
+      "auth_type": null,
+      "no_auth": false,
+      "deprecated": false,
+      "deprecation_notice": "",
+      "color": "#7B2EF2",
+      "text_icon": "FW",
+      "website": "https://fireworks.ai",
+      "signup_url": "",
+      "api_key_url": "https://fireworks.ai/account/api-keys",
+      "notice_text": "",
+      "service_kinds": [
+        "llm",
+        "embedding"
+      ],
+      "passthrough_models": false,
+      "has_provider_specific_data": false,
+      "models_url": "",
+      "models_fetcher_type": "",
+      "default_model": "",
+      "pricing_url": "",
+      "free_tier": "",
+      "base_urls": {
+        "embedding": "https://api.fireworks.ai/inference/v1/embeddings",
+        "tts": "",
+        "stt": "",
+        "search": "",
+        "fetch": "",
+        "image": ""
+      }
+    },
+    "cerebras": {
+      "id": "cerebras",
+      "alias": "cerebras",
+      "name": "Cerebras",
+      "group": "apikey",
+      "auth_modes": [
+        "apikey"
+      ],
+      "auth_type": null,
+      "no_auth": false,
+      "deprecated": false,
+      "deprecation_notice": "",
+      "color": "#FF4F00",
+      "text_icon": "CB",
+      "website": "https://www.cerebras.ai",
+      "signup_url": "",
+      "api_key_url": "https://cloud.cerebras.ai/platform",
+      "notice_text": "",
+      "service_kinds": [
+        "llm"
+      ],
+      "passthrough_models": false,
+      "has_provider_specific_data": false,
+      "models_url": "",
+      "models_fetcher_type": "",
+      "default_model": "",
+      "pricing_url": "",
+      "free_tier": "",
+      "base_urls": {
+        "embedding": "",
+        "tts": "",
+        "stt": "",
+        "search": "",
+        "fetch": "",
+        "image": ""
+      }
+    },
+    "cohere": {
+      "id": "cohere",
+      "alias": "cohere",
+      "name": "Cohere",
+      "group": "apikey",
+      "auth_modes": [
+        "apikey"
+      ],
+      "auth_type": null,
+      "no_auth": false,
+      "deprecated": false,
+      "deprecation_notice": "",
+      "color": "#39594D",
+      "text_icon": "CO",
+      "website": "https://cohere.com",
+      "signup_url": "",
+      "api_key_url": "https://dashboard.cohere.com/api-keys",
+      "notice_text": "",
+      "service_kinds": [
+        "llm"
+      ],
+      "passthrough_models": false,
+      "has_provider_specific_data": false,
+      "models_url": "",
+      "models_fetcher_type": "",
+      "default_model": "",
+      "pricing_url": "",
+      "free_tier": "",
+      "base_urls": {
+        "embedding": "",
+        "tts": "",
+        "stt": "",
+        "search": "",
+        "fetch": "",
+        "image": ""
+      }
+    },
+    "nebius": {
+      "id": "nebius",
+      "alias": "nebius",
+      "name": "Nebius AI",
+      "group": "apikey",
+      "auth_modes": [
+        "apikey"
+      ],
+      "auth_type": null,
+      "no_auth": false,
+      "deprecated": false,
+      "deprecation_notice": "",
+      "color": "#6C5CE7",
+      "text_icon": "NB",
+      "website": "https://nebius.com",
+      "signup_url": "",
+      "api_key_url": "https://studio.nebius.com/settings/api-keys",
+      "notice_text": "",
+      "service_kinds": [
+        "llm",
+        "embedding"
+      ],
+      "passthrough_models": false,
+      "has_provider_specific_data": false,
+      "models_url": "",
+      "models_fetcher_type": "",
+      "default_model": "",
+      "pricing_url": "",
+      "free_tier": "",
+      "base_urls": {
+        "embedding": "https://api.tokenfactory.nebius.com/v1/embeddings",
+        "tts": "",
+        "stt": "",
+        "search": "",
+        "fetch": "",
+        "image": ""
+      }
+    },
+    "siliconflow": {
+      "id": "siliconflow",
+      "alias": "siliconflow",
+      "name": "SiliconFlow",
+      "group": "apikey",
+      "auth_modes": [
+        "apikey"
+      ],
+      "auth_type": null,
+      "no_auth": false,
+      "deprecated": false,
+      "deprecation_notice": "",
+      "color": "#5B6EF5",
+      "text_icon": "SF",
+      "website": "https://cloud.siliconflow.com",
+      "signup_url": "",
+      "api_key_url": "https://cloud.siliconflow.com/account/ak",
+      "notice_text": "",
+      "service_kinds": [
+        "llm"
+      ],
+      "passthrough_models": false,
+      "has_provider_specific_data": false,
+      "models_url": "",
+      "models_fetcher_type": "",
+      "default_model": "",
+      "pricing_url": "",
+      "free_tier": "",
+      "base_urls": {
+        "embedding": "",
+        "tts": "",
+        "stt": "",
+        "search": "",
+        "fetch": "",
+        "image": ""
+      }
+    },
+    "hyperbolic": {
+      "id": "hyperbolic",
+      "alias": "hyp",
+      "name": "Hyperbolic",
+      "group": "apikey",
+      "auth_modes": [
+        "apikey"
+      ],
+      "auth_type": null,
+      "no_auth": false,
+      "deprecated": false,
+      "deprecation_notice": "",
+      "color": "#00D4FF",
+      "text_icon": "HY",
+      "website": "https://hyperbolic.xyz",
+      "signup_url": "",
+      "api_key_url": "https://app.hyperbolic.xyz/settings",
+      "notice_text": "",
+      "service_kinds": [
+        "llm",
+        "tts"
+      ],
+      "passthrough_models": false,
+      "has_provider_specific_data": false,
+      "models_url": "",
+      "models_fetcher_type": "",
+      "default_model": "",
+      "pricing_url": "",
+      "free_tier": "",
+      "base_urls": {
+        "embedding": "",
+        "tts": "https://api.hyperbolic.xyz/v1/audio/generation",
+        "stt": "",
+        "search": "",
+        "fetch": "",
+        "image": ""
+      }
+    },
+    "deepgram": {
+      "id": "deepgram",
+      "alias": "dg",
+      "name": "Deepgram",
+      "group": "apikey",
+      "auth_modes": [
+        "apikey"
+      ],
+      "auth_type": null,
+      "no_auth": false,
+      "deprecated": false,
+      "deprecation_notice": "",
+      "color": "#13EF93",
+      "text_icon": "DG",
+      "website": "https://deepgram.com",
+      "signup_url": "",
+      "api_key_url": "https://console.deepgram.com/api-keys",
+      "notice_text": "$200 free credit on signup (no card required). Aura-1: $0.015/1k chars, Aura-2: $0.030/1k chars (Pay-As-You-Go).",
+      "service_kinds": [
+        "stt",
+        "imageToText",
+        "tts"
+      ],
+      "passthrough_models": false,
+      "has_provider_specific_data": false,
+      "models_url": "",
+      "models_fetcher_type": "",
+      "default_model": "",
+      "pricing_url": "",
+      "free_tier": "",
+      "base_urls": {
+        "embedding": "",
+        "tts": "https://api.deepgram.com/v1/speak",
+        "stt": "https://api.deepgram.com/v1/listen",
+        "search": "",
+        "fetch": "",
+        "image": ""
+      }
+    },
+    "assemblyai": {
+      "id": "assemblyai",
+      "alias": "aai",
+      "name": "AssemblyAI",
+      "group": "apikey",
+      "auth_modes": [
+        "apikey"
+      ],
+      "auth_type": null,
+      "no_auth": false,
+      "deprecated": false,
+      "deprecation_notice": "",
+      "color": "#0062FF",
+      "text_icon": "AA",
+      "website": "https://assemblyai.com",
+      "signup_url": "",
+      "api_key_url": "https://www.assemblyai.com/app/api-keys",
+      "notice_text": "",
+      "service_kinds": [
+        "stt"
+      ],
+      "passthrough_models": false,
+      "has_provider_specific_data": false,
+      "models_url": "",
+      "models_fetcher_type": "",
+      "default_model": "",
+      "pricing_url": "",
+      "free_tier": "",
+      "base_urls": {
+        "embedding": "",
+        "tts": "",
+        "stt": "https://api.assemblyai.com/v2/transcript",
+        "search": "",
+        "fetch": "",
+        "image": ""
+      }
+    },
+    "nanobanana": {
+      "id": "nanobanana",
+      "alias": "nb",
+      "name": "NanoBanana API",
+      "group": "apikey",
+      "auth_modes": [
+        "apikey"
+      ],
+      "auth_type": null,
+      "no_auth": false,
+      "deprecated": false,
+      "deprecation_notice": "",
+      "color": "#FFD700",
+      "text_icon": "🍌",
+      "website": "https://nanobananaapi.ai",
+      "signup_url": "",
+      "api_key_url": "https://nanobananaapi.ai/dashboard",
+      "notice_text": "3rd-party proxy for Google Nano Banana (Gemini 2.5/3 Flash Image). For official, use Gemini provider.",
+      "service_kinds": [
+        "image"
+      ],
+      "passthrough_models": false,
+      "has_provider_specific_data": false,
+      "models_url": "",
+      "models_fetcher_type": "",
+      "default_model": "",
+      "pricing_url": "",
+      "free_tier": "",
+      "base_urls": {
+        "embedding": "",
+        "tts": "",
+        "stt": "",
+        "search": "",
+        "fetch": "",
+        "image": ""
+      }
+    },
+    "elevenlabs": {
+      "id": "elevenlabs",
+      "alias": "el",
+      "name": "ElevenLabs",
+      "group": "apikey",
+      "auth_modes": [
+        "apikey"
+      ],
+      "auth_type": null,
+      "no_auth": false,
+      "deprecated": false,
+      "deprecation_notice": "",
+      "color": "#6C47FF",
+      "text_icon": "EL",
+      "website": "https://elevenlabs.io",
+      "signup_url": "",
+      "api_key_url": "https://elevenlabs.io/app/settings/api-keys",
+      "notice_text": "",
+      "service_kinds": [
+        "tts"
+      ],
+      "passthrough_models": false,
+      "has_provider_specific_data": false,
+      "models_url": "",
+      "models_fetcher_type": "",
+      "default_model": "",
+      "pricing_url": "",
+      "free_tier": "",
+      "base_urls": {
+        "embedding": "",
+        "tts": "https://api.elevenlabs.io/v1/text-to-speech",
+        "stt": "",
+        "search": "",
+        "fetch": "",
+        "image": ""
+      }
+    },
+    "cartesia": {
+      "id": "cartesia",
+      "alias": "cartesia",
+      "name": "Cartesia",
+      "group": "apikey",
+      "auth_modes": [
+        "apikey"
+      ],
+      "auth_type": null,
+      "no_auth": false,
+      "deprecated": false,
+      "deprecation_notice": "",
+      "color": "#FF4F8B",
+      "text_icon": "CA",
+      "website": "https://cartesia.ai",
+      "signup_url": "",
+      "api_key_url": "https://play.cartesia.ai/keys",
+      "notice_text": "",
+      "service_kinds": [
+        "tts"
+      ],
+      "passthrough_models": false,
+      "has_provider_specific_data": false,
+      "models_url": "",
+      "models_fetcher_type": "",
+      "default_model": "",
+      "pricing_url": "",
+      "free_tier": "",
+      "base_urls": {
+        "embedding": "",
+        "tts": "https://api.cartesia.ai/tts/bytes",
+        "stt": "",
+        "search": "",
+        "fetch": "",
+        "image": ""
+      }
+    },
+    "playht": {
+      "id": "playht",
+      "alias": "playht",
+      "name": "PlayHT",
+      "group": "apikey",
+      "auth_modes": [
+        "apikey"
+      ],
+      "auth_type": null,
+      "no_auth": false,
+      "deprecated": false,
+      "deprecation_notice": "",
+      "color": "#00B4D8",
+      "text_icon": "PH",
+      "website": "https://play.ht",
+      "signup_url": "",
+      "api_key_url": "https://play.ht/studio/api-access",
+      "notice_text": "",
+      "service_kinds": [
+        "tts"
+      ],
+      "passthrough_models": false,
+      "has_provider_specific_data": false,
+      "models_url": "",
+      "models_fetcher_type": "",
+      "default_model": "",
+      "pricing_url": "",
+      "free_tier": "",
+      "base_urls": {
+        "embedding": "",
+        "tts": "https://api.play.ht/api/v2/tts/stream",
+        "stt": "",
+        "search": "",
+        "fetch": "",
+        "image": ""
+      }
+    },
+    "local-device": {
+      "id": "local-device",
+      "alias": "local-device",
+      "name": "Local Device",
+      "group": "apikey",
+      "auth_modes": [
+        "apikey"
+      ],
+      "auth_type": null,
+      "no_auth": true,
+      "deprecated": false,
+      "deprecation_notice": "",
+      "color": "#64748B",
+      "text_icon": "LD",
+      "website": "",
+      "signup_url": "",
+      "api_key_url": "",
+      "notice_text": "",
+      "service_kinds": [
+        "tts"
+      ],
+      "passthrough_models": false,
+      "has_provider_specific_data": false,
+      "models_url": "",
+      "models_fetcher_type": "",
+      "default_model": "",
+      "pricing_url": "",
+      "free_tier": "",
+      "base_urls": {
+        "embedding": "",
+        "tts": "local-device",
+        "stt": "",
+        "search": "",
+        "fetch": "",
+        "image": ""
+      }
+    },
+    "google-tts": {
+      "id": "google-tts",
+      "alias": "google-tts",
+      "name": "Google TTS",
+      "group": "apikey",
+      "auth_modes": [
+        "apikey"
+      ],
+      "auth_type": null,
+      "no_auth": true,
+      "deprecated": false,
+      "deprecation_notice": "",
+      "color": "#4285F4",
+      "text_icon": "GT",
+      "website": "",
+      "signup_url": "",
+      "api_key_url": "",
+      "notice_text": "",
+      "service_kinds": [
+        "tts"
+      ],
+      "passthrough_models": false,
+      "has_provider_specific_data": false,
+      "models_url": "",
+      "models_fetcher_type": "",
+      "default_model": "",
+      "pricing_url": "",
+      "free_tier": "",
+      "base_urls": {
+        "embedding": "",
+        "tts": "google-tts",
+        "stt": "",
+        "search": "",
+        "fetch": "",
+        "image": ""
+      }
+    },
+    "edge-tts": {
+      "id": "edge-tts",
+      "alias": "edge-tts",
+      "name": "Edge TTS",
+      "group": "apikey",
+      "auth_modes": [
+        "apikey"
+      ],
+      "auth_type": null,
+      "no_auth": true,
+      "deprecated": false,
+      "deprecation_notice": "",
+      "color": "#0078D4",
+      "text_icon": "ET",
+      "website": "",
+      "signup_url": "",
+      "api_key_url": "",
+      "notice_text": "",
+      "service_kinds": [
+        "tts"
+      ],
+      "passthrough_models": false,
+      "has_provider_specific_data": false,
+      "models_url": "",
+      "models_fetcher_type": "",
+      "default_model": "",
+      "pricing_url": "",
+      "free_tier": "",
+      "base_urls": {
+        "embedding": "",
+        "tts": "edge-tts",
+        "stt": "",
+        "search": "",
+        "fetch": "",
+        "image": ""
+      }
+    },
+    "coqui": {
+      "id": "coqui",
+      "alias": "coqui",
+      "name": "Coqui TTS",
+      "group": "apikey",
+      "auth_modes": [
+        "apikey"
+      ],
+      "auth_type": null,
+      "no_auth": true,
+      "deprecated": false,
+      "deprecation_notice": "",
+      "color": "#10B981",
+      "text_icon": "CQ",
+      "website": "https://github.com/coqui-ai/TTS",
+      "signup_url": "",
+      "api_key_url": "",
+      "notice_text": "",
+      "service_kinds": [
+        "tts"
+      ],
+      "passthrough_models": false,
+      "has_provider_specific_data": false,
+      "models_url": "",
+      "models_fetcher_type": "",
+      "default_model": "",
+      "pricing_url": "",
+      "free_tier": "",
+      "base_urls": {
+        "embedding": "",
+        "tts": "http://localhost:5002/api/tts",
+        "stt": "",
+        "search": "",
+        "fetch": "",
+        "image": ""
+      }
+    },
+    "tortoise": {
+      "id": "tortoise",
+      "alias": "tortoise",
+      "name": "Tortoise TTS",
+      "group": "apikey",
+      "auth_modes": [
+        "apikey"
+      ],
+      "auth_type": null,
+      "no_auth": true,
+      "deprecated": false,
+      "deprecation_notice": "",
+      "color": "#7C3AED",
+      "text_icon": "TT",
+      "website": "https://github.com/neonbjb/tortoise-tts",
+      "signup_url": "",
+      "api_key_url": "",
+      "notice_text": "",
+      "service_kinds": [
+        "tts"
+      ],
+      "passthrough_models": false,
+      "has_provider_specific_data": false,
+      "models_url": "",
+      "models_fetcher_type": "",
+      "default_model": "",
+      "pricing_url": "",
+      "free_tier": "",
+      "base_urls": {
+        "embedding": "",
+        "tts": "http://localhost:5000/api/tts",
+        "stt": "",
+        "search": "",
+        "fetch": "",
+        "image": ""
+      }
+    },
+    "inworld": {
+      "id": "inworld",
+      "alias": "inworld",
+      "name": "Inworld TTS",
+      "group": "apikey",
+      "auth_modes": [
+        "apikey"
+      ],
+      "auth_type": null,
+      "no_auth": false,
+      "deprecated": false,
+      "deprecation_notice": "",
+      "color": "#FF6B6B",
+      "text_icon": "IW",
+      "website": "https://inworld.ai",
+      "signup_url": "",
+      "api_key_url": "https://platform.inworld.ai/api-keys",
+      "notice_text": "Free tier: 40 minutes/month TTS. Paid: TTS-1.5 Mini $0.01/min ($15/1M chars), TTS-1.5 Max $0.025/min ($30/1M chars). 270+ voices, 15 languages.",
+      "service_kinds": [
+        "tts"
+      ],
+      "passthrough_models": false,
+      "has_provider_specific_data": false,
+      "models_url": "",
+      "models_fetcher_type": "",
+      "default_model": "",
+      "pricing_url": "",
+      "free_tier": "",
+      "base_urls": {
+        "embedding": "",
+        "tts": "https://api.inworld.ai/tts/v1/voice",
+        "stt": "",
+        "search": "",
+        "fetch": "",
+        "image": ""
+      }
+    },
+    "voyage-ai": {
+      "id": "voyage-ai",
+      "alias": "voyage",
+      "name": "Voyage AI",
+      "group": "apikey",
+      "auth_modes": [
+        "apikey"
+      ],
+      "auth_type": null,
+      "no_auth": false,
+      "deprecated": false,
+      "deprecation_notice": "",
+      "color": "#0EA5E9",
+      "text_icon": "VG",
+      "website": "https://www.voyageai.com",
+      "signup_url": "",
+      "api_key_url": "https://dash.voyageai.com/api-keys",
+      "notice_text": "",
+      "service_kinds": [
+        "embedding"
+      ],
+      "passthrough_models": false,
+      "has_provider_specific_data": false,
+      "models_url": "",
+      "models_fetcher_type": "",
+      "default_model": "",
+      "pricing_url": "",
+      "free_tier": "",
+      "base_urls": {
+        "embedding": "https://api.voyageai.com/v1/embeddings",
+        "tts": "",
+        "stt": "",
+        "search": "",
+        "fetch": "",
+        "image": ""
+      }
+    },
+    "sdwebui": {
+      "id": "sdwebui",
+      "alias": "sdwebui",
+      "name": "SD WebUI",
+      "group": "apikey",
+      "auth_modes": [
+        "apikey"
+      ],
+      "auth_type": null,
+      "no_auth": false,
+      "deprecated": false,
+      "deprecation_notice": "",
+      "color": "#FF7043",
+      "text_icon": "SD",
+      "website": "https://github.com/AUTOMATIC1111/stable-diffusion-webui",
+      "signup_url": "",
+      "api_key_url": "",
+      "notice_text": "",
+      "service_kinds": [
+        "image"
+      ],
+      "passthrough_models": false,
+      "has_provider_specific_data": false,
+      "models_url": "",
+      "models_fetcher_type": "",
+      "default_model": "",
+      "pricing_url": "",
+      "free_tier": "",
+      "base_urls": {
+        "embedding": "",
+        "tts": "",
+        "stt": "",
+        "search": "",
+        "fetch": "",
+        "image": ""
+      }
+    },
+    "comfyui": {
+      "id": "comfyui",
+      "alias": "comfyui",
+      "name": "ComfyUI",
+      "group": "apikey",
+      "auth_modes": [
+        "apikey"
+      ],
+      "auth_type": null,
+      "no_auth": false,
+      "deprecated": false,
+      "deprecation_notice": "",
+      "color": "#4CAF50",
+      "text_icon": "CF",
+      "website": "https://github.com/comfyanonymous/ComfyUI",
+      "signup_url": "",
+      "api_key_url": "",
+      "notice_text": "",
+      "service_kinds": [
+        "image"
+      ],
+      "passthrough_models": false,
+      "has_provider_specific_data": false,
+      "models_url": "",
+      "models_fetcher_type": "",
+      "default_model": "",
+      "pricing_url": "",
+      "free_tier": "",
+      "base_urls": {
+        "embedding": "",
+        "tts": "",
+        "stt": "",
+        "search": "",
+        "fetch": "",
+        "image": ""
+      }
+    },
+    "huggingface": {
+      "id": "huggingface",
+      "alias": "hf",
+      "name": "HuggingFace",
+      "group": "apikey",
+      "auth_modes": [
+        "apikey"
+      ],
+      "auth_type": null,
+      "no_auth": false,
+      "deprecated": false,
+      "deprecation_notice": "",
+      "color": "#FFD21E",
+      "text_icon": "HF",
+      "website": "https://huggingface.co",
+      "signup_url": "",
+      "api_key_url": "https://huggingface.co/settings/tokens",
+      "notice_text": "",
+      "service_kinds": [
+        "image",
+        "imageToText",
+        "tts",
+        "stt"
+      ],
+      "passthrough_models": false,
+      "has_provider_specific_data": false,
+      "models_url": "",
+      "models_fetcher_type": "",
+      "default_model": "",
+      "pricing_url": "",
+      "free_tier": "",
+      "base_urls": {
+        "embedding": "",
+        "tts": "https://api-inference.huggingface.co/models",
+        "stt": "https://api-inference.huggingface.co/models",
+        "search": "",
+        "fetch": "",
+        "image": ""
+      }
+    },
+    "blackbox": {
+      "id": "blackbox",
+      "alias": "bb",
+      "name": "Blackbox AI",
+      "group": "apikey",
+      "auth_modes": [
+        "apikey"
+      ],
+      "auth_type": null,
+      "no_auth": false,
+      "deprecated": false,
+      "deprecation_notice": "",
+      "color": "#5B5FEF",
+      "text_icon": "BB",
+      "website": "https://blackbox.ai",
+      "signup_url": "",
+      "api_key_url": "https://www.blackbox.ai/api-management",
+      "notice_text": "",
+      "service_kinds": [
+        "llm"
+      ],
+      "passthrough_models": false,
+      "has_provider_specific_data": false,
+      "models_url": "",
+      "models_fetcher_type": "",
+      "default_model": "",
+      "pricing_url": "",
+      "free_tier": "",
+      "base_urls": {
+        "embedding": "",
+        "tts": "",
+        "stt": "",
+        "search": "",
+        "fetch": "",
+        "image": ""
+      }
+    },
+    "chutes": {
+      "id": "chutes",
+      "alias": "ch",
+      "name": "Chutes AI",
+      "group": "apikey",
+      "auth_modes": [
+        "apikey"
+      ],
+      "auth_type": null,
+      "no_auth": false,
+      "deprecated": false,
+      "deprecation_notice": "",
+      "color": "#ffffffff",
+      "text_icon": "CH",
+      "website": "https://chutes.ai",
+      "signup_url": "",
+      "api_key_url": "https://chutes.ai/app/api",
+      "notice_text": "",
+      "service_kinds": [
+        "llm"
+      ],
+      "passthrough_models": false,
+      "has_provider_specific_data": false,
+      "models_url": "",
+      "models_fetcher_type": "",
+      "default_model": "",
+      "pricing_url": "",
+      "free_tier": "",
+      "base_urls": {
+        "embedding": "",
+        "tts": "",
+        "stt": "",
+        "search": "",
+        "fetch": "",
+        "image": ""
+      }
+    },
+    "ollama-local": {
+      "id": "ollama-local",
+      "alias": "ollama-local",
+      "name": "Ollama Local",
+      "group": "apikey",
+      "auth_modes": [
+        "apikey"
+      ],
+      "auth_type": null,
+      "no_auth": false,
+      "deprecated": false,
+      "deprecation_notice": "",
+      "color": "#ffffffff",
+      "text_icon": "OL",
+      "website": "https://ollama.com",
+      "signup_url": "",
+      "api_key_url": "",
+      "notice_text": "",
+      "service_kinds": [
+        "llm"
+      ],
+      "passthrough_models": false,
+      "has_provider_specific_data": false,
+      "models_url": "",
+      "models_fetcher_type": "",
+      "default_model": "",
+      "pricing_url": "",
+      "free_tier": "",
+      "base_urls": {
+        "embedding": "",
+        "tts": "",
+        "stt": "",
+        "search": "",
+        "fetch": "",
+        "image": ""
+      }
+    },
+    "vertex-partner": {
+      "id": "vertex-partner",
+      "alias": "vxp",
+      "name": "Vertex Partner",
+      "group": "apikey",
+      "auth_modes": [
+        "apikey"
+      ],
+      "auth_type": null,
+      "no_auth": false,
+      "deprecated": false,
+      "deprecation_notice": "",
+      "color": "#34A853",
+      "text_icon": "VP",
+      "website": "https://cloud.google.com/vertex-ai/generative-ai/docs/partner-models/use-partner-models",
+      "signup_url": "",
+      "api_key_url": "https://console.cloud.google.com/iam-admin/serviceaccounts",
+      "notice_text": "",
+      "service_kinds": [
+        "llm"
+      ],
+      "passthrough_models": false,
+      "has_provider_specific_data": false,
+      "models_url": "",
+      "models_fetcher_type": "",
+      "default_model": "",
+      "pricing_url": "",
+      "free_tier": "",
+      "base_urls": {
+        "embedding": "",
+        "tts": "",
+        "stt": "",
+        "search": "",
+        "fetch": "",
+        "image": ""
+      }
+    },
+    "tavily": {
+      "id": "tavily",
+      "alias": "tavily",
+      "name": "Tavily",
+      "group": "apikey",
+      "auth_modes": [
+        "apikey"
+      ],
+      "auth_type": null,
+      "no_auth": false,
+      "deprecated": false,
+      "deprecation_notice": "",
+      "color": "#5B21B6",
+      "text_icon": "TV",
+      "website": "https://tavily.com",
+      "signup_url": "",
+      "api_key_url": "https://app.tavily.com/home",
+      "notice_text": "",
+      "service_kinds": [
+        "webSearch",
+        "webFetch"
+      ],
+      "passthrough_models": false,
+      "has_provider_specific_data": false,
+      "models_url": "",
+      "models_fetcher_type": "",
+      "default_model": "",
+      "pricing_url": "",
+      "free_tier": "",
+      "base_urls": {
+        "embedding": "",
+        "tts": "",
+        "stt": "",
+        "search": "https://api.tavily.com/search",
+        "fetch": "https://api.tavily.com/extract",
+        "image": ""
+      }
+    },
+    "brave-search": {
+      "id": "brave-search",
+      "alias": "brave",
+      "name": "Brave Search",
+      "group": "apikey",
+      "auth_modes": [
+        "apikey"
+      ],
+      "auth_type": null,
+      "no_auth": false,
+      "deprecated": false,
+      "deprecation_notice": "",
+      "color": "#FB542B",
+      "text_icon": "BR",
+      "website": "https://brave.com/search/api",
+      "signup_url": "",
+      "api_key_url": "https://api-dashboard.search.brave.com/app/keys",
+      "notice_text": "",
+      "service_kinds": [
+        "webSearch"
+      ],
+      "passthrough_models": false,
+      "has_provider_specific_data": false,
+      "models_url": "",
+      "models_fetcher_type": "",
+      "default_model": "",
+      "pricing_url": "",
+      "free_tier": "",
+      "base_urls": {
+        "embedding": "",
+        "tts": "",
+        "stt": "",
+        "search": "https://api.search.brave.com/res/v1",
+        "fetch": "",
+        "image": ""
+      }
+    },
+    "serper": {
+      "id": "serper",
+      "alias": "serper",
+      "name": "Serper",
+      "group": "apikey",
+      "auth_modes": [
+        "apikey"
+      ],
+      "auth_type": null,
+      "no_auth": false,
+      "deprecated": false,
+      "deprecation_notice": "",
+      "color": "#4F46E5",
+      "text_icon": "SP",
+      "website": "https://serper.dev",
+      "signup_url": "",
+      "api_key_url": "https://serper.dev/api-key",
+      "notice_text": "",
+      "service_kinds": [
+        "webSearch"
+      ],
+      "passthrough_models": false,
+      "has_provider_specific_data": false,
+      "models_url": "",
+      "models_fetcher_type": "",
+      "default_model": "",
+      "pricing_url": "",
+      "free_tier": "",
+      "base_urls": {
+        "embedding": "",
+        "tts": "",
+        "stt": "",
+        "search": "https://google.serper.dev",
+        "fetch": "",
+        "image": ""
+      }
+    },
+    "exa": {
+      "id": "exa",
+      "alias": "exa",
+      "name": "Exa",
+      "group": "apikey",
+      "auth_modes": [
+        "apikey"
+      ],
+      "auth_type": null,
+      "no_auth": false,
+      "deprecated": false,
+      "deprecation_notice": "",
+      "color": "#2563EB",
+      "text_icon": "EX",
+      "website": "https://exa.ai",
+      "signup_url": "",
+      "api_key_url": "https://dashboard.exa.ai/api-keys",
+      "notice_text": "",
+      "service_kinds": [
+        "webSearch",
+        "webFetch"
+      ],
+      "passthrough_models": false,
+      "has_provider_specific_data": false,
+      "models_url": "",
+      "models_fetcher_type": "",
+      "default_model": "",
+      "pricing_url": "",
+      "free_tier": "",
+      "base_urls": {
+        "embedding": "",
+        "tts": "",
+        "stt": "",
+        "search": "https://api.exa.ai/search",
+        "fetch": "https://api.exa.ai/contents",
+        "image": ""
+      }
+    },
+    "searxng": {
+      "id": "searxng",
+      "alias": "searxng",
+      "name": "SearXNG",
+      "group": "apikey",
+      "auth_modes": [
+        "apikey"
+      ],
+      "auth_type": null,
+      "no_auth": true,
+      "deprecated": false,
+      "deprecation_notice": "",
+      "color": "#3B82F6",
+      "text_icon": "SX",
+      "website": "https://docs.searxng.org",
+      "signup_url": "",
+      "api_key_url": "",
+      "notice_text": "",
+      "service_kinds": [
+        "webSearch"
+      ],
+      "passthrough_models": false,
+      "has_provider_specific_data": false,
+      "models_url": "",
+      "models_fetcher_type": "",
+      "default_model": "",
+      "pricing_url": "",
+      "free_tier": "",
+      "base_urls": {
+        "embedding": "",
+        "tts": "",
+        "stt": "",
+        "search": "http://localhost:8888/search",
+        "fetch": "",
+        "image": ""
+      }
+    },
+    "google-pse": {
+      "id": "google-pse",
+      "alias": "gpse",
+      "name": "Google PSE",
+      "group": "apikey",
+      "auth_modes": [
+        "apikey"
+      ],
+      "auth_type": null,
+      "no_auth": false,
+      "deprecated": false,
+      "deprecation_notice": "",
+      "color": "#4285F4",
+      "text_icon": "GP",
+      "website": "https://programmablesearchengine.google.com",
+      "signup_url": "",
+      "api_key_url": "https://programmablesearchengine.google.com/controlpanel/create",
+      "notice_text": "",
+      "service_kinds": [
+        "webSearch"
+      ],
+      "passthrough_models": false,
+      "has_provider_specific_data": false,
+      "models_url": "",
+      "models_fetcher_type": "",
+      "default_model": "",
+      "pricing_url": "",
+      "free_tier": "",
+      "base_urls": {
+        "embedding": "",
+        "tts": "",
+        "stt": "",
+        "search": "https://www.googleapis.com/customsearch/v1",
+        "fetch": "",
+        "image": ""
+      }
+    },
+    "linkup": {
+      "id": "linkup",
+      "alias": "linkup",
+      "name": "Linkup",
+      "group": "apikey",
+      "auth_modes": [
+        "apikey"
+      ],
+      "auth_type": null,
+      "no_auth": false,
+      "deprecated": false,
+      "deprecation_notice": "",
+      "color": "#0EA5E9",
+      "text_icon": "LK",
+      "website": "https://linkup.so",
+      "signup_url": "",
+      "api_key_url": "https://app.linkup.so/api-keys",
+      "notice_text": "",
+      "service_kinds": [
+        "webSearch"
+      ],
+      "passthrough_models": false,
+      "has_provider_specific_data": false,
+      "models_url": "",
+      "models_fetcher_type": "",
+      "default_model": "",
+      "pricing_url": "",
+      "free_tier": "",
+      "base_urls": {
+        "embedding": "",
+        "tts": "",
+        "stt": "",
+        "search": "https://api.linkup.so/v1/search",
+        "fetch": "",
+        "image": ""
+      }
+    },
+    "searchapi": {
+      "id": "searchapi",
+      "alias": "searchapi",
+      "name": "SearchAPI",
+      "group": "apikey",
+      "auth_modes": [
+        "apikey"
+      ],
+      "auth_type": null,
+      "no_auth": false,
+      "deprecated": false,
+      "deprecation_notice": "",
+      "color": "#0EA5A4",
+      "text_icon": "SA",
+      "website": "https://www.searchapi.io",
+      "signup_url": "",
+      "api_key_url": "https://www.searchapi.io/dashboard",
+      "notice_text": "",
+      "service_kinds": [
+        "webSearch"
+      ],
+      "passthrough_models": false,
+      "has_provider_specific_data": false,
+      "models_url": "",
+      "models_fetcher_type": "",
+      "default_model": "",
+      "pricing_url": "",
+      "free_tier": "",
+      "base_urls": {
+        "embedding": "",
+        "tts": "",
+        "stt": "",
+        "search": "https://www.searchapi.io/api/v1/search",
+        "fetch": "",
+        "image": ""
+      }
+    },
+    "youcom": {
+      "id": "youcom",
+      "alias": "youcom",
+      "name": "You.com Search",
+      "group": "apikey",
+      "auth_modes": [
+        "apikey"
+      ],
+      "auth_type": null,
+      "no_auth": false,
+      "deprecated": false,
+      "deprecation_notice": "",
+      "color": "#7C3AED",
+      "text_icon": "YC",
+      "website": "https://you.com",
+      "signup_url": "",
+      "api_key_url": "https://api.you.com",
+      "notice_text": "",
+      "service_kinds": [
+        "webSearch"
+      ],
+      "passthrough_models": false,
+      "has_provider_specific_data": false,
+      "models_url": "",
+      "models_fetcher_type": "",
+      "default_model": "",
+      "pricing_url": "",
+      "free_tier": "",
+      "base_urls": {
+        "embedding": "",
+        "tts": "",
+        "stt": "",
+        "search": "https://ydc-index.io/v1/search",
+        "fetch": "",
+        "image": ""
+      }
+    },
+    "firecrawl": {
+      "id": "firecrawl",
+      "alias": "firecrawl",
+      "name": "Firecrawl",
+      "group": "apikey",
+      "auth_modes": [
+        "apikey"
+      ],
+      "auth_type": null,
+      "no_auth": false,
+      "deprecated": false,
+      "deprecation_notice": "",
+      "color": "#F59E0B",
+      "text_icon": "FC",
+      "website": "https://firecrawl.dev",
+      "signup_url": "",
+      "api_key_url": "https://www.firecrawl.dev/app/api-keys",
+      "notice_text": "",
+      "service_kinds": [
+        "webFetch"
+      ],
+      "passthrough_models": false,
+      "has_provider_specific_data": false,
+      "models_url": "",
+      "models_fetcher_type": "",
+      "default_model": "",
+      "pricing_url": "",
+      "free_tier": "",
+      "base_urls": {
+        "embedding": "",
+        "tts": "",
+        "stt": "",
+        "search": "",
+        "fetch": "https://api.firecrawl.dev/v1/scrape",
+        "image": ""
+      }
+    },
+    "fal-ai": {
+      "id": "fal-ai",
+      "alias": "fal",
+      "name": "Fal.ai",
+      "group": "apikey",
+      "auth_modes": [
+        "apikey"
+      ],
+      "auth_type": null,
+      "no_auth": false,
+      "deprecated": false,
+      "deprecation_notice": "",
+      "color": "#2563EB",
+      "text_icon": "FL",
+      "website": "https://fal.ai",
+      "signup_url": "",
+      "api_key_url": "https://fal.ai/dashboard/keys",
+      "notice_text": "",
+      "service_kinds": [
+        "image"
+      ],
+      "passthrough_models": false,
+      "has_provider_specific_data": false,
+      "models_url": "",
+      "models_fetcher_type": "",
+      "default_model": "",
+      "pricing_url": "",
+      "free_tier": "",
+      "base_urls": {
+        "embedding": "",
+        "tts": "",
+        "stt": "",
+        "search": "",
+        "fetch": "",
+        "image": "https://api.fal.ai/v1/models?limit=1"
+      }
+    },
+    "stability-ai": {
+      "id": "stability-ai",
+      "alias": "stability",
+      "name": "Stability AI",
+      "group": "apikey",
+      "auth_modes": [
+        "apikey"
+      ],
+      "auth_type": null,
+      "no_auth": false,
+      "deprecated": false,
+      "deprecation_notice": "",
+      "color": "#8B5CF6",
+      "text_icon": "SA",
+      "website": "https://stability.ai",
+      "signup_url": "",
+      "api_key_url": "https://platform.stability.ai/account/keys",
+      "notice_text": "",
+      "service_kinds": [
+        "image"
+      ],
+      "passthrough_models": false,
+      "has_provider_specific_data": false,
+      "models_url": "",
+      "models_fetcher_type": "",
+      "default_model": "",
+      "pricing_url": "",
+      "free_tier": "",
+      "base_urls": {
+        "embedding": "",
+        "tts": "",
+        "stt": "",
+        "search": "",
+        "fetch": "",
+        "image": "https://api.stability.ai/v1/user/account"
+      }
+    },
+    "black-forest-labs": {
+      "id": "black-forest-labs",
+      "alias": "bfl",
+      "name": "Black Forest Labs",
+      "group": "apikey",
+      "auth_modes": [
+        "apikey"
+      ],
+      "auth_type": null,
+      "no_auth": false,
+      "deprecated": false,
+      "deprecation_notice": "",
+      "color": "#111827",
+      "text_icon": "BF",
+      "website": "https://blackforestlabs.ai",
+      "signup_url": "",
+      "api_key_url": "https://api.bfl.ai",
+      "notice_text": "",
+      "service_kinds": [
+        "image"
+      ],
+      "passthrough_models": false,
+      "has_provider_specific_data": false,
+      "models_url": "",
+      "models_fetcher_type": "",
+      "default_model": "",
+      "pricing_url": "",
+      "free_tier": "",
+      "base_urls": {
+        "embedding": "",
+        "tts": "",
+        "stt": "",
+        "search": "",
+        "fetch": "",
+        "image": "https://api.bfl.ai/v1/get_result?id=ping"
+      }
+    },
+    "recraft": {
+      "id": "recraft",
+      "alias": "recraft",
+      "name": "Recraft",
+      "group": "apikey",
+      "auth_modes": [
+        "apikey"
+      ],
+      "auth_type": null,
+      "no_auth": false,
+      "deprecated": false,
+      "deprecation_notice": "",
+      "color": "#EC4899",
+      "text_icon": "RC",
+      "website": "https://recraft.ai",
+      "signup_url": "",
+      "api_key_url": "https://www.recraft.ai/profile/api",
+      "notice_text": "",
+      "service_kinds": [
+        "image"
+      ],
+      "passthrough_models": false,
+      "has_provider_specific_data": false,
+      "models_url": "",
+      "models_fetcher_type": "",
+      "default_model": "",
+      "pricing_url": "",
+      "free_tier": "",
+      "base_urls": {
+        "embedding": "",
+        "tts": "",
+        "stt": "",
+        "search": "",
+        "fetch": "",
+        "image": "https://external.api.recraft.ai/v1/users/me"
+      }
+    },
+    "topaz": {
+      "id": "topaz",
+      "alias": "topaz",
+      "name": "Topaz",
+      "group": "apikey",
+      "auth_modes": [
+        "apikey"
+      ],
+      "auth_type": null,
+      "no_auth": false,
+      "deprecated": false,
+      "deprecation_notice": "",
+      "color": "#059669",
+      "text_icon": "TP",
+      "website": "https://topazlabs.com",
+      "signup_url": "",
+      "api_key_url": "https://topazlabs.com/account",
+      "notice_text": "",
+      "service_kinds": [
+        "image"
+      ],
+      "passthrough_models": false,
+      "has_provider_specific_data": false,
+      "models_url": "",
+      "models_fetcher_type": "",
+      "default_model": "",
+      "pricing_url": "",
+      "free_tier": "",
+      "base_urls": {
+        "embedding": "",
+        "tts": "",
+        "stt": "",
+        "search": "",
+        "fetch": "",
+        "image": ""
+      }
+    },
+    "runwayml": {
+      "id": "runwayml",
+      "alias": "runway",
+      "name": "Runway ML",
+      "group": "apikey",
+      "auth_modes": [
+        "apikey"
+      ],
+      "auth_type": null,
+      "no_auth": false,
+      "deprecated": false,
+      "deprecation_notice": "",
+      "color": "#000000",
+      "text_icon": "RW",
+      "website": "https://runwayml.com",
+      "signup_url": "",
+      "api_key_url": "https://dev.runwayml.com",
+      "notice_text": "",
+      "service_kinds": [
+        "image",
+        "video"
+      ],
+      "passthrough_models": false,
+      "has_provider_specific_data": false,
+      "models_url": "",
+      "models_fetcher_type": "",
+      "default_model": "",
+      "pricing_url": "",
+      "free_tier": "",
+      "base_urls": {
+        "embedding": "",
+        "tts": "",
+        "stt": "",
+        "search": "",
+        "fetch": "",
+        "image": "https://api.dev.runwayml.com/v1/organization"
+      }
+    },
+    "aws-polly": {
+      "id": "aws-polly",
+      "alias": "polly",
+      "name": "AWS Polly",
+      "group": "apikey",
+      "auth_modes": [
+        "apikey"
+      ],
+      "auth_type": null,
+      "no_auth": false,
+      "deprecated": false,
+      "deprecation_notice": "",
+      "color": "#FF9900",
+      "text_icon": "PL",
+      "website": "https://aws.amazon.com/polly/",
+      "signup_url": "",
+      "api_key_url": "https://console.aws.amazon.com/iam/home#/security_credentials",
+      "notice_text": "Use AWS Secret Access Key as API key; set providerSpecificData.accessKeyId and optional region.",
+      "service_kinds": [
+        "tts"
+      ],
+      "passthrough_models": false,
+      "has_provider_specific_data": true,
+      "models_url": "",
+      "models_fetcher_type": "",
+      "default_model": "",
+      "pricing_url": "",
+      "free_tier": "",
+      "base_urls": {
+        "embedding": "",
+        "tts": "https://polly.{region}.amazonaws.com/v1/speech",
+        "stt": "",
+        "search": "",
+        "fetch": "",
+        "image": ""
+      }
+    },
+    "jina-ai": {
+      "id": "jina-ai",
+      "alias": "jina",
+      "name": "Jina AI",
+      "group": "apikey",
+      "auth_modes": [
+        "apikey"
+      ],
+      "auth_type": null,
+      "no_auth": false,
+      "deprecated": false,
+      "deprecation_notice": "",
+      "color": "#2563EB",
+      "text_icon": "JA",
+      "website": "https://jina.ai",
+      "signup_url": "",
+      "api_key_url": "https://jina.ai/?sui=apikey",
+      "notice_text": "10M free tokens on signup (non-commercial), no credit card required.",
+      "service_kinds": [
+        "embedding"
+      ],
+      "passthrough_models": false,
+      "has_provider_specific_data": false,
+      "models_url": "",
+      "models_fetcher_type": "",
+      "default_model": "",
+      "pricing_url": "",
+      "free_tier": "",
+      "base_urls": {
+        "embedding": "https://api.jina.ai/v1/embeddings",
+        "tts": "",
+        "stt": "",
+        "search": "",
+        "fetch": "",
+        "image": ""
+      }
+    },
+    "jina-reader": {
+      "id": "jina-reader",
+      "alias": "jina",
+      "name": "Jina Reader",
+      "group": "apikey",
+      "auth_modes": [
+        "apikey"
+      ],
+      "auth_type": null,
+      "no_auth": false,
+      "deprecated": false,
+      "deprecation_notice": "",
+      "color": "#000000",
+      "text_icon": "JR",
+      "website": "https://jina.ai/reader",
+      "signup_url": "",
+      "api_key_url": "https://jina.ai/?sui=apikey",
+      "notice_text": "",
+      "service_kinds": [
+        "webFetch"
+      ],
+      "passthrough_models": false,
+      "has_provider_specific_data": false,
+      "models_url": "",
+      "models_fetcher_type": "",
+      "default_model": "",
+      "pricing_url": "",
+      "free_tier": "",
+      "base_urls": {
+        "embedding": "",
+        "tts": "",
+        "stt": "",
+        "search": "",
+        "fetch": "https://r.jina.ai",
+        "image": ""
+      }
+    },
+    "grok-web": {
+      "id": "grok-web",
+      "alias": "gw",
+      "name": "Grok Web (Subscription)",
+      "group": "cookie",
+      "auth_modes": [
+        "cookie"
+      ],
+      "auth_type": "cookie",
+      "no_auth": false,
+      "deprecated": false,
+      "deprecation_notice": "",
+      "color": "#1DA1F2",
+      "text_icon": "GW",
+      "website": "https://grok.com",
+      "signup_url": "",
+      "api_key_url": "",
+      "notice_text": "",
+      "service_kinds": [
+        "llm"
+      ],
+      "passthrough_models": true,
+      "has_provider_specific_data": false,
+      "models_url": "",
+      "models_fetcher_type": "",
+      "default_model": "",
+      "pricing_url": "",
+      "free_tier": "",
+      "base_urls": {
+        "embedding": "",
+        "tts": "",
+        "stt": "",
+        "search": "",
+        "fetch": "",
+        "image": ""
+      }
+    },
+    "perplexity-web": {
+      "id": "perplexity-web",
+      "alias": "pw",
+      "name": "Perplexity Web (Pro/Max)",
+      "group": "cookie",
+      "auth_modes": [
+        "cookie"
+      ],
+      "auth_type": "cookie",
+      "no_auth": false,
+      "deprecated": false,
+      "deprecation_notice": "",
+      "color": "#20808D",
+      "text_icon": "PW",
+      "website": "https://www.perplexity.ai",
+      "signup_url": "",
+      "api_key_url": "",
+      "notice_text": "",
+      "service_kinds": [
+        "llm"
+      ],
+      "passthrough_models": false,
+      "has_provider_specific_data": false,
+      "models_url": "",
+      "models_fetcher_type": "",
+      "default_model": "",
+      "pricing_url": "",
+      "free_tier": "",
+      "base_urls": {
+        "embedding": "",
+        "tts": "",
+        "stt": "",
+        "search": "",
+        "fetch": "",
+        "image": ""
+      }
+    }
+  }
+}

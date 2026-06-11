@@ -1,0 +1,216 @@
+{
+  "schema_version": "guild_failure_flags_v0",
+  "default_flag": "unknown_failure",
+  "flags": {
+    "provider_service_unavailable": {
+      "category": "provider_infra",
+      "severity": "warning",
+      "retry_policy": "try_next_provider_then_backoff",
+      "user_label": "Provider temporarily unavailable",
+      "meaning": "The selected provider endpoint returned a temporary outage or overload signal such as HTTP 500/502/503/504, DNS failure, or connection refusal.",
+      "next_actions": [
+        "Try the next ammo in the ladder.",
+        "If every provider returns this flag, wait and retry later.",
+        "Do not treat this as a worker artifact/schema bug."
+      ],
+      "owner": "provider_route",
+      "evidence_fields": ["blocked_reason", "adapter_result.summary", "adapter_result.attempts", "known_risks"],
+      "safe_to_retry": true
+    },
+    "provider_rate_limited": {
+      "category": "provider_quota",
+      "severity": "warning",
+      "retry_policy": "try_next_provider_or_backoff",
+      "user_label": "Provider rate limited",
+      "meaning": "The provider rejected the request because quota or rate limits were hit.",
+      "next_actions": [
+        "Try a different ammo/provider if available.",
+        "Back off before retrying the same provider.",
+        "Check account quota only outside committed config."
+      ],
+      "owner": "provider_route",
+      "evidence_fields": ["blocked_reason", "adapter_result.summary", "known_risks"],
+      "safe_to_retry": true
+    },
+    "provider_missing": {
+      "category": "local_config",
+      "severity": "blocked",
+      "retry_policy": "try_next_provider",
+      "user_label": "Provider key or local tool missing",
+      "meaning": "The provider cannot run because the required environment key, local CLI, or local service is unavailable.",
+      "next_actions": [
+        "Set the provider key in the local shell or ignored local config.",
+        "Install or authenticate the local CLI when this is a CLI transport.",
+        "Do not commit provider secrets."
+      ],
+      "owner": "local_setup",
+      "evidence_fields": ["blocked_reason", "adapter_result.summary", "commands_run"],
+      "safe_to_retry": false
+    },
+    "provider_auth_failed": {
+      "category": "local_config",
+      "severity": "blocked",
+      "retry_policy": "do_not_retry_same_provider",
+      "user_label": "Provider authentication failed",
+      "meaning": "The provider rejected the configured key or account credentials.",
+      "next_actions": [
+        "Verify the key/account outside Git-tracked files.",
+        "Rotate or replace the key if needed.",
+        "Keep reports boolean-only: present or missing, never print the key."
+      ],
+      "owner": "local_setup",
+      "evidence_fields": ["blocked_reason", "adapter_result.summary", "known_risks"],
+      "safe_to_retry": false
+    },
+    "provider_timeout": {
+      "category": "provider_infra",
+      "severity": "warning",
+      "retry_policy": "try_next_provider_then_backoff",
+      "user_label": "Provider timed out",
+      "meaning": "The provider call did not finish inside the configured timeout.",
+      "next_actions": [
+        "Try the next ammo in the ladder.",
+        "Increase timeout only for providers known to be slow.",
+        "Check whether prompt size is unexpectedly large."
+      ],
+      "owner": "provider_route",
+      "evidence_fields": ["blocked_reason", "adapter_result.summary", "commands_run"],
+      "safe_to_retry": true
+    },
+    "provider_failed": {
+      "category": "provider_infra",
+      "severity": "warning",
+      "retry_policy": "try_next_provider",
+      "user_label": "Provider failed",
+      "meaning": "The provider returned a non-specific execution failure.",
+      "next_actions": [
+        "Inspect adapter summary and known risks.",
+        "Classify into a narrower flag if the failure repeats.",
+        "Try another provider when the ladder has one."
+      ],
+      "owner": "provider_route",
+      "evidence_fields": ["blocked_reason", "adapter_result.summary", "known_risks"],
+      "safe_to_retry": true
+    },
+    "provider_error_event": {
+      "category": "provider_infra",
+      "severity": "warning",
+      "retry_policy": "try_next_provider",
+      "user_label": "Provider emitted error event",
+      "meaning": "A local provider or CLI emitted an explicit error event even if the process did not crash cleanly.",
+      "next_actions": [
+        "Inspect the provider event payload.",
+        "Try another provider when available.",
+        "Classify the event into a narrower provider flag if it repeats."
+      ],
+      "owner": "provider_route",
+      "evidence_fields": ["blocked_reason", "adapter_result.summary", "known_risks"],
+      "safe_to_retry": true
+    },
+    "provider_exhausted": {
+      "category": "provider_route",
+      "severity": "blocked",
+      "retry_policy": "manual_intervention",
+      "user_label": "Provider ladder exhausted",
+      "meaning": "Every retryable provider/ammo option in the ladder failed or no usable ammo was available.",
+      "next_actions": [
+        "Inspect adapter_result.attempts to see which ammo failed.",
+        "Add or reorder ammo in the relevant capability ladder.",
+        "Fix provider setup before rerunning the same quest."
+      ],
+      "owner": "provider_route",
+      "evidence_fields": ["blocked_reason", "adapter_result.attempts", "known_risks"],
+      "safe_to_retry": false
+    },
+    "invalid_adapter_output": {
+      "category": "artifact_contract",
+      "severity": "error",
+      "retry_policy": "fix_adapter_or_prompt",
+      "user_label": "Invalid adapter output",
+      "meaning": "The adapter did not return valid worker artifact JSON or missed required fields.",
+      "next_actions": [
+        "Inspect adapter_output_validation.errors.",
+        "Tighten provider prompt or parser.",
+        "Add a schema smoke test for the failing shape."
+      ],
+      "owner": "artifact_validation",
+      "evidence_fields": ["adapter_output_validation.errors", "worker_output", "adapter_result.text"],
+      "safe_to_retry": false
+    },
+    "ungrounded_artifact_output": {
+      "category": "grounding",
+      "severity": "error",
+      "retry_policy": "fix_worker_grounding",
+      "user_label": "Artifact not grounded in real files/routes",
+      "meaning": "The worker artifact looked plausible but did not cite or modify the expected concrete repo paths.",
+      "next_actions": [
+        "Inject exact allowed files and required citations into the task.",
+        "Reject conceptual or fake routes.",
+        "Rerun after grounding packet is fixed."
+      ],
+      "owner": "grounding_validation",
+      "evidence_fields": ["artifact_grounding_validation.errors", "allowed_files", "file_outputs"],
+      "safe_to_retry": false
+    },
+    "files_outside_allowed_scope": {
+      "category": "safety_scope",
+      "severity": "error",
+      "retry_policy": "fix_task_contract",
+      "user_label": "File output outside allowed scope",
+      "meaning": "The worker attempted to write outside the task contract's allowed file scope.",
+      "next_actions": [
+        "Check task allowed_files.",
+        "Decide whether the task contract should expand.",
+        "Do not write the file until scope is explicit."
+      ],
+      "owner": "file_scope_validation",
+      "evidence_fields": ["file_scope_validation.errors", "file_output_scope_validation.errors", "file_outputs"],
+      "safe_to_retry": false
+    },
+    "needs_info": {
+      "category": "requirements",
+      "severity": "blocked",
+      "retry_policy": "ask_user_or_planner",
+      "user_label": "Needs more information",
+      "meaning": "The worker cannot proceed safely because the task request lacks necessary requirements or context.",
+      "next_actions": [
+        "Ask a narrow question.",
+        "Update the task brief or planner output.",
+        "Rerun only after requirements are clarified."
+      ],
+      "owner": "requirements",
+      "evidence_fields": ["blocked_reason", "summary", "known_risks"],
+      "safe_to_retry": false
+    },
+    "adapter_not_implemented": {
+      "category": "runtime_config",
+      "severity": "error",
+      "retry_policy": "fix_config_or_backend",
+      "user_label": "Adapter not implemented",
+      "meaning": "Config references an adapter name that the provider registry cannot instantiate.",
+      "next_actions": [
+        "Check provider-adapters, provider-transports, model-cartridges, and registry.py.",
+        "Rename the adapter to an implemented backend or add backend support.",
+        "Add a config smoke test for the new adapter."
+      ],
+      "owner": "runtime_config",
+      "evidence_fields": ["blocked_reason", "adapter", "transport", "ammo"],
+      "safe_to_retry": false
+    },
+    "unknown_failure": {
+      "category": "unknown",
+      "severity": "error",
+      "retry_policy": "classify_before_retry",
+      "user_label": "Unknown Guild failure",
+      "meaning": "The failure did not map to a known blocked_reason flag.",
+      "next_actions": [
+        "Inspect payload JSON and guild-events.jsonl.",
+        "Add a new specific flag if this failure can repeat.",
+        "Avoid broad reruns until the owner/category is known."
+      ],
+      "owner": "runtime_debug",
+      "evidence_fields": ["blocked_reason", "summary", "known_risks", "payload_path"],
+      "safe_to_retry": false
+    }
+  }
+}

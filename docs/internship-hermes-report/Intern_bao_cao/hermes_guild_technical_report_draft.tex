@@ -1,0 +1,1029 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T5]{fontenc}
+\usepackage[vietnamese,english]{babel}
+\usepackage{amsmath, amssymb}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{geometry}
+\usepackage{hyperref}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{booktabs}
+\usepackage{fancyhdr}
+\usepackage{xcolor}
+\usepackage{array}
+\usepackage{longtable}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta, positioning, shapes.geometric, fit}
+\newcolumntype{P}[1]{>{\raggedright\arraybackslash}p{#1}}
+
+\geometry{margin=2.5cm}
+\graphicspath{{./}{../CV2025___Technical_Report_Template/}{CV2025___Technical_Report_Template/}}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    urlcolor=blue,
+    citecolor=blue
+}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\textbf{Báo cáo kỹ thuật - Hermes Guild}}
+\fancyhead[R]{\thepage}
+
+\tikzset{
+    block/.style={rectangle, rounded corners, draw=black!70, fill=gray!8, align=center, minimum height=0.9cm, minimum width=2.4cm, font=\small},
+    store/.style={cylinder, shape border rotate=90, draw=black!70, fill=blue!6, align=center, minimum height=1.0cm, minimum width=1.9cm, font=\small},
+    arrow/.style={-{Latex[length=2mm]}, thick, draw=black!70}
+}
+
+\newcommand{\screenshotplaceholder}[3]{
+\begin{figure}[H]
+    \centering
+    \IfFileExists{#1}{
+        \includegraphics[width=#2\textwidth]{#1}
+    }{
+        \fbox{
+            \begin{minipage}[c][0.22\textheight][c]{#2\textwidth}
+                \centering
+                \textbf{Chèn ảnh thật tại đây}\\[0.25cm]
+                \texttt{#1}\\[0.25cm]
+                #3
+            \end{minipage}
+        }
+    }
+    \caption{#3}
+\end{figure}
+}
+
+\begin{document}
+
+% =========================
+% Cover Page
+% =========================
+\begin{titlepage}
+    \centering
+    {\Large \textbf{ĐẠI HỌC HUẾ}}\\
+    {\large \textbf{TRƯỜNG ĐẠI HỌC KHOA HỌC}}\\
+    {\large \textbf{KHOA CÔNG NGHỆ THÔNG TIN}}\\[1.6cm]
+    \includegraphics[width=0.25\textwidth]{Logo_IT.png}\\[1.4cm]
+
+    {\Huge \textbf{BÁO CÁO KỸ THUẬT}}\\[0.35cm]
+    {\Large \textbf{Xây dựng hệ thống điều phối AI Agent cục bộ với Hermes Guild}}\\[0.4cm]
+    {\large \textbf{Từ nghiên cứu Multi-Agent đến kiến trúc Blackboard, Memory và Artifact Review}}\\[1.4cm]
+
+    \begin{tabular}{>{\bfseries}ll}
+        Họ và tên sinh viên: & Nguyễn Thắng\\
+        MSSV: & 22T1020428\\
+        Đơn vị thực tập: & HueCIT\\
+        Giảng viên hướng dẫn: & Lê Quang Chiến\\
+        Thời gian thực tập: & 13/04/2026 -- 12/06/2026\\
+        Repository: & \url{https://github.com/Esrgis/hermes-memory-forge}\\
+        Ngày nộp: & \today
+    \end{tabular}
+
+    \vfill
+    \textit{Huế, \today}
+\end{titlepage}
+
+\setcounter{tocdepth}{1}
+\tableofcontents
+\newpage
+
+% =========================
+% 1. Gioi thieu
+% =========================
+\section{Giới thiệu}
+
+\subsection{Bối cảnh}
+
+Trong giai đoạn gần đây, các hệ thống AI Agent bắt đầu chuyển từ mô hình chatbot đơn lẻ sang mô hình có khả năng gọi công cụ, ghi nhớ ngữ cảnh, thao tác trên file, chạy lệnh và phối hợp nhiều vai trò khác nhau. Một Agent không chỉ trả lời văn bản, mà nhận nhiệm vụ, phân tích yêu cầu, gọi tool, kiểm tra kết quả và lưu lại trạng thái cho lần làm việc tiếp theo.
+
+Khi khả năng của Agent tăng lên, vấn đề kỹ thuật cũng thay đổi. Trọng tâm không còn chỉ là ``model nào thông minh hơn'', mà là cách thiết kế một runtime để Agent hoạt động ổn định, có thể kiểm chứng và không tiêu tốn tài nguyên vô hạn. Với các tác vụ phần mềm, một hệ thống hữu ích cần trả lời được các câu hỏi:
+
+\begin{itemize}
+    \item Nhiệm vụ được chia nhỏ như thế nào?
+    \item Agent nào được quyền nhận nhiệm vụ?
+    \item Kết quả của Agent được lưu ở đâu và kiểm chứng ra sao?
+    \item Khi nhiều Agent cùng chạy, làm sao tránh đua trạng thái, file lock hoặc output giả?
+    \item Khi cần review, làm sao tránh để reviewer trở thành nút thắt cổ chai?
+\end{itemize}
+
+Báo cáo này trình bày quá trình nghiên cứu và xây dựng \textbf{Hermes Guild}, một hệ thống điều phối AI Agent cục bộ trên Windows. Dự án bắt đầu từ việc khảo sát các framework như Paperclip, OpenClaw, CrewAI, sau đó phát triển thành một kiến trúc riêng dựa trên Hermes, Obsidian, SQLite, PowerShell, dashboard cục bộ và cơ chế artifact review.
+
+\subsection{Mục tiêu thực tập}
+
+Mục tiêu ban đầu của quá trình thực tập là tìm hiểu cách xây dựng một hệ thống AI Agent hỗ trợ quản lý và triển khai công việc phần mềm. Trong quá trình nghiên cứu, mục tiêu được cụ thể hóa thành các yêu cầu kỹ thuật sau:
+
+\begin{enumerate}
+    \item Khảo sát mô hình Agent và Multi-Agent trong các framework hiện có.
+    \item Phân tích điểm mạnh, điểm yếu của mô hình tuần tự, phân cấp và song song.
+    \item Xây dựng một hệ thống cục bộ có khả năng chia việc, giao việc, theo dõi tiến độ và lưu artifact.
+    \item Thiết kế cơ chế memory để hệ thống tiếp tục từ trạng thái trước đó.
+    \item Kiểm chứng bằng các smoke test thay vì chỉ dựa vào giao diện dashboard.
+\end{enumerate}
+
+Kết quả cuối cùng không chỉ là một demo giao diện, mà là một bộ nguyên tắc vận hành: hàng đợi tác vụ, cơ chế nhận tác vụ, bằng chứng đầu ra, đánh giá tích hợp, kiểm tra tự động, atomic write và lưu trạng thái phiên làm việc.
+
+\subsection{Phạm vi báo cáo}
+
+Báo cáo tập trung vào khía cạnh kỹ thuật của hệ thống Hermes Guild. Các phần triển khai liên quan đến secret, API key, cấu hình cá nhân và log thô không được đưa vào báo cáo. Mã nguồn được đặt tại \url{https://github.com/Esrgis/hermes-memory-forge}; báo cáo chỉ trình bày kiến trúc, quy trình kiểm chứng và kết quả thực nghiệm.
+
+% =========================
+% 2. Co so ly thuyet
+% =========================
+\section{Cơ sở lý thuyết}
+
+\subsection{AI Agent}
+
+Một AI Agent là thực thể phần mềm nhận thông tin từ môi trường, suy luận, chọn hành động và thực thi hành động thông qua công cụ. Với LLM hiện đại, vòng lặp hoạt động phổ biến của Agent gồm:
+
+\begin{center}
+\texttt{Perception -> Reasoning -> Action -> Memory}
+\end{center}
+
+Trong đó:
+
+\begin{itemize}
+    \item \textbf{Perception}: nhận input từ người dùng, file, API, dashboard hoặc trạng thái runtime.
+    \item \textbf{Reasoning}: phân tích nhiệm vụ, lập kế hoạch, lựa chọn công cụ.
+    \item \textbf{Action}: gọi lệnh, ghi file, gửi request, tạo artifact.
+    \item \textbf{Memory}: lưu thông tin cần thiết để tiếp tục hoặc cải thiện ở lần sau.
+\end{itemize}
+
+Với một Agent đơn lẻ, mọi bước thường nằm trong cùng một vòng lặp. Điều này đơn giản nhưng dễ gặp giới hạn: context quá dài, tool-call lặp, khó kiểm chứng output và khó chạy nhiều hướng song song.
+
+\subsection{Multi-Agent và bài toán điều phối}
+
+Multi-Agent là mô hình trong đó nhiều Agent có vai trò khác nhau cùng tham gia giải quyết một mục tiêu. Ví dụ: planner phân tích yêu cầu, worker tạo artifact, tester kiểm thử, reviewer tổng hợp.
+
+Điểm khó của Multi-Agent không nằm ở việc tạo nhiều prompt khác nhau. Điểm khó là \textbf{điều phối}. Một runtime Multi-Agent cần có:
+
+\begin{itemize}
+    \item Cấu trúc nhiệm vụ rõ ràng.
+    \item Trạng thái task quan sát được.
+    \item Cơ chế claim task để tránh hai worker xử lý cùng một task.
+    \item Artifact để lưu bằng chứng đầu ra.
+    \item Review để tổng hợp và phát hiện mismatch.
+    \item Giới hạn vòng lặp để tránh retry vô hạn.
+\end{itemize}
+
+Nếu thiếu các thành phần trên, hệ thống dễ nhìn giống đang hoạt động trên dashboard nhưng thực tế không tạo ra kết quả kiểm chứng được.
+
+\subsection{Ba mô hình điều phối phổ biến}
+
+\subsubsection{Mô hình tuần tự}
+
+Mô hình tuần tự xử lý từng bước theo thứ tự cố định. Bước sau chỉ bắt đầu khi bước trước hoàn thành. Ưu điểm là dễ hiểu, dễ debug và ít race condition. Nhược điểm là chậm và không tận dụng được khả năng chạy đồng thời của nhiều Agent.
+
+\subsubsection{Mô hình phân cấp}
+
+Mô hình phân cấp mô phỏng tổ chức con người: một manager chia việc cho các worker. Cách này trực quan nhưng có nguy cơ tạo nút thắt ở manager. Nếu manager phải quyết định từng task, hệ thống có thể trở thành tuần tự trá hình.
+
+\subsubsection{Mô hình fan-out/fan-in}
+
+Mô hình fan-out/fan-in chia một mục tiêu thành nhiều nhánh độc lập, cho các worker xử lý song song, sau đó gom kết quả về một bước review hoặc synthesis. Đây là mô hình phù hợp với nhiều tác vụ AI: nhiều Agent yếu hoặc trung bình có thể tạo nhiều góc nhìn, sau đó reviewer tổng hợp thành một artifact tốt hơn.
+
+\begin{figure}[H]
+    \centering
+    \begin{tikzpicture}[node distance=1.4cm]
+        \node[block] (input) {Yêu cầu\\người dùng};
+        \node[block, right=of input] (planner) {Lập kế hoạch\\tác vụ};
+        \node[block, above right=0.7cm and 1.2cm of planner] (w1) {Worker 1\\kết quả A};
+        \node[block, right=1.2cm of planner] (w2) {Worker 2\\kết quả B};
+        \node[block, below right=0.7cm and 1.2cm of planner] (w3) {Worker 3\\kết quả C};
+        \node[block, right=5.1cm of planner] (review) {Đánh giá\\tích hợp};
+        \node[block, right=of review] (final) {Kết quả\\cuối};
+        \draw[arrow] (input) -- (planner);
+        \draw[arrow] (planner) -- (w1);
+        \draw[arrow] (planner) -- (w2);
+        \draw[arrow] (planner) -- (w3);
+        \draw[arrow] (w1) -- (review);
+        \draw[arrow] (w2) -- (review);
+        \draw[arrow] (w3) -- (review);
+        \draw[arrow] (review) -- (final);
+    \end{tikzpicture}
+    \caption{Mô hình fan-out/fan-in ở mức khái niệm}
+\end{figure}
+
+\subsection{Kiến trúc bảng trạng thái chung}
+
+Kiến trúc bảng trạng thái chung (blackboard architecture) là mô hình trong đó nhiều thành phần cùng đọc/ghi vào một không gian trạng thái chung. Trong Hermes Guild, blackboard không phải là một file text duy nhất, mà là tập hợp của:
+
+\begin{itemize}
+    \item SQLite task queue.
+    \item Bảng artifact.
+    \item Dashboard JSON cho UI.
+    \item Workspace file cho output thật.
+    \item Event log để kiểm chứng runtime.
+\end{itemize}
+
+Điểm quan trọng là phân biệt rõ vai trò từng lớp. SQLite dùng cho trạng thái runtime có tính cạnh tranh. File JSON dùng cho dashboard đọc. Obsidian dùng cho memory dài hạn. Nếu trộn các vai trò này, hệ thống dễ bị race condition, file lock hoặc memory bị nhiễu.
+
+% =========================
+% 3. Khao sat va qua trinh hinh thanh
+% =========================
+\section{Khảo sát công cụ và quá trình hình thành ý tưởng}
+
+\subsection{Giai đoạn Paperclip và OpenClaw}
+
+Giai đoạn đầu của thực tập tập trung vào việc chạy thử Paperclip/OpenClaw trên môi trường Windows. Đây là các hệ thống mô phỏng một tổ chức AI gồm các vai trò như CEO, CTO hoặc worker. Qua việc triển khai bằng Docker, WSL2 và cấu hình model provider, một số bài học kỹ thuật được rút ra:
+
+\begin{itemize}
+    \item Môi trường Windows/WSL có nhiều rủi ro về permission, CRLF, Docker volume và NTFS.
+    \item Agent không tự động làm đúng nếu không hiểu rõ vai trò và cách framework delegate task.
+    \item Free tier và quota phải được tính từ đầu, vì retry sai có thể tiêu tốn tài nguyên nhanh.
+    \item Dashboard hoặc UI đẹp không đồng nghĩa với runtime ổn định.
+\end{itemize}
+
+Một lỗi điển hình là đặt repo hoặc runtime trên NTFS khiến container Linux gặp lỗi quyền. Bài học ở đây là phải debug theo lớp: hệ điều hành, Docker, container, app, Agent. Không thể sửa lỗi môi trường bằng cách chỉ sửa prompt hoặc code Agent.
+
+\subsection{Giai đoạn CrewAI}
+
+Sau Paperclip, quá trình nghiên cứu chuyển sang CrewAI để tìm một mô hình điều phối linh hoạt hơn. CrewAI cung cấp agent, task, crew và các mode như sequential hoặc hierarchical. Tuy nhiên, khi thử xây dựng luồng song song, một số giới hạn xuất hiện:
+
+\begin{itemize}
+    \item \texttt{Process.sequential} an toàn nhưng không song song.
+    \item \texttt{Process.hierarchical} có manager nhưng dễ tạo bottleneck.
+    \item \texttt{async\_execution=True} không đồng nghĩa với parallel thật sự ở mức task graph.
+    \item Muốn kiểm soát parallel cần hiểu sâu hơn về Flow, \texttt{asyncio.gather()} và dependency.
+\end{itemize}
+
+Từ đó hình thành một insight quan trọng: framework thường chọn mặc định an toàn cho số đông. Nếu biết rõ task độc lập và có yêu cầu kiểm chứng riêng, ta có thể xây runtime hẹp hơn nhưng phù hợp hơn.
+
+\subsection{Từ metaphor công ty đến primitive kỹ thuật}
+
+Nhiều hệ thống Multi-Agent dùng metaphor công ty: CEO, manager, nhân viên. Metaphor này dễ hiểu nhưng có thể giới hạn tư duy. Máy tính không có cùng giới hạn attention như con người. Một hệ thống AI cục bộ không nhất thiết phải mô phỏng sơ đồ tổ chức; nó cần primitive đúng:
+
+\begin{itemize}
+    \item Task graph thay vì lời giao việc mơ hồ.
+    \item Artifact thay vì chat transcript.
+    \item Claim/lease thay vì ``ai đó sẽ làm''.
+    \item Review gate thay vì manager đọc mọi thứ.
+    \item Memory checkpoint thay vì nhớ bằng chat context.
+\end{itemize}
+
+Đây là bước chuyển từ ``AI company'' sang ``runtime điều phối artifact''.
+
+\subsection{Lý do chọn Hermes Guild}
+
+Hermes Guild được xây dựng theo hướng local-first. Thay vì phụ thuộc hoàn toàn vào một platform bên ngoài, hệ thống dùng các thành phần cục bộ:
+
+\begin{itemize}
+    \item \textbf{Hermes}: vai trò router, memory, secretary và control plane nhẹ.
+    \item \textbf{SQLite}: lưu task queue và artifact.
+    \item \textbf{Obsidian}: lưu memory dài hạn ở dạng markdown.
+    \item \textbf{PowerShell}: automation trên Windows.
+    \item \textbf{Dashboard HTML/API}: quan sát trạng thái runtime.
+    \item \textbf{Provider adapters}: kết nối nhiều model/provider nhưng vẫn giữ fallback local.
+\end{itemize}
+
+Triết lý chính: ưu tiên chạy cục bộ, truy xuất có giới hạn, kiểm chứng bằng bằng chứng đầu ra, không phóng đại kết quả.
+
+\subsection{Timeline nghiên cứu}
+
+Quá trình thực tập chia thành bốn giai đoạn. Cách chia này giúp thấy rõ dự án không đi thẳng từ ý tưởng đến Hermes Guild, mà đi qua nhiều lần thử, lỗi và điều chỉnh kiến trúc.
+
+\begin{longtable}{p{0.18\textwidth}p{0.34\textwidth}p{0.38\textwidth}}
+\caption{Timeline tóm tắt quá trình nghiên cứu}\\
+\toprule
+\textbf{Giai đoạn} & \textbf{Hoạt động chính} & \textbf{Bài học kỹ thuật} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{Giai đoạn} & \textbf{Hoạt động chính} & \textbf{Bài học kỹ thuật} \\
+\midrule
+\endhead
+Tháng 4 & Cài Paperclip/OpenClaw, Docker, WSL2, cấu hình provider & Debug phải đi từ tầng môi trường lên tầng Agent; quota và permission là vấn đề thật \\
+Đầu tháng 5 & Thử CrewAI, phân tích sequential/hierarchical/Flow & Framework có default an toàn, nhưng không luôn phù hợp với yêu cầu parallel cụ thể \\
+Giữa tháng 5 & Chuyển từ metaphor công ty sang fan-out/fan-in artifact pipeline & Multi-Agent cần primitive kỹ thuật, không chỉ cần role prompt \\
+Cuối tháng 5 - đầu tháng 6 & Xây Hermes Guild, dashboard, worker, artifact, Provider Lab, memory checkpoint & Runtime phải có bằng chứng: file thật, payload thật, event thật, memory tóm tắt \\
+\bottomrule
+\end{longtable}
+
+Điểm đáng chú ý là mỗi giai đoạn đều để lại một constraint cho giai đoạn sau. Lỗi Docker/NTFS dẫn đến yêu cầu local-first và Windows-safe. Lỗi CrewAI parallel dẫn đến yêu cầu task graph rõ ràng. Lỗi dashboard stale dẫn đến atomic write. Lỗi output giả dẫn đến artifact grounding. Vì vậy Hermes Guild không phải một ý tưởng tách rời, mà là kết quả của nhiều lần loại bỏ thiết kế chưa phù hợp.
+
+\subsection{So sánh các hướng tiếp cận}
+
+\begin{table}[H]
+\centering
+\caption{So sánh các hướng tiếp cận đã khảo sát}
+\begin{tabular}{p{0.22\textwidth}p{0.25\textwidth}p{0.25\textwidth}p{0.18\textwidth}}
+\toprule
+\textbf{Hướng} & \textbf{Ưu điểm} & \textbf{Hạn chế} & \textbf{Kết luận} \\
+\midrule
+Paperclip/OpenClaw & Có UI, role rõ, dễ hình dung theo công ty & Môi trường Docker/Windows khó, metaphor công ty dễ tạo sequential bottleneck & Hữu ích để học, chưa phù hợp làm lõi runtime \\
+CrewAI sequential & Dễ hiểu, dễ chạy demo, ít race condition & Không tận dụng parallel, chậm khi task độc lập & Tốt cho baseline \\
+CrewAI hierarchical & Có manager điều phối, gần với tổ chức con người & Manager dễ trở thành bottleneck; parallel không hiển nhiên & Cần dùng cẩn thận \\
+Custom async flow & Kiểm soát parallel tốt, phù hợp fan-out & Debug khó, crash recovery phức tạp & Cần thêm state store và checkpoint \\
+Hermes Guild & Ưu tiên chạy cục bộ, có bằng chứng đầu ra, task queue và memory rõ & Còn cần kiểm chứng thêm với provider thật & Phù hợp để kiểm chứng giả thuyết về runtime cục bộ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Khác biệt so với CrewAI}
+
+CrewAI hỗ trợ định nghĩa Agent, Task và Crew để chạy workflow AI. Hệ thống trong báo cáo này không chỉ tập trung vào việc tạo nhiều vai trò Agent, mà tập trung vào lớp điều phối có trạng thái, bằng chứng và khả năng kiểm chứng. Nói ngắn gọn, CrewAI trả lời tốt câu hỏi ``Agent nào làm việc gì'', còn hệ thống này tập trung trả lời câu hỏi ``task được claim thế nào, bằng chứng nằm ở đâu, kết quả được đánh giá ra sao và lần sau tiếp tục từ đâu''.
+
+\begin{table}[H]
+\centering
+\caption{Khác biệt giữa CrewAI và hệ thống điều phối được xây dựng}
+\begin{tabular}{P{0.24\textwidth}P{0.32\textwidth}P{0.34\textwidth}}
+\toprule
+\textbf{Khía cạnh} & \textbf{CrewAI} & \textbf{Hệ thống Hermes Guild} \\
+\midrule
+Đơn vị trung tâm & Agent và Task trong một workflow & Task contract, trạng thái runtime và artifact bằng chứng \\
+Điều phối & Sequential, hierarchical hoặc Flow tùy cấu hình & Hàng đợi SQLite với claim, lease, rank, skill và dependency \\
+Song song/concurrent & Hỗ trợ qua Flow/async nếu cấu hình đúng; chưa đo trong cùng kịch bản báo cáo & Kịch bản chuẩn đo được 3 nhánh worker chạy đồng thời ở mức runtime cục bộ/I/O-bound, chưa chứng minh true parallel CPU-bound \\
+Bằng chứng đầu ra & Thường dựa vào output của task hoặc file do task ghi & Artifact metadata, file workspace, validation và event log \\
+Đánh giá kết quả & Cho phép thêm reviewer agent & Bước đánh giá tích hợp có input artifact và giới hạn vòng sửa \\
+Khả năng tiếp tục phiên sau & Phụ thuộc cách người dùng tự tích hợp memory & Có checkpoint, Current State và Obsidian memory đã tóm tắt \\
+Vai trò dashboard & Không phải trọng tâm mặc định & Dashboard chỉ là read-model; nguồn kiểm chứng nằm ở SQLite, payload và file output \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{Đối chiếu định lượng trong phạm vi đã đo}
+\small
+\begin{tabular}{P{0.30\textwidth}P{0.30\textwidth}P{0.30\textwidth}}
+\toprule
+\textbf{Tiêu chí} & \textbf{Mốc đối chiếu/CrewAI} & \textbf{Hermes Guild trong kịch bản chuẩn} \\
+\midrule
+Số task có trạng thái quan sát được & Chưa đo cùng prompt và cùng máy & 4 task, kết thúc \texttt{done = 4} \\
+Số nhánh worker concurrent & Chưa đo cùng điều kiện; sequential mặc định là 1 luồng xử lý & 3 nhánh worker tạo \texttt{build-1.md}, \texttt{build-2.md}, \texttt{build-3.md}; chưa dùng làm bằng chứng true parallel CPU-bound \\
+Thời gian plan đến final artifact & Chưa có baseline CrewAI hoặc sequential cùng điều kiện & Khoảng 29 giây trong local smoke \\
+Bằng chứng output & Phụ thuộc cách người dùng thiết kế output/log & 6 file output chính, artifact metadata, validation và event log \\
+Khả năng kết luận & Chưa đủ dữ liệu để kết luận nhanh hơn/chậm hơn & Chứng minh tính khả thi và khả năng kiểm chứng của runtime cục bộ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Do chưa chạy benchmark CrewAI và sequential trên cùng prompt, cùng máy và cùng provider, báo cáo không kết luận Hermes Guild nhanh hơn CrewAI. Kết quả định lượng hiện tại chỉ dùng để chứng minh hệ thống tạo task, claim task, chạy nhiều nhánh concurrent trong local smoke, ghi artifact và kiểm chứng output bằng file thật. Báo cáo không chứng minh true parallel theo nghĩa CPU-bound parallelism.
+
+% =========================
+% 4. Phuong phap de xuat
+% =========================
+\section{Phương pháp đề xuất}
+
+\subsection{Tổng quan kiến trúc Hermes Guild}
+
+Hermes Guild là một hệ thống thử nghiệm điều phối Multi-Agent theo mô hình blackboard. Người dùng nhập yêu cầu, planner tạo task graph, các worker claim task, tạo artifact, bước đánh giá tích hợp tổng hợp kết quả, finalizer tạo kết quả cuối.
+
+\begin{figure}[H]
+    \centering
+    \resizebox{\textwidth}{!}{
+    \begin{tikzpicture}[node distance=1.0cm]
+        \node[block, minimum width=2.6cm] (user) {Người dùng\\prompt};
+        \node[block, right=of user, minimum width=2.7cm] (planner) {Planner\\task graph};
+        \node[store, right=1.3cm of planner, minimum width=2.5cm] (blackboard) {Bảng trạng thái\\SQLite runtime};
+        \node[block, above=1.0cm of blackboard, minimum width=3.1cm] (tasks) {Task queue\\claim, lease\\rank, dependency};
+        \node[block, below=1.0cm of blackboard, minimum width=3.1cm] (artifacts) {Artifact store\\metadata, payload\\file pointer};
+        \node[block, right=1.4cm of tasks, minimum width=2.6cm] (workers) {Workers\\A/B/C};
+        \node[block, right=1.4cm of artifacts, minimum width=2.7cm] (workspace) {Workspace files\\build/review/final};
+        \node[block, right=1.5cm of blackboard, minimum width=2.8cm] (review) {Đánh giá\\tích hợp};
+        \node[block, right=1.2cm of review, minimum width=2.4cm] (final) {Kết quả\\cuối};
+        \node[block, below=1.0cm of workspace, minimum width=2.8cm] (dashboard) {Dashboard\\read-model};
+        \node[store, above=1.0cm of workers, minimum width=2.6cm] (memory) {Memory\\checkpoint};
+        \draw[arrow] (user) -- (planner);
+        \draw[arrow] (planner) -- (blackboard);
+        \draw[arrow] (blackboard) -- (tasks);
+        \draw[arrow] (blackboard) -- (artifacts);
+        \draw[arrow] (tasks) -- (workers);
+        \draw[arrow] (workers) -- (artifacts);
+        \draw[arrow] (artifacts) -- (workspace);
+        \draw[arrow] (artifacts) -- (review);
+        \draw[arrow] (review) -- (final);
+        \draw[arrow] (blackboard) -- (dashboard);
+        \draw[arrow] (final) -- (memory);
+    \end{tikzpicture}}
+    \caption{Kiến trúc bảng trạng thái chung của hệ thống: hàng đợi task, kho artifact, dashboard read-model, workspace file và memory pipeline}
+\end{figure}
+
+Các thành phần chính:
+
+\begin{table}[H]
+\centering
+\caption{Các thành phần trong Hermes Guild}
+\begin{tabular}{p{0.28\textwidth}p{0.62\textwidth}}
+\toprule
+\textbf{Thành phần} & \textbf{Vai trò} \\
+\midrule
+Planner & Chuyển yêu cầu người dùng thành task graph có dependency, skill, rank và output file. \\
+Task queue & Lưu trạng thái task trong SQLite, hỗ trợ claim, lease, heartbeat và unlock dependency. \\
+Worker & Nhận task phù hợp rank/skill, gọi provider hoặc adapter local, tạo artifact. \\
+Artifact store & Lưu metadata, payload JSON và liên kết đến file thật trong workspace. \\
+Join review & Fan-in gate đọc artifact upstream, phát hiện mismatch và tạo fix task có giới hạn. \\
+Dashboard & Read-model cho người dùng quan sát trạng thái task, artifact và repair status. \\
+Memory pipeline & Ghi checkpoint và current state vào Obsidian dưới dạng tóm tắt, không ghi raw log. \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Luồng dữ liệu và mô hình lưu trữ}
+
+Để người đọc thấy dữ liệu thực sự chảy qua hệ thống, pipeline được tóm tắt như sau: task được tạo trước, worker tạo artifact, bước đánh giá tích hợp đọc artifact, sau đó hệ thống tạo artifact cuối cùng.
+
+\begin{figure}[H]
+    \centering
+    \begin{tikzpicture}[node distance=1.4cm]
+        \node[block] (task) {Task record\\hợp đồng tác vụ};
+        \node[block, right=of task] (artifact) {Artifact\\bằng chứng worker};
+        \node[block, right=of artifact] (review) {Đánh giá\\tích hợp};
+        \node[block, right=of review] (final) {Final artifact\\kết quả cuối};
+        \draw[arrow] (task) -- (artifact);
+        \draw[arrow] (artifact) -- (review);
+        \draw[arrow] (review) -- (final);
+    \end{tikzpicture}
+    \caption{Luồng dữ liệu từ task đến kết quả cuối}
+\end{figure}
+
+\begin{table}[H]
+\centering
+\caption{Các kho dữ liệu chính trong runtime}
+\begin{tabular}{p{0.28\textwidth}p{0.62\textwidth}}
+\toprule
+\textbf{Kho dữ liệu} & \textbf{Vai trò} \\
+\midrule
+SQLite: tasks & Lưu task contract, trạng thái, rank, skill, dependency, assignee, lease và heartbeat. \\
+SQLite: artifacts & Lưu artifact metadata, producer, artifact type, summary và payload đã được kiểm soát. \\
+Dashboard JSON & Read-model được export từ SQLite để UI hiển thị nhanh, không phải nguồn sự thật cuối cùng. \\
+Workspace files & Chứa file output thật của worker, ví dụ \texttt{build-1.md}, \texttt{review.md}, \texttt{final-summary.md}. \\
+Event log & Ghi các sự kiện runtime như tạo nhiệm vụ, wake worker, publish artifact, finalize. \\
+Obsidian memory & Lưu trạng thái đã tóm tắt cho việc resume, không lưu raw log hoặc secret. \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[H]
+    \centering
+    \begin{tikzpicture}[node distance=1.2cm]
+        \node[store] (db) {SQLite\\runtime DB};
+        \node[block, below left=1.0cm and 2.0cm of db, minimum width=3.0cm] (tasks) {tasks\\task contract\\status, rank, skill\\dependency, lease};
+        \node[block, below=1.0cm of db, minimum width=3.1cm] (artifacts) {artifacts\\producer, type\\summary, payload\\file pointers};
+        \node[block, below right=1.0cm and 2.0cm of db, minimum width=3.0cm] (events) {dashboard/events\\read-model\\runtime log\\status counts};
+        \node[block, below=1.4cm of artifacts, minimum width=3.3cm] (files) {workspace files\\build-*.md\\review.md\\final-artifact.json};
+        \draw[arrow] (db) -- (tasks);
+        \draw[arrow] (db) -- (artifacts);
+        \draw[arrow] (db) -- (events);
+        \draw[arrow] (artifacts) -- (files);
+        \draw[arrow] (tasks) -- (artifacts);
+        \draw[arrow] (events) -- (files);
+    \end{tikzpicture}
+    \caption{Sơ đồ lưu trữ dữ liệu runtime: tasks, artifacts, events và file output}
+\end{figure}
+
+\subsection{Task contract}
+
+Mỗi task trong Guild không chỉ có title. Nó có một contract tối thiểu:
+
+\begin{itemize}
+    \item \texttt{task\_id}: định danh duy nhất.
+    \item \texttt{task\_type}: contract, execution, verification, join\_review, fix hoặc final\_review.
+    \item \texttt{required\_rank}: rank tối thiểu của Agent.
+    \item \texttt{required\_skill}: skill cần để claim task.
+    \item \texttt{depends\_on}: danh sách task phải hoàn thành trước.
+    \item \texttt{output\_artifact}: loại artifact cần xuất.
+    \item \texttt{allowed\_files}: phạm vi file được phép ghi.
+    \item \texttt{acceptance\_criteria}: tiêu chí hoàn thành.
+\end{itemize}
+
+Cách làm này biến prompt thành một hợp đồng kiểm tra được. Nếu planner tạo thiếu nhánh worker khi người dùng yêu cầu ba phần song song, đó là lỗi contract chứ không phải lỗi UI.
+
+\subsection{Rank, skill và claim task}
+
+Rank và claim task giải quyết bài toán ``worker nào được quyền xử lý task''. Trong báo cáo này, \textit{claim task} nghĩa là worker giành quyền xử lý một task trong SQLite bằng transaction. Worker chỉ được claim task nếu:
+
+\begin{itemize}
+    \item Task đang ở trạng thái \texttt{open}.
+    \item Rank của worker đủ cao so với \texttt{required\_rank}.
+    \item Worker có \texttt{required\_skill}.
+    \item Dependency đã được unlock.
+\end{itemize}
+
+Claim được thực hiện bằng SQLite transaction. Khi nhiều worker cùng muốn claim một task, chỉ một worker update thành công từ \texttt{open} sang \texttt{claimed}. Điều này tránh việc hai Agent cùng làm một task và ghi đè kết quả nhau. Phần này mô tả cơ chế ở mức kiến trúc; phiên bản hiện tại đã có claim, lease, heartbeat và unlock dependency trong runtime, còn mã nguồn chi tiết được để trong repository GitHub.
+
+\begin{table}[H]
+\centering
+\caption{Quy trình claim task ở mức thiết kế}
+\begin{tabular}{p{0.26\textwidth}p{0.64\textwidth}}
+\toprule
+\textbf{Bước} & \textbf{Mô tả} \\
+\midrule
+Lọc task & Chỉ xét task có trạng thái \texttt{open}, đúng nhiệm vụ tổng hoặc đúng task id nếu có chỉ định. \\
+Sắp xếp & Ưu tiên task có rank yêu cầu cao hơn, sau đó theo thời điểm mở task. \\
+Kiểm tra quyền & Worker phải có rank đủ cao và skill phù hợp. \\
+Claim nguyên tử & Transaction cập nhật task từ \texttt{open} sang \texttt{claimed}; nếu task đã bị worker khác claim thì thao tác thất bại. \\
+Lease/heartbeat & Task được gắn assignee, thời hạn lease và heartbeat để phục hồi khi worker treo. \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Artifact không phải raw chat}
+
+Một lỗi thường gặp khi xây Agent là lưu toàn bộ chat transcript hoặc raw output. Hermes Guild dùng artifact làm đơn vị bằng chứng. Artifact là metadata có kiểm soát, trỏ đến file thật khi cần, nhưng không cần trình bày payload đầy đủ trong báo cáo.
+
+\begin{table}[H]
+\centering
+\caption{Các nhóm thông tin chính trong artifact}
+\begin{tabular}{p{0.26\textwidth}p{0.64\textwidth}}
+\toprule
+\textbf{Nhóm thông tin} & \textbf{Mục đích} \\
+\midrule
+Trạng thái & Cho biết worker hoàn thành, bị chặn hay thất bại. \\
+Tóm tắt & Mô tả ngắn kết quả, không thay thế file thật. \\
+File thay đổi & Trỏ đến output trong workspace của nhiệm vụ tổng. \\
+Bằng chứng chạy & Ghi adapter/lệnh/test chính đã thực hiện. \\
+Rủi ro còn lại & Cho reviewer biết output có cần nâng cấp kiểm tra không. \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Điểm quan trọng là \texttt{depends\_on} và \texttt{input\_artifacts} chỉ là pointer. Chúng không thay thế nội dung review. Reviewer dùng chúng để biết task nào đã xong, artifact nào cần đọc và file thật nằm ở đâu.
+
+\subsection{Join review là fan-in gate}
+
+Trong thiết kế hiện tại, \texttt{join\_review} không phải là hai worker họp trực tiếp với nhau. Nó là một task riêng. Sau khi các worker upstream hoàn thành, một reviewer đủ rank/skill claim task này, đọc artifact và file liên quan, sau đó đưa ra quyết định:
+
+\begin{itemize}
+    \item \textbf{Accept}: artifact upstream nhất quán, đủ điều kiện tạo final artifact.
+    \item \textbf{Revise}: phát hiện mismatch, tạo fix task có giới hạn.
+\end{itemize}
+
+Cơ chế này giúp review có trạng thái rõ ràng và kiểm chứng được. Tuy nhiên, nó cũng tạo nguy cơ bottleneck nếu mọi output đều cần strong reviewer.
+
+\subsection{Tiered review như policy đề xuất}
+
+Để tránh reviewer trở thành nút thắt, báo cáo đề xuất review nhiều tầng. Đây là policy thiết kế và hướng triển khai, chưa phải một module risk-routing hoàn chỉnh trong phiên bản hiện tại:
+
+\begin{enumerate}
+    \item \textbf{Deterministic validation}: kiểm tra schema, file tồn tại, allowed files, required anchors, test command.
+    \item \textbf{Cheap integration check}: kiểm tra output ít rủi ro bằng model nhẹ hoặc rule đơn giản.
+    \item \textbf{Strong review}: chỉ dùng khi có mismatch, uncertainty, task nhạy cảm, fix loop hoặc rủi ro quota/secret/git/memory.
+\end{enumerate}
+
+Theo nguyên tắc review có budget ở trên, Hermes không nên đẩy mọi task lên strong reviewer. Hermes nên làm triage bằng metadata:
+
+\begin{itemize}
+    \item schema invalid,
+    \item file missing,
+    \item outside allowed files,
+    \item blocked reason,
+    \item known risks,
+    \item conflict giữa artifacts,
+    \item repeated fix round,
+    \item sensitive domain như secret, auth, git, memory hoặc quota.
+\end{itemize}
+
+Invariant đề xuất:
+
+\begin{center}
+\texttt{worker output -> deterministic validation -> risk scoring -> cheap review -> strong review only on risk}
+\end{center}
+
+\subsection{Risk scoring cho review như policy đề xuất}
+
+Một vấn đề thực tế là làm sao biết khi nào dùng cheap reviewer và khi nào dùng strong reviewer. Câu trả lời không nên là để Hermes đọc sâu toàn bộ output bằng model mạnh. Nếu làm vậy, Hermes lại trở thành reviewer thứ hai và chi phí không giảm.
+
+Giải pháp hợp lý hơn là dùng risk scoring dựa trên metadata rẻ. Ví dụ:
+
+\begin{table}[H]
+\centering
+\caption{Ví dụ bảng điểm rủi ro cho review}
+\begin{tabular}{p{0.52\textwidth}c}
+\toprule
+\textbf{Tín hiệu} & \textbf{Điểm} \\
+\midrule
+Schema artifact không hợp lệ & +3 \\
+File expected bị thiếu & +3 \\
+File nằm ngoài \texttt{allowed\_files} & +3 \\
+Test command failed & +2 \\
+Worker báo \texttt{blocked\_reason} hoặc uncertainty & +2 \\
+Artifact của các worker conflict nhau & +2 \\
+Task là fix round hoặc lỗi lặp lại & +2 \\
+Đụng vùng nhạy cảm: secret, auth, git, memory, quota & +2 \\
+Output quá ngắn hoặc generic & +1 \\
+Provider trả warning/rate limit & +1 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Policy đề xuất:
+
+\begin{itemize}
+    \item 0--1 điểm: deterministic accept hoặc cheap review.
+    \item 2--3 điểm: cheap reviewer bắt buộc.
+    \item Từ 4 điểm trở lên: strong reviewer.
+    \item Nếu không chắc: strong reviewer, nhưng log lý do escalate.
+\end{itemize}
+
+Cách này biến review routing thành một bài toán policy, không phải một prompt mơ hồ. Hermes chỉ cần đọc metadata đã có trong payload, không cần tự đóng vai chuyên gia kỹ thuật cho mọi task.
+
+\subsection{Nguyên tắc thiết kế rút ra}
+
+Từ quá trình khảo sát và triển khai, hệ thống đề xuất sáu nguyên tắc:
+
+\begin{enumerate}
+    \item \textbf{File là evidence, không phải kênh giao tiếp chính}. Runtime state nên nằm trong SQLite hoặc memory có kiểm soát.
+    \item \textbf{Dashboard là quan sát, không phải sự thật}. Khi nghi ngờ, phải kiểm tra event log, payload và file workspace.
+    \item \textbf{Planner output là contract}. Nếu task graph sai, cần sửa planner/template, không vá bằng UI.
+    \item \textbf{Artifact phải grounded}. JSON summary chưa đủ nếu task yêu cầu file thật.
+    \item \textbf{Review phải có budget}. Không để strong reviewer đọc mọi thứ.
+    \item \textbf{Memory phải distilled}. Không ghi raw chat hoặc secret vào memory dài hạn.
+\end{enumerate}
+
+% =========================
+% 5. Trien khai
+% =========================
+\section{Triển khai hệ thống}
+
+\subsection{Môi trường triển khai}
+
+Hệ thống được triển khai trên máy cá nhân Windows, dùng PowerShell làm shell chính. Một số công cụ Linux-native qua Docker/WSL từng được khảo sát, nhưng Hermes Guild hiện được thiết kế Windows-first để tránh phụ thuộc vào container phức tạp trong giai đoạn thử nghiệm.
+
+\begin{table}[H]
+\centering
+\caption{Môi trường và công cụ chính}
+\begin{tabular}{p{0.28\textwidth}p{0.62\textwidth}}
+\toprule
+\textbf{Công cụ} & \textbf{Vai trò} \\
+\midrule
+Windows/PowerShell & Automation, launcher, script vận hành. \\
+SQLite & Lưu task queue và artifact runtime. \\
+Python & Dashboard server, provider adapter, worker runtime. \\
+Obsidian Markdown & Memory dài hạn và current state. \\
+Hermes CLI & Router, memory, secretary, gateway cho workflow cục bộ. \\
+HTML Dashboard & Quan sát bảng tác vụ và bằng chứng đầu ra. \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Dashboard và read-model}
+
+Dashboard không đọc trực tiếp toàn bộ database theo cách tùy tiện. Runtime export một read-model JSON để UI hiển thị. File này gồm số lượng task, thống kê trạng thái, thẻ task, bằng chứng đầu ra và trạng thái sửa lỗi.
+
+Ban đầu, dashboard JSON được ghi trực tiếp. Trên Windows, khi một process đọc file trong lúc process khác ghi file, có thể xảy ra lỗi permission hoặc trạng thái stale. Triệu chứng là dashboard lúc hiện task, lúc mất task, lúc nhảy trạng thái.
+
+\subsection{Atomic write cho dashboard}
+
+Bug file lock được xử lý bằng atomic write. Thay vì ghi thẳng vào \texttt{guild-dashboard.json}, hệ thống ghi ra file tạm rồi replace bằng thao tác nguyên tử của hệ điều hành. Báo cáo chỉ mô tả kỹ thuật; mã nguồn chi tiết nên được để trong GitHub.
+
+\begin{table}[H]
+\centering
+\caption{Quy trình atomic write cho dashboard JSON}
+\begin{tabular}{p{0.24\textwidth}p{0.66\textwidth}}
+\toprule
+\textbf{Bước} & \textbf{Mục đích} \\
+\midrule
+Ghi file tạm & Tạo bản JSON hoàn chỉnh ở đường dẫn tạm, không đụng file dashboard đang được UI đọc. \\
+Replace nguyên tử & Thay file cũ bằng file mới sau khi bản mới đã ghi xong. \\
+Retry khi bị lock & Nếu Windows đang giữ lock, chờ ngắn rồi thử lại thay vì làm hỏng snapshot. \\
+Dọn file tạm & Nếu replace thất bại sau số lần giới hạn, xóa file tạm và báo lỗi rõ ràng. \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+PowerShell export cũng dùng hướng tương tự: ghi file tạm, sau đó \texttt{Move-Item -Force} với retry. Nhờ vậy, reader hoặc thấy bản cũ hoàn chỉnh, hoặc thấy bản mới hoàn chỉnh, nhưng không thấy file đang ghi dở.
+
+Điểm cần nhấn mạnh: atomic write không thay thế rank và claim task. Rank và claim task xử lý ownership của task trong SQLite. Atomic write xử lý consistency của file snapshot cho dashboard.
+
+\subsection{Memory pipeline}
+
+Hermes Guild phân biệt runtime state và memory:
+
+\begin{itemize}
+    \item Runtime state nằm ở SQLite, dashboard JSON, event log và workspace file.
+    \item Memory dài hạn nằm trong Obsidian dưới dạng markdown đã distill.
+    \item Checkpoint session chỉ lưu sự kiện quan trọng, evidence, next action và risk.
+\end{itemize}
+
+Quy tắc quan trọng là không ghi raw chat log và không ghi secret vào Obsidian. Memory là semantic compression, không phải kho chứa mọi thứ.
+
+\subsection{Quy trình kiểm chứng runtime}
+
+Trong các hệ thống Agent, dashboard có thể tạo cảm giác hệ thống đang chạy tốt, nhưng dashboard chỉ là một lớp hiển thị. Vì vậy Hermes Guild dùng một ladder kiểm chứng:
+
+\begin{enumerate}
+    \item Xem event log để biết có tạo quest, wake worker, chạy finalizer hay không.
+    \item Xem payload của worker để biết adapter nào được gọi, provider attempts ra sao, blocked reason là gì.
+    \item Xem artifact record để biết output được publish chưa.
+    \item Xem file thật trong \texttt{guild-workspaces/<quest-id>/}.
+    \item Cuối cùng mới xem dashboard JSON/UI.
+\end{enumerate}
+
+Ladder này giúp tránh tình trạng ``UI có vẻ đúng nhưng runtime sai''. Ví dụ, một task có thể hiện \texttt{done} trên dashboard, nhưng nếu file expected không tồn tại hoặc artifact không grounded thì kết quả đó chưa đáng tin.
+
+\subsection{Quy trình smoke test và dry-run}
+
+Trong quá trình phát triển, hệ thống được kiểm chứng bằng các bước nhỏ thay vì chạy ngay provider thật. Quy trình này giảm chi phí, tránh tiêu hao quota và giúp cô lập lỗi theo tầng.
+
+\begin{table}[H]
+\centering
+\caption{Các mức kiểm thử phân tầng}
+\begin{tabular}{p{0.26\textwidth}p{0.36\textwidth}p{0.28\textwidth}}
+\toprule
+\textbf{Mức kiểm thử} & \textbf{Mục đích} & \textbf{Rủi ro còn lại} \\
+\midrule
+Dry-run & Kiểm tra command/config sẽ làm gì mà chưa mở terminal hoặc gọi provider thật. & Không chứng minh output thật được tạo. \\
+Static check & Kiểm tra JSON, PowerShell/Python parse và cấu hình route. & Không chứng minh runtime đa tiến trình. \\
+Local deterministic smoke & Dùng adapter ghi file cục bộ để chứng minh task, artifact và file output. & Không đại diện cho lỗi provider thật. \\
+Provider route smoke & Lớp kiểm thử cần chạy với task nhỏ để kiểm tra auth/model/adapter provider thật. & Có thể tốn quota hoặc gặp rate limit; chưa dùng làm bằng chứng chính trong báo cáo. \\
+End-to-end run & Chạy kịch bản đầy đủ, kiểm tra task, artifact, review và final output. & Cần thu số liệu thời gian và lỗi chi tiết. \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Provider routing}
+
+Hermes Guild hỗ trợ nhiều provider thông qua adapter. Tuy nhiên provider thật có quota và chi phí, nên hệ thống luôn giữ local deterministic adapter để smoke test. Có ba mức chạy:
+
+\begin{itemize}
+    \item \textbf{Local smoke}: dùng \texttt{local-file-writer} hoặc \texttt{local-dry-run}, không tốn quota, dùng để kiểm tra runtime.
+    \item \textbf{Provider route smoke}: gọi adapter/provider thật với task nhỏ, dùng để kiểm tra cấu hình.
+    \item \textbf{End-to-end với provider thật}: chạy nhiệm vụ đầy đủ bằng provider thật, cần kiểm tra quota/cost trước.
+\end{itemize}
+
+Trong phạm vi số liệu của báo cáo này, local smoke đã pass và được dùng làm bằng chứng chính. Provider route smoke được trình bày như một lớp kiểm thử cần có cho adapter/provider thật, nhưng chưa được dùng làm số liệu chứng minh chính. End-to-end với provider thật chưa hoàn tất.
+
+Điểm này quan trọng trong báo cáo vì nó thể hiện thái độ kỹ thuật trung thực. Một local smoke pass không có nghĩa là provider path đã pass. Ngược lại, provider path fail chưa chắc runtime sai; có thể là auth, quota hoặc model output không đúng contract.
+
+Trong quá trình thử nghiệm provider, các lỗi thường gặp gồm: thiếu hoặc sai API key, phản hồi 401, hết quota, rate limit, hoặc model trả output không đúng contract. Vì vậy hệ thống tách rõ ba lớp: kiểm thử cục bộ để chứng minh runtime, kiểm thử route provider để chứng minh cấu hình adapter, và end-to-end với provider thật để chứng minh toàn bộ luồng.
+
+% =========================
+% 6. Ket qua
+% =========================
+\section{Kết quả đạt được}
+
+\subsection{Kết quả khảo sát}
+
+Quá trình khảo sát cho thấy:
+
+\begin{itemize}
+    \item Paperclip/OpenClaw hữu ích để hiểu mô hình Agent theo vai trò, nhưng dễ bị giới hạn bởi metaphor công ty và môi trường Docker/Windows.
+    \item CrewAI giúp hiểu rõ agent/task/crew, nhưng sequential và hierarchical không mặc định giải quyết được yêu cầu parallel kiểm soát chặt.
+    \item Hermes phù hợp làm router/memory/control plane, nhưng không nên dùng như wrapper cho mọi code-heavy task.
+    \item SQLite và artifact contract là nền tảng phù hợp hơn cho runtime cục bộ có thể kiểm chứng.
+\end{itemize}
+
+\subsection{Kết quả hệ thống}
+
+Hệ thống đã đạt các kết quả chính:
+
+\begin{itemize}
+    \item Có task queue với create/list/inspect/claim/unlock/heartbeat.
+    \item Có worker loop deterministic trước khi dùng provider thật.
+    \item Có dashboard bốn cột: ready, claimed, blocked, done.
+    \item Có provider adapter và Provider Lab để cấu hình/test provider; provider thật chưa được dùng làm bằng chứng pass chính trong báo cáo.
+    \item Có adapter ghi file cục bộ để chứng minh worker viết file thật trong phạm vi cho phép.
+    \item Có bước đánh giá tích hợp và finalizer tạo final-summary/final-artifact.
+    \item Có memory checkpoint và current state để resume session.
+\end{itemize}
+
+\subsection{Kịch bản kiểm thử chuẩn}
+
+Kịch bản kiểm thử chuẩn dùng adapter ghi file cục bộ đã pass với nhiệm vụ tổng \texttt{quest-manual-dashboard-task-20260602092403}. Đây là kịch bản dùng để chứng minh runtime tạo task, worker claim task, ghi file thật, publish artifact, kiểm tra grounding và tạo kết quả cuối.
+
+\begin{table}[H]
+\centering
+\caption{Thiết lập thực nghiệm trong báo cáo}
+\begin{tabular}{P{0.28\textwidth}P{0.62\textwidth}}
+\toprule
+\textbf{Mục} & \textbf{Thiết lập} \\
+\midrule
+Đối tượng đo & Runtime điều phối Multi-Agent cục bộ, không phải mô hình học máy cần huấn luyện. \\
+Dữ liệu đầu vào & Một prompt chuẩn được planner chuyển thành ba nhánh worker và một bước đánh giá tích hợp. \\
+Adapter & \texttt{local-file-writer}, dùng để loại bỏ biến nhiễu do API key, quota, rate limit và chất lượng provider. \\
+Nguồn bằng chứng & SQLite task state, payload JSON, event log và file thật trong \texttt{guild-workspaces/<quest-id>/}. \\
+Điều kiện kết luận & Chỉ kết luận local runtime hoạt động và có thể kiểm chứng; chưa kết luận hiệu năng với provider thật. \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{Số liệu từ kịch bản kiểm thử chuẩn}
+\small
+\begin{tabular}{P{0.30\textwidth}P{0.28\textwidth}P{0.32\textwidth}}
+\toprule
+\textbf{Chỉ số} & \textbf{Giá trị} & \textbf{Ý nghĩa} \\
+\midrule
+Mã nhiệm vụ tổng & \shortstack[l]{\texttt{quest-manual-dashboard-}\\\texttt{task-20260602092403}} & Định danh lần chạy dùng làm bằng chứng. \\
+Số task trong nhiệm vụ & 4 & Ba task worker và một bước đánh giá/tổng hợp. \\
+Trạng thái task cuối & \texttt{done = 4} & Toàn bộ task trong kịch bản đã hoàn thành. \\
+Số nhánh worker concurrent & 3 & Ba nhánh tạo \texttt{build-1.md}, \texttt{build-2.md}, \texttt{build-3.md}; đây là concurrent local smoke/I/O-bound, không phải chứng minh true parallel CPU-bound. \\
+Số file output chính & 6 & Ba file build, \texttt{review.md}, \texttt{final-summary.md}, \texttt{final-artifact.json}. \\
+Thời gian từ plan đến final artifact & Khoảng 29 giây & Ước lượng từ timestamp file: \texttt{hermes-plan.json} 16:24:07 đến \texttt{final-artifact.json} 16:24:36. \\
+Thời gian tạo ba file worker & Khoảng 11 giây & Từ \texttt{build-1.md} 16:24:15 đến \texttt{build-3.md} 16:24:26. \\
+Kích thước output chính & Khoảng 8 KB & Tổng kích thước sáu file output chính theo filesystem. \\
+Adapter validation & \texttt{valid = true} & Output adapter đạt contract tối thiểu. \\
+Grounding validation & \texttt{valid = true} & Artifact được kiểm tra dựa trên file thật, không chỉ dựa vào summary. \\
+Số vòng fix loop & 0 trong lần chạy chuẩn & Không cần sinh task sửa lỗi trong kịch bản chuẩn. \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Các file output chính gồm: \texttt{build-1.md}, \texttt{build-2.md}, \texttt{build-3.md}, \texttt{review.md}, \texttt{final-summary.md} và \texttt{final-artifact.json}.
+
+Đây là bằng chứng quan trọng vì nó kiểm tra file thật trong \texttt{guild-workspaces/<quest-id>/}, không chỉ kiểm tra dashboard nhìn đẹp.
+
+\begin{table}[H]
+\centering
+\caption{Mốc đối chiếu và giới hạn so sánh}
+\small
+\begin{tabular}{P{0.28\textwidth}P{0.30\textwidth}P{0.32\textwidth}}
+\toprule
+\textbf{Hướng chạy} & \textbf{Trạng thái đo} & \textbf{Ý nghĩa đối với báo cáo} \\
+\midrule
+Hermes Guild local smoke & Đã đo trong nhiệm vụ chuẩn: 4 task, 3 nhánh worker concurrent, 6 file output, khoảng 29 giây từ plan đến final artifact & Chứng minh được luồng điều phối, ghi artifact và validation trên file thật. \\
+Sequential một worker & Chưa đo cùng prompt trong bản này & Cần bổ sung để biết lợi ích thực tế của fan-out khi task độc lập. \\
+CrewAI sequential/hierarchical & Chưa đo cùng prompt, cùng máy và cùng provider & Không dùng số liệu hiện tại để kết luận nhanh hơn CrewAI. \\
+Provider thật & Chưa dùng làm số liệu chính vì có biến nhiễu quota, auth, rate limit và chất lượng model & Chỉ nên đo sau khi adapter/provider smoke ổn định. \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Vì vậy, con số 29 giây không được dùng như một benchmark thắng/thua. Nó là bằng chứng rằng trong một lần chạy cục bộ có kiểm soát, hệ thống đi được từ kế hoạch đến artifact cuối, đồng thời để lại đủ dấu vết để kiểm tra lại.
+
+\screenshotplaceholder{board.png}{0.9}{Ảnh chụp dashboard dạng bảng bốn cột Ready, Claimed, Blocked và Done}
+
+\screenshotplaceholder{lab.png}{0.9}{Ảnh chụp dashboard với prompt kiểm thử, adapter cục bộ, routing log và event log}
+
+\screenshotplaceholder{tree.png}{0.72}{Ảnh chụp thư mục output chứa các file build, review và final artifact}
+
+\subsection{Chỉ số cần đo thêm}
+
+Một số chỉ số vận hành chưa được đo đầy đủ trong bản hiện tại, đặc biệt là thời gian chạy. Trước bản nộp cuối, nên chạy lại một nhiệm vụ chuẩn hóa và ghi các chỉ số sau:
+
+\begin{table}[H]
+\centering
+\caption{Chỉ số vận hành cần bổ sung}
+\begin{tabular}{p{0.3\textwidth}p{0.38\textwidth}p{0.22\textwidth}}
+\toprule
+\textbf{Chỉ số} & \textbf{Cách đo đề xuất} & \textbf{Nguồn dữ liệu} \\
+\midrule
+Latency tạo nhiệm vụ & Từ lúc submit request đến khi task graph được tạo & Event log \\
+Latency claim & Từ lúc task \texttt{open} đến \texttt{claimed} & SQLite timestamps \\
+Thời gian worker chạy & Từ \texttt{claimed} đến khi artifact được publish & Worker payload/artifact timestamp \\
+Thời gian đánh giá tích hợp & Từ review task \texttt{open} đến final artifact & Task/artifact timestamps \\
+Kích thước artifact & Số byte hoặc số dòng của payload/file output & Artifact payload và files \\
+Số lần provider bị chặn & Auth/quota/model-output failure & Worker payload attempts \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Nhóm lỗi đã phát hiện theo tầng}
+
+\begin{longtable}{p{0.24\textwidth}p{0.34\textwidth}p{0.32\textwidth}}
+\caption{Nhóm lỗi tiêu biểu và bài học}\\
+\toprule
+\textbf{Tầng lỗi} & \textbf{Biểu hiện} & \textbf{Bài học} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{Tầng lỗi} & \textbf{Biểu hiện} & \textbf{Bài học} \\
+\midrule
+\endhead
+Môi trường Windows/Docker & Permission, CRLF, NTFS, Docker volume gây lỗi khó đoán & Debug từ tầng hạ tầng lên tầng Agent. \\
+Framework orchestration & Sequential/hierarchical dễ tạo bottleneck khi muốn chạy song song & Cần hiểu default của framework trước khi override. \\
+Planner/task contract & Template quá generic tạo thiếu worker task & Planner output là contract, không phải gợi ý. \\
+Adapter/output validation & Worker ghi file thật nhưng validation chỉ đọc summary & Validation phải dùng đúng nguồn dữ liệu thật. \\
+Finalizer/fix loop & Runtime tạo fix task cho lỗi do validation gate & Fix loop chỉ nên sửa lỗi module, không che bug runtime. \\
+Dashboard/read-model & UI stale/jumping do Windows file lock & Dùng atomic write và retry cho snapshot JSON. \\
+Review bottleneck & Mọi output dồn vào strong reviewer & Cần deterministic validation, risk scoring và tiered review. \\
+Provider/quota & Auth, quota, rate limit hoặc model output sai contract & Tách local smoke, provider smoke và end-to-end run. \\
+Memory/session & Raw log hoặc context quá dài có thể làm nhiễu resume & Chỉ lưu memory đã tóm tắt, không lưu secret/raw log. \\
+\bottomrule
+\end{longtable}
+
+\subsection{Đánh giá theo tiêu chí ban đầu}
+
+\begin{table}[H]
+\centering
+\caption{Đánh giá kết quả theo mục tiêu thực tập}
+\begin{tabular}{p{0.38\textwidth}p{0.18\textwidth}p{0.34\textwidth}}
+\toprule
+\textbf{Mục tiêu} & \textbf{Trạng thái} & \textbf{Ghi chú} \\
+\midrule
+Khảo sát framework Agent/Multi-Agent & Đạt & Đã khảo sát Paperclip, OpenClaw, CrewAI, Hermes và các hướng provider/router \\
+Chứng minh concurrent worker cục bộ & Đạt cục bộ & Có mô hình ba nhánh worker chạy đồng thời trong kịch bản kiểm thử chuẩn; chưa chứng minh true parallel CPU-bound \\
+Task queue có claim/rank & Đạt ở phiên bản hiện tại & SQLite claim, lease, heartbeat, unlock dependency; Section 4.4 mô tả kiến trúc, không phải chỉ là ý tưởng chưa làm \\
+Artifact evidence & Đạt ở phiên bản hiện tại & Artifact JSON và file workspace được kiểm tra grounding \\
+Dashboard quan sát runtime & Đạt ở phiên bản hiện tại & Có board và export JSON, đã xử lý file lock bằng atomic write \\
+Provider thật E2E & Chưa hoàn tất & Cần kiểm tra quota/cost trước khi chạy nhiệm vụ bằng provider thật \\
+Memory resume & Đạt ở phiên bản hiện tại & Có checkpoint, dry-run/apply và Current State \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Giới hạn hiện tại}
+
+Hệ thống vẫn còn một số giới hạn:
+
+\begin{itemize}
+    \item Provider thật chưa được chứng minh ổn định end-to-end trong mọi cấu hình.
+    \item Risk scoring cho tiered review mới là policy đề xuất, chưa hoàn thiện thành module độc lập.
+    \item Dashboard vẫn ở mức thử nghiệm, chưa phải production UI.
+    \item Planner còn phụ thuộc template; nếu prompt mới ngoài template, có thể tạo task graph chưa tối ưu.
+    \item Hệ thống chạy tốt nhất trên máy cá nhân đã cấu hình sẵn, chưa đóng gói hoàn toàn cho máy khác.
+\end{itemize}
+
+Những giới hạn này không làm giảm giá trị của hệ thống, vì mục tiêu thực tập là nghiên cứu và xây dựng hướng kỹ thuật khả thi. Chúng là cơ sở cho phần hướng phát triển.
+
+% =========================
+% 7. Thao luan
+% =========================
+\section{Thảo luận}
+
+\subsection{Task ownership và file consistency là hai vấn đề khác nhau}
+
+Một bài học quan trọng là không nên dùng một cơ chế để giải quyết mọi vấn đề. Rank và claim task là cơ chế đúng cho task ownership — nó trả lời câu hỏi: worker nào được quyền claim task nào?
+
+Nhưng cơ chế này không giải quyết việc nhiều process đọc/ghi dashboard JSON. Đó là bài toán file consistency. Trên Windows, file lock mạnh hơn Linux trong nhiều tình huống, nên atomic write là kỹ thuật cần thiết. Hai cơ chế bổ sung cho nhau.
+
+\subsection{Artifact pointer và evidence thật}
+
+Artifact JSON chỉ là chỉ mục. Nếu hệ thống chỉ đọc JSON ngắn rồi kết luận task done, nó có thể bị output giả hoặc output quá generic. Vì vậy, artifact cần trỏ đến file thật, command thật hoặc validation result thật.
+
+Trong Hermes Guild, reviewer/finalizer phải đọc evidence đúng lớp: JSON metadata để biết đường đi, file workspace để kiểm tra nội dung, event log để kiểm tra runtime, payload để biết provider attempts.
+
+Một quy tắc debug quan trọng được rút ra là: khi dashboard, artifact JSON và file thật mâu thuẫn nhau, file thật trong workspace được xem là nguồn bằng chứng ưu tiên. Dashboard chỉ là lớp quan sát; artifact JSON là chỉ mục; file output mới là kết quả mà người dùng có thể kiểm tra lại.
+
+\subsection{Review không được trở thành bottleneck mới}
+
+Mô hình fan-out/fan-in mạnh ở chỗ các nhánh worker có thể chạy đồng thời và độc lập với nhau trong các tác vụ I/O-bound. Tuy nhiên, nếu mọi kết quả đều phải qua một strong reviewer, hệ thống chỉ chuyển bottleneck từ planner sang reviewer.
+
+Giải pháp là review nhiều tầng. Deterministic validation xử lý phần rẻ và chắc chắn. Cheap reviewer xử lý task ít rủi ro. Strong reviewer chỉ xử lý ca có risk signal. Cách này giúp tiết kiệm quota và giảm thời gian chờ.
+
+\subsection{Không phóng đại kết quả}
+
+Một nguyên tắc vận hành quan trọng là không phóng đại kết quả. Nếu lần chạy chỉ dùng adapter ghi file cục bộ, phải nói rõ đó là đường kiểm thử cục bộ. Nếu provider thật chưa chạy, không được trình bày như đã chứng minh end-to-end với provider thật.
+
+Nguyên tắc này làm báo cáo kỹ thuật đáng tin hơn: kết quả nào đã pass, kết quả nào mới static verification, kết quả nào còn pending.
+
+\subsection{Lessons learned}
+
+Một số bài học kỹ thuật nên được giữ lại rõ ràng vì chúng thể hiện quá trình debug thực tế:
+
+\begin{itemize}
+    \item \textbf{Planner output là contract}. Nếu kế hoạch sinh thiếu task, lỗi nằm ở hợp đồng tác vụ chứ không phải ở giao diện.
+    \item \textbf{Dashboard appearance không phải truth}. Giao diện có thể stale hoặc nhảy trạng thái; cần kiểm tra event log, payload và file output.
+    \item \textbf{File output là bằng chứng mạnh nhất}. Nếu adapter ghi file thật nhưng validation chỉ đọc summary, hệ thống có thể báo fail giả.
+    \item \textbf{Fix loop phải sửa đúng tầng}. Nếu lỗi do validation hoặc dashboard, tạo thêm fix task cho worker sẽ che mất lỗi runtime.
+    \item \textbf{Review không được trở thành bottleneck}. Cần kiểm tra tự động và risk scoring trước khi gọi strong reviewer.
+    \item \textbf{Local smoke khác provider smoke}. Kiểm thử cục bộ chứng minh runtime; provider thật còn có auth, quota, rate limit và model-output risk.
+\end{itemize}
+
+% =========================
+% 8. Ket luan
+% =========================
+\section{Kết luận}
+
+Quá trình thực tập đã đi từ việc khảo sát các framework Agent có sẵn đến xây dựng một hệ thống cục bộ có runtime rõ ràng hơn. Bài học chính không phải là chọn một framework duy nhất, mà là hiểu primitive kỹ thuật cần có cho một hệ thống Multi-Agent:
+
+\begin{itemize}
+    \item Task graph thay cho prompt mơ hồ.
+    \item Claim/lease để kiểm soát quyền xử lý task.
+    \item Artifact để lưu bằng chứng.
+    \item Join review để fan-in kết quả.
+    \item Deterministic validation trước khi gọi model mạnh.
+    \item Atomic write cho file dashboard.
+    \item Memory checkpoint để resume.
+\end{itemize}
+
+Hermes Guild đã chứng minh được tính khả thi ban đầu của mô hình ưu tiên chạy cục bộ, kiểm chứng qua bằng chứng đầu ra và tự động hóa có giới hạn. Hệ thống không cố biến AI thành một công ty ảo, mà xây các thành phần kỹ thuật để nhiều Agent có thể phối hợp theo cách kiểm chứng được.
+
+\subsection{Hướng phát triển}
+
+Các hướng tiếp theo:
+
+\begin{enumerate}
+    \item Hoàn thiện real-provider smoke với chính sách quota rõ ràng.
+    \item Bổ sung risk scoring cho tiered review.
+    \item Cải thiện dashboard để phân biệt local smoke, real provider và blocked state.
+    \item Tạo báo cáo artifact tự động sau mỗi quest.
+    \item Chuẩn hóa memory pipeline để hỗ trợ nhiều phiên làm việc dài.
+    \item Đóng gói Hermes Guild thành demo có thể chạy lại trên máy khác.
+\end{enumerate}
+
+% =========================
+% Tai lieu tham khao
+% =========================
+\section*{Tài liệu tham khảo}
+\addcontentsline{toc}{section}{Tài liệu tham khảo}
+\begin{enumerate}
+    \item Stuart Russell, Peter Norvig. \textit{Artificial Intelligence: A Modern Approach}. Pearson.
+    \item Barbara Hayes-Roth. \textit{A Blackboard Architecture for Control}. Artificial Intelligence, 26(3), 1985.
+    \item Daniel D. Corkill. \textit{Blackboard Systems}. AI Expert, 1991.
+    \item Reid G. Smith. \textit{The Contract Net Protocol: High-Level Communication and Control in a Distributed Problem Solver}. IEEE Transactions on Computers, 29(12), 1980.
+    \item Michael Wooldridge, Nicholas R. Jennings. \textit{Intelligent Agents: Theory and Practice}. The Knowledge Engineering Review, 10(2), 1995.
+    \item Peter Stone, Manuela Veloso. \textit{Multiagent Systems: A Survey from a Machine Learning Perspective}. Autonomous Robots, 8, 2000.
+    \item CrewAI Documentation. \textit{Agents, Tasks, Crews and Flows}.
+    \item SQLite Documentation. \textit{Atomic Commit In SQLite}.
+    \item Git Documentation. \textit{Git internals and object storage}.
+    \item Obsidian Documentation. \textit{Markdown-based knowledge management}.
+    \item Tài liệu và ghi chú nội bộ trong quá trình thực tập: Paperclip, CrewAI, Hermes Guild, Provider Lab, Guild Debug Repair Notebook.
+\end{enumerate}
+
+\end{document}

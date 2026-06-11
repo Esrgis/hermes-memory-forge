@@ -21,7 +21,8 @@
       "ammo_ladder": [
         "gemini:gemini-2.5-flash",
         "opencode:deepseek-v4-flash-free",
-        "openrouter:poolside-laguna-free"
+        "openrouter:poolside-laguna-free",
+        "cerebras"
       ],
       "notes": "Default gun for bounded execution workers. Auto-rank uses direct providers first: Gemini, then OpenCode, then OpenRouter Poolside for the third build worker. 9Router is kept as an explicit adapter/route, not the automatic fallback path."
     },
@@ -60,7 +61,10 @@
       "failure_policy": {
         "invalid_output": "blocked_reason=invalid_adapter_output"
       },
-      "ammo_ladder": ["local:dry-run"],
+      "ammo_ladder": [
+        "local:dry-run",
+        "cerebras"
+      ],
       "notes": "No-model smoke gun for board, validation, and blocked-artifact plumbing."
     },
     "scoped-demo-writer": {
@@ -77,7 +81,9 @@
         "invalid_output": "blocked_reason=invalid_adapter_output",
         "files_outside_allowed_scope": "blocked_reason=files_outside_allowed_scope"
       },
-      "ammo_ladder": ["local:file-writer"],
+      "ammo_ladder": [
+        "local:file-writer"
+      ],
       "notes": "Deterministic full-demo gun. It proves scoped file writes, artifact publication, and final assembly without provider keys."
     }
   }

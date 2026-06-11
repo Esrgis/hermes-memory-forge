@@ -15,7 +15,15 @@ param(
     [Parameter(ParameterSetName = "Apply")]
     [switch]$Apply,
 
-    [switch]$Json
+    [switch]$ShowCandidate,
+
+    [switch]$Json,
+
+    [switch]$JsonCompact,
+
+    [switch]$SummaryOnly,
+
+    [int]$ChangedPathLimit = 20
 )
 
 $ErrorActionPreference = "Stop"
@@ -23,7 +31,7 @@ $ErrorActionPreference = "Stop"
 function Write-Result {
     param([Parameter(Mandatory = $true)][object]$Value)
 
-    if ($Json) {
+    if ($Json -or $JsonCompact) {
         $Value | ConvertTo-Json -Depth 10
         return
     }
@@ -89,6 +97,126 @@ function Get-UniqueCleanItems {
         }
     }
     return $items
+}
+
+function Invoke-GitText {
+    param([string[]]$Arguments)
+    try {
+        $output = & git @Arguments 2>$null
+        if ($LASTEXITCODE -ne 0) {
+            return @()
+        }
+        return @($output)
+    } catch {
+        return @()
+    }
+}
+
+function Test-TextGuard {
+    param(
+        [string]$Text,
+        [string]$Kind
+    )
+
+    $patterns = if ($Kind -eq "secret") {
+        @(
+            'sk-[A-Za-z0-9_\-]{16,}',
+            'ghp_[A-Za-z0-9_]{16,}',
+            'github_pat_[A-Za-z0-9_]{16,}',
+            'xox[baprs]-[A-Za-z0-9\-]{16,}',
+            '(?i)\b(api[_-]?key|token|secret|password)\s*[:=]\s*\S{8,}'
+        )
+    } else {
+        @(
+            '(?im)^\s*(user|assistant|system|tool):\s+',
+            '(?i)<\|im_(start|end)\|>',
+            '(?i)"role"\s*:\s*"(user|assistant|system|tool)"'
+        )
+    }
+
+    foreach ($pattern in $patterns) {
+        if ($Text -match $pattern) {
+            return "failed"
+        }
+    }
+    return "passed"
+}
+
+function Convert-StatusLineToPath {
+    param([string]$Line)
+
+    if ([string]::IsNullOrWhiteSpace($Line)) {
+        return ""
+    }
+    $value = $Line
+    if ($value.Length -gt 3) {
+        $value = $value.Substring(3)
+    }
+    if ($value -match ' -> ') {
+        $value = ($value -split ' -> ')[-1]
+    }
+    return $value.Trim().Trim('"')
+}
+
+function New-DirtySnapshot {
+    param([int]$Limit)
+
+    $gitStatus = @(Invoke-GitText -Arguments @("status", "--porcelain=v1"))
+    $tracked = @($gitStatus | Where-Object { $_ -match '^\s*[MADRCU]{1,2}\s+' })
+    $untracked = @($gitStatus | Where-Object { $_ -match '^\?\?\s+' })
+    $examples = @(
+        $gitStatus |
+            ForEach-Object { Convert-StatusLineToPath -Line $_ } |
+            Where-Object { -not [string]::IsNullOrWhiteSpace($_) } |
+            Select-Object -First $Limit
+    )
+
+    return [pscustomobject]@{
+        tracked_modified = $tracked.Count
+        untracked = $untracked.Count
+        examples = $examples
+    }
+}
+
+function Write-FlushPreviewFile {
+    param(
+        [Parameter(Mandatory = $true)]$MemoryResult,
+        [Parameter(Mandatory = $true)]$DirtySnapshot
+    )
+
+    $previewDir = Join-Path $checkpointRoot "flush-preview"
+    New-Item -ItemType Directory -Force -Path $previewDir | Out-Null
+    $previewPath = Join-Path $previewDir "latest.md"
+    $lines = @(
+        "# Session Checkpoint Flush Preview",
+        "",
+        "Generated: $((Get-Date).ToString("yyyy-MM-dd HH:mm:ss"))",
+        "",
+        "## Targets",
+        "",
+        "- $($MemoryResult.would_append_daily)",
+        "- $($MemoryResult.would_write_current_state)",
+        "",
+        "## Guards",
+        "",
+        "- secret_scan: $(Test-TextGuard -Text (($MemoryResult.candidate, $MemoryResult.current_state) -join "`n") -Kind "secret")",
+        "- raw_log_scan: $(Test-TextGuard -Text (($MemoryResult.candidate, $MemoryResult.current_state) -join "`n") -Kind "raw_log")",
+        "",
+        "## Dirty Snapshot",
+        "",
+        "- tracked_modified: $($DirtySnapshot.tracked_modified)",
+        "- untracked: $($DirtySnapshot.untracked)",
+        "",
+        "## Candidate Daily Note",
+        "",
+        $MemoryResult.candidate,
+        "",
+        "## Candidate Current State",
+        "",
+        $MemoryResult.current_state
+    )
+    $lines | Set-Content -LiteralPath $previewPath -Encoding UTF8
+    return $previewPath
 }
 
 $workspace = (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot "..")).Path
@@ -205,15 +333,33 @@ if ($Apply) {
 }
 
 $memoryResult = & $closeMemory @memoryArgs -DryRun
-Write-Result ([pscustomobject]@{
+$dirtySnapshot = New-DirtySnapshot -Limit $ChangedPathLimit
+$guardText = (($memoryResult.candidate, $memoryResult.current_state) -join "`n")
+$secretScan = Test-TextGuard -Text $guardText -Kind "secret"
+$rawLogScan = Test-TextGuard -Text $guardText -Kind "raw_log"
+$previewPath = Write-FlushPreviewFile -MemoryResult $memoryResult -DirtySnapshot $dirtySnapshot
+
+$result = [ordered]@{
     ok = $true
-    mode = "dry_run"
+    mode = if ($ShowCandidate) { "dry_run" } else { "dry_run_compact" }
     checkpoint_dir = $checkpointRoot
     pending_count = $pending.Count
     would_flush_count = $selected.Count
     promoted_count = $promoted.Count
     skipped_count = $skipped.Count
-    promoted = @($promoted | ForEach-Object {
+    targets = @($memoryResult.would_append_daily, $memoryResult.would_write_current_state)
+    promoted = @($promoted | ForEach-Object { $_.summary })
+    skipped = @($skipped | ForEach-Object { $_.summary })
+    guards = [ordered]@{
+        secret_scan = $secretScan
+        raw_log_scan = $rawLogScan
+    }
+    candidate_written = $previewPath
+    dirty_snapshot = $dirtySnapshot
+}
+
+if ($ShowCandidate -and -not $SummaryOnly -and -not $JsonCompact) {
+    $result.promoted_details = @($promoted | ForEach-Object {
         [pscustomobject]@{
             id = $_.id
             local_time = $_.local_time
@@ -222,7 +368,7 @@ Write-Result ([pscustomobject]@{
             summary = $_.summary
         }
     })
-    skipped = @($skipped | ForEach-Object {
+    $result.skipped_details = @($skipped | ForEach-Object {
         [pscustomobject]@{
             id = $_.id
             kind = $_.kind
@@ -230,5 +376,10 @@ Write-Result ([pscustomobject]@{
             summary = $_.summary
         }
     })
-    memory_dry_run = $memoryResult
-})
+    $result.candidate_daily_note = $memoryResult.candidate
+    $result.candidate_current_state = $memoryResult.current_state
+    $result.changed_paths_full = @(Invoke-GitText -Arguments @("status", "--porcelain=v1"))
+    $result.memory_dry_run = $memoryResult
+}
+
+Write-Result ([pscustomobject]$result)

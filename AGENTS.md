@@ -16,6 +16,10 @@ Read these files first when operating in this directory, when present:
 - `HERMES_USER_CONFIG.md` for private local activation preferences, when present; do not quote or expose secrets from it.
 - `skills/dangerous-operation-guard/SKILL.md` before destructive filesystem/git/path/junction/memory/cron operations.
 - `skills/obsidian-rag-check/SKILL.md` for cross-session recall, project memory lookup, or checking prior constraints before acting.
+- `skills/guild-planner/SKILL.md` for Guild task decomposition, plan preview, worker skill mapping, join reviews, or planner skill-pack changes.
+- `skills/guild-runtime-debug/SKILL.md` when a Guild run looks fake, too fast, stuck, duplicated, misrouted, or when checking runtime truth from logs/artifacts.
+- `skills/guild-webapp-testing/SKILL.md` before dashboard UI/Playwright testing; do not open UI or start dashboard servers without explicit approval.
+- `skills/guild-release-notes/SKILL.md` for user-facing Guild changelogs, daily update bullets, or checkpoint-friendly summaries.
 
 Operating rules:
 
@@ -42,6 +46,8 @@ Operating rules:
 - For routine requests, consult `docs/core/HERMES_ROUTER.md` and use known routes directly.
 - Do not route code-heavy implementation/debugging/refactor/test work through Hermes as a model wrapper when direct Codex execution is available. Hermes should act as router, memory, planner, reviewer, and secretary; Codex/direct workers should do repo surgery.
 - For recall/memory questions or when prior constraints matter, use `skills/obsidian-rag-check/SKILL.md` and search Obsidian FTS before relying on hot memory.
+- For Guild planning and preview/run behavior, use `skills/guild-planner/SKILL.md` and keep Preview separate from worker wake.
+- For Guild runtime debugging, use `skills/guild-runtime-debug/SKILL.md` and prefer `guild-events.jsonl`, worker payload JSON, and quest workspace files over dashboard appearance.
 - For non-trivial memory lookup, follow `_obsidian_vault/Specs/Memory Query Protocol Spec.md`: classify the request, use a query packet, search source tiers in order, and treat session-history fallback as a repair signal.
 - Do not load broad skills or inspect databases for simple messaging, greetings, note routing, or status checks.
 - For Telegram requests, use `scripts/send-telegram-home.ps1`; do not use cron or gateway fallback without explicit approval.

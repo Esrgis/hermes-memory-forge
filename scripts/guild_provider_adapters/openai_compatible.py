@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import replace
 import os
 
-from .base import AdapterContext, AdapterResult, ProviderAdapter, agent_id
+from .base import AdapterContext, AdapterResult, ProviderAdapter, agent_id, GUILD_WORKER_SYSTEM_PROMPT
 from .groq import post_openai_compatible
 
 
@@ -54,8 +54,7 @@ class OpenAICompatibleAdapter(ProviderAdapter):
                 {
                     "role": "system",
                     "content": (
-                        "Return only compact JSON matching the worker artifact schema. "
-                        "Do not include markdown fences."
+                        GUILD_WORKER_SYSTEM_PROMPT
                     ),
                 },
                 {"role": "user", "content": context.message},
@@ -106,3 +105,4 @@ class NineRouterAdapter(ProviderAdapter):
         result.adapter = context.adapter_name
         result.transport = transport_name
         return result
+

@@ -19,9 +19,22 @@ one_hermes_ex.md
 /Hermes_bug.png
 /zen_*.png
 
+# Personal debug/talk notes. Keep these as local learning logs, not repo artifacts.
+/docs/learning/GUILD_DEBUG_REPAIR_NOTEBOOK_*.md
+/docs/learning/debug_worker_c_fix_*.md
+/docs/learning/*_talk.md
+
 # Keep polished internship/report notes explicit; ignore raw source dumps.
 /docs/internship-hermes-report/00-raw-dump/
 /docs/internship-hermes-report/CV2025___Technical_Report_Template/
+/docs/internship-hermes-report/hermes_guild_technical_report_draft.tex
+/docs/internship-hermes-report/*.aux
+/docs/internship-hermes-report/*.out
+/docs/internship-hermes-report/*.toc
+/docs/internship-hermes-report/*.fls
+/docs/internship-hermes-report/*.fdb_latexmk
+/docs/internship-hermes-report/*.synctex.gz
+/docs/internship-hermes-report/*.pdf
 
 *.log
 *.tmp

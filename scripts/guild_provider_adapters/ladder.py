@@ -9,6 +9,8 @@ RETRYABLE_BLOCKS = {
     "provider_error_event",
     "provider_failed",
     "provider_missing",
+    "provider_rate_limited",
+    "provider_service_unavailable",
     "provider_timeout",
 }
 
@@ -21,7 +23,7 @@ class AmmoLadderAdapter(ProviderAdapter):
     def invoke(self, context: AdapterContext) -> AdapterResult:
         from .registry import get_backend_adapter
 
-        ladder = resolve_ammo_ladder(context.capability_config)
+        ladder = resolve_ammo_ladder(context.capability_config, context.combo_config)
         if context.provider:
             preferred = str(context.provider)
             if preferred in ladder:

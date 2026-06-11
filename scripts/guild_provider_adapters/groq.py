@@ -7,7 +7,7 @@ import time
 import urllib.error
 import urllib.request
 
-from .base import AdapterContext, AdapterResult, ProviderAdapter, agent_id
+from .base import AdapterContext, AdapterResult, ProviderAdapter, agent_id, GUILD_WORKER_SYSTEM_PROMPT
 
 
 class GroqAdapter(ProviderAdapter):
@@ -38,8 +38,7 @@ class GroqAdapter(ProviderAdapter):
                 {
                     "role": "system",
                     "content": (
-                        "Return only compact JSON matching the worker artifact schema. "
-                        "Do not include markdown fences."
+                        GUILD_WORKER_SYSTEM_PROMPT
                     ),
                 },
                 {"role": "user", "content": context.message},
@@ -221,3 +220,4 @@ def normalize_json_text(value: str) -> str:
         if lines[-1].strip() == "```":
             return "\n".join(lines[1:-1]).strip()
     return text
+

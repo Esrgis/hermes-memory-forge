@@ -11,7 +11,9 @@ param(
 
     [switch]$NoSessionMemory,
 
-    [switch]$Json
+    [switch]$Json,
+
+    [switch]$LightMode # Skip heavy prompt injection for faster cold‑start
 )
 
 $ErrorActionPreference = "Stop"
@@ -85,22 +87,41 @@ function Read-CompactFile {
     return $text.Substring(0, $MaxChars) + "`n[truncated: $RelativePath]"
 }
 
-$managerBootstrap = Read-CompactFile -RelativePath "docs\workers\HERMES_MANAGER_BOOTSTRAP.md" -MaxChars 14000
-$startHere = Read-CompactFile -RelativePath "START_HERE.md" -MaxChars 8000
-$currentState = Read-CompactFile -RelativePath "_obsidian_vault\System\Assistant\Shared\Current State.md" -MaxChars 8000
-$runtimeRouter = Read-CompactFile -RelativePath "docs\core\HERMES_RUNTIME_ROUTER.md" -MaxChars 12000
-$router = Read-CompactFile -RelativePath "docs\core\HERMES_ROUTER.md" -MaxChars 10000
-$providerAdapters = Read-CompactFile -RelativePath "docs\workers\PROVIDER_ADAPTERS.md" -MaxChars 12000
-$agentProfiles = Read-CompactFile -RelativePath "config\guild\agent-profiles.json" -MaxChars 8000
-$capabilities = Read-CompactFile -RelativePath "config\guild\capability-adapters.json" -MaxChars 10000
-$cartridges = Read-CompactFile -RelativePath "config\guild\model-cartridges.json" -MaxChars 8000
-$transports = Read-CompactFile -RelativePath "config\guild\provider-transports.json" -MaxChars 8000
-$cognition = Read-CompactFile -RelativePath "_obsidian_vault\System\Assistant\Shared\Cognition Reflexes.md" -MaxChars 12000
-$skillGuildPlanner = Read-CompactFile -RelativePath "skills\guild-planner\SKILL.md" -MaxChars 8000
-$skillGuildPlannerSchema = Read-CompactFile -RelativePath "skills\guild-planner\references\planner-schema.md" -MaxChars 8000
-$skillGuildRuntimeDebug = Read-CompactFile -RelativePath "skills\guild-runtime-debug\SKILL.md" -MaxChars 7000
-$skillGuildWebappTesting = Read-CompactFile -RelativePath "skills\guild-webapp-testing\SKILL.md" -MaxChars 7000
-$skillGuildReleaseNotes = Read-CompactFile -RelativePath "skills\guild-release-notes\SKILL.md" -MaxChars 6000
+$managerBootstrap = Read-CompactFile -RelativePath "docs\\workers\\HERMES_MANAGER_BOOTSTRAP.md" -MaxChars 14000
+if (-not $LightMode) {
+    $startHere = Read-CompactFile -RelativePath "START_HERE.md" -MaxChars 8000
+    $currentState = Read-CompactFile -RelativePath "_obsidian_vault\\System\\Assistant\\Shared\\Current State.md" -MaxChars 8000
+    $runtimeRouter = Read-CompactFile -RelativePath "docs\\core\\HERMES_RUNTIME_ROUTER.md" -MaxChars 12000
+    $router = Read-CompactFile -RelativePath "docs\\core\\HERMES_ROUTER.md" -MaxChars 10000
+    $providerAdapters = Read-CompactFile -RelativePath "docs\\workers\\PROVIDER_ADAPTERS.md" -MaxChars 12000
+    $agentProfiles = Read-CompactFile -RelativePath "config\\guild\\agent-profiles.json" -MaxChars 8000
+    $capabilities = Read-CompactFile -RelativePath "config\\guild\\capability-adapters.json" -MaxChars 10000
+    $cartridges = Read-CompactFile -RelativePath "config\\guild\\model-cartridges.json" -MaxChars 8000
+    $transports = Read-CompactFile -RelativePath "config\\guild\\provider-transports.json" -MaxChars 8000
+    $cognition = Read-CompactFile -RelativePath "_obsidian_vault\\System\\Assistant\\Shared\\Cognition Reflexes.md" -MaxChars 12000
+    $skillGuildPlanner = Read-CompactFile -RelativePath "skills\\guild-planner\\SKILL.md" -MaxChars 8000
+    $skillGuildPlannerSchema = Read-CompactFile -RelativePath "skills\\guild-planner\\references\\planner-schema.md" -MaxChars 8000
+    $skillGuildRuntimeDebug = Read-CompactFile -RelativePath "skills\\guild-runtime-debug\\SKILL.md" -MaxChars 7000
+    $skillGuildWebappTesting = Read-CompactFile -RelativePath "skills\\guild-webapp-testing\\SKILL.md" -MaxChars 7000
+    $skillGuildReleaseNotes = Read-CompactFile -RelativePath "skills\\guild-release-notes\\SKILL.md" -MaxChars 6000
+} else {
+    $startHere = ""
+    $currentState = ""
+    $runtimeRouter = ""
+    $router = ""
+    $providerAdapters = ""
+    $agentProfiles = ""
+    $capabilities = ""
+    $cartridges = ""
+    $transports = ""
+    $cognition = ""
+    $skillGuildPlanner = ""
+    $skillGuildPlannerSchema = ""
+    $skillGuildRuntimeDebug = ""
+    $skillGuildWebappTesting = ""
+    $skillGuildReleaseNotes = ""
+}
+
 
 $fullPrompt = @"
 You are Hermes operating as the HermesGuildCore Guild manager.

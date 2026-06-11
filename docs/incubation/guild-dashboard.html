@@ -167,12 +167,20 @@
       color: rgba(244, 234, 213, 0.46);
       font: 800 0.68rem var(--mono);
       text-align: center;
+      border-radius: 10px;
+      border: 1px solid transparent;
+      background: transparent;
+      padding: 5px;
     }
 
-    .side-item.active { color: #fff; }
+    .side-item.active {
+      color: #fff;
+      border-color: rgba(241, 217, 143, 0.52);
+      background: rgba(241, 217, 143, 0.14);
+    }
 
     .sidebar {
-      display: none;
+      grid-row: 2 / 5;
     }
 
     .subbar {
@@ -253,11 +261,59 @@
       grid-column: 2;
       grid-row: 3;
       display: grid;
-      grid-template-columns: minmax(320px, 1.05fr) minmax(320px, 1fr) minmax(300px, 0.95fr);
+      grid-template-columns: minmax(320px, 1.05fr) minmax(320px, 1fr);
       gap: 12px;
       padding: 10px 18px 12px;
       background: rgba(102, 74, 31, 0.56);
       border-bottom: 1px solid rgba(245, 236, 217, 0.14);
+    }
+
+    .page-hidden {
+      display: none !important;
+    }
+
+    .provider-page {
+      grid-column: 2;
+      grid-row: 3 / 5;
+      min-width: 0;
+      min-height: 0;
+      overflow: auto;
+      padding: 16px 18px 28px;
+      background: rgba(102, 74, 31, 0.28);
+    }
+
+    .provider-page-shell {
+      display: grid;
+      gap: 14px;
+      max-width: 1560px;
+      margin: 0 auto;
+    }
+
+    .provider-page-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 14px;
+      border-radius: 8px;
+      border: 1px solid rgba(245, 236, 217, 0.16);
+      background: linear-gradient(180deg, rgba(96, 63, 31, 0.94), rgba(55, 34, 20, 0.94));
+    }
+
+    .provider-page-title {
+      display: grid;
+      gap: 3px;
+      min-width: 0;
+    }
+
+    .provider-page-title strong {
+      color: #fff1cb;
+      font: 900 1.1rem var(--display);
+    }
+
+    .provider-page-title span {
+      color: rgba(255, 246, 221, 0.7);
+      font: 0.74rem var(--mono);
     }
 
     .quest-form,
@@ -411,6 +467,21 @@
     .provider-lab {
       display: grid;
       gap: 7px;
+      align-content: start;
+    }
+
+    .provider-page .provider-lab {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 12px;
+      background: transparent;
+      border: 0;
+      padding: 0;
+    }
+
+    .provider-page .provider-lab-title,
+    .provider-page .provider-tabs,
+    .provider-page .provider-status {
+      grid-column: 1 / -1;
     }
 
     .provider-grid {
@@ -434,6 +505,280 @@
       color: rgba(255, 246, 221, 0.86);
       font: 0.72rem var(--mono);
       overflow-wrap: anywhere;
+    }
+
+    .provider-tabs {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 6px;
+    }
+
+    .provider-lab-title {
+      display: grid;
+      grid-template-columns: 32px minmax(0, 1fr);
+      align-items: center;
+      gap: 8px;
+    }
+
+    .provider-lab-logo,
+    .provider-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      object-fit: contain;
+      background: rgba(255, 244, 219, 0.1);
+      border: 1px solid rgba(255, 244, 219, 0.14);
+    }
+
+    .provider-lab-logo {
+      padding: 3px;
+    }
+
+    .provider-icon {
+      padding: 4px;
+    }
+
+    .provider-tab {
+      min-height: 30px;
+      padding: 0 8px;
+      border-radius: 7px;
+      background: rgba(255, 244, 219, 0.08);
+      font-size: 0.68rem;
+    }
+
+    .provider-tab.active {
+      border-color: rgba(241, 217, 143, 0.86);
+      background: rgba(241, 217, 143, 0.18);
+    }
+
+    .provider-pane {
+      display: none;
+      gap: 8px;
+    }
+
+    .provider-pane.active {
+      display: grid;
+    }
+
+    .provider-toolbar {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 96px;
+      gap: 8px;
+    }
+
+    .provider-search {
+      min-height: 30px;
+      border: 1px solid rgba(255, 244, 219, 0.18);
+      border-radius: 7px;
+      padding: 7px 9px;
+      background: rgba(31, 25, 18, 0.32);
+      color: #fff8e7;
+      font: 0.72rem var(--mono);
+    }
+
+    .provider-list,
+    .combo-list,
+    .capability-list,
+    .flag-list {
+      display: grid;
+      gap: 7px;
+      max-height: 320px;
+      overflow: auto;
+      padding-right: 2px;
+    }
+
+    .provider-page .provider-list {
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      max-height: none;
+      overflow: visible;
+    }
+
+    .provider-page #providerPaneProviders {
+      grid-template-columns: minmax(0, 1fr);
+      align-items: start;
+    }
+
+    .provider-page #providerPaneProviders .provider-toolbar,
+    .provider-page #providerPaneProviders .provider-list {
+      grid-column: 1;
+    }
+
+    .provider-page #providerPaneProviders .provider-detail,
+    .provider-page #providerPaneProviders > .provider-grid,
+    .provider-page #providerPaneProviders > .provider-actions {
+      display: none;
+    }
+
+    .provider-card,
+    .combo-card,
+    .capability-card,
+    .flag-card {
+      display: grid;
+      gap: 6px;
+      padding: 8px;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 244, 219, 0.14);
+      background: rgba(31, 25, 18, 0.28);
+      color: rgba(255, 246, 221, 0.88);
+      font: 0.72rem var(--mono);
+    }
+
+    .provider-card {
+      cursor: pointer;
+    }
+
+    .provider-card.selected {
+      border-color: rgba(241, 217, 143, 0.86);
+      box-shadow: 0 0 0 2px rgba(241, 217, 143, 0.12);
+    }
+
+    .provider-card.deprecated {
+      opacity: 0.72;
+    }
+
+    .provider-modal-backdrop {
+      position: fixed;
+      inset: 0;
+      display: none;
+      place-items: center;
+      padding: 22px;
+      background: rgba(18, 12, 8, 0.62);
+      backdrop-filter: blur(8px);
+      z-index: 20;
+    }
+
+    .provider-modal-backdrop.open {
+      display: grid;
+    }
+
+    .provider-modal {
+      width: min(720px, calc(100vw - 44px));
+      max-height: min(820px, calc(100vh - 44px));
+      overflow: auto;
+      display: grid;
+      gap: 12px;
+      padding: 14px;
+      border-radius: 10px;
+      border: 1px solid rgba(255, 244, 219, 0.18);
+      background: linear-gradient(180deg, rgba(96, 63, 31, 0.98), rgba(34, 23, 16, 0.98));
+      box-shadow: 0 24px 70px rgba(0, 0, 0, 0.42);
+    }
+
+    .provider-modal-head {
+      display: grid;
+      grid-template-columns: 40px minmax(0, 1fr) auto;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .provider-modal-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      object-fit: contain;
+      padding: 5px;
+      background: rgba(255, 244, 219, 0.1);
+      border: 1px solid rgba(255, 244, 219, 0.14);
+    }
+
+    .provider-modal-title {
+      min-width: 0;
+      display: grid;
+      gap: 3px;
+    }
+
+    .provider-modal-title strong {
+      color: #fff1cb;
+      font: 900 1rem var(--display);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .provider-modal-title span {
+      color: rgba(255, 246, 221, 0.7);
+      font: 0.72rem var(--mono);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .provider-modal-note {
+      padding: 8px;
+      border-radius: 8px;
+      background: rgba(255, 244, 219, 0.08);
+      color: rgba(255, 246, 221, 0.84);
+      font: 0.72rem var(--mono);
+      overflow-wrap: anywhere;
+    }
+
+    .provider-card-head,
+    .combo-card-head,
+    .capability-card-head,
+    .flag-card-head {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .provider-card-head {
+      grid-template-columns: 32px minmax(0, 1fr) auto;
+    }
+
+    .provider-name,
+    .combo-name,
+    .capability-name,
+    .flag-name {
+      min-width: 0;
+      color: #fff1cb;
+      font-weight: 900;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .provider-pill-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      min-width: 0;
+    }
+
+    .provider-pill {
+      max-width: 100%;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 244, 219, 0.14);
+      padding: 2px 6px;
+      background: rgba(255, 244, 219, 0.08);
+      color: rgba(255, 246, 221, 0.82);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .provider-pill.good {
+      border-color: rgba(47, 180, 124, 0.42);
+      color: #c8f5d8;
+    }
+
+    .provider-pill.warn {
+      border-color: rgba(242, 182, 50, 0.5);
+      color: #ffe7a6;
+    }
+
+    .provider-pill.bad {
+      border-color: rgba(220, 105, 75, 0.55);
+      color: #ffd0c2;
+    }
+
+    .combo-editor {
+      display: grid;
+      gap: 8px;
+      padding: 8px;
+      border-radius: 8px;
+      background: rgba(255, 244, 219, 0.07);
+      border: 1px solid rgba(255, 244, 219, 0.12);
     }
 
     .columns {
@@ -826,11 +1171,8 @@
     </nav>
 
     <aside class="sidebar" aria-label="Guild sections">
-      <div class="side-item">Guild</div>
-      <div class="side-item active">Board</div>
-      <div class="side-item">Tasks</div>
-      <div class="side-item">Agents</div>
-      <div class="side-item">Logs</div>
+      <button class="side-item active" type="button" data-main-view="dashboard">Board</button>
+      <button class="side-item" type="button" data-main-view="providers">Providers</button>
     </aside>
 
     <section class="subbar">
@@ -844,7 +1186,7 @@
       <div class="avatars" id="agentStrip"></div>
     </section>
 
-    <section class="quest-panel" aria-label="Assign quest">
+    <section class="quest-panel dashboard-section" aria-label="Assign quest">
       <form class="quest-form" id="questForm">
         <div class="quest-grid">
           <div class="quest-field">
@@ -930,7 +1272,28 @@ Keep the output presentation-ready, bounded, and easy to explain to a mentor.</t
         </section>
       </div>
         <section class="provider-lab" aria-label="Provider lab">
-          <div class="hermes-log-title">Provider Lab</div>
+          <div class="provider-lab-title">
+            <img class="provider-lab-logo" src="assets/provider-icons/9router-logo.png" alt="">
+            <div>
+              <div class="hermes-log-title">Provider Lab</div>
+              <div class="task-id">9Router-style catalog, Guild-native routes</div>
+            </div>
+          </div>
+          <div class="provider-tabs" role="tablist" aria-label="Provider lab views">
+            <button class="provider-tab active" type="button" data-provider-pane="providers">Providers</button>
+            <button class="provider-tab" type="button" data-provider-pane="combos">Combos</button>
+            <button class="provider-tab" type="button" data-provider-pane="capabilities">Capabilities</button>
+            <button class="provider-tab" type="button" data-provider-pane="flags">Flags</button>
+          </div>
+          <div class="provider-pane active" id="providerPaneProviders">
+            <div class="provider-toolbar">
+              <input class="provider-search" id="providerSearch" placeholder="filter providers">
+              <button id="refreshProviderLab" type="button">Reload</button>
+            </div>
+            <div class="provider-list" id="providerList"></div>
+            <div class="provider-detail" id="providerDetail">
+              <div class="empty">Select a provider card.</div>
+            </div>
           <div class="provider-grid">
             <div class="quest-field">
               <label for="quickProviderName">New Provider</label>
@@ -946,7 +1309,7 @@ Keep the output presentation-ready, bounded, and easy to explain to a mentor.</t
             </div>
             <div class="quest-field">
               <label for="quickProviderModel">Model</label>
-              <input id="quickProviderModel" placeholder="model id">
+              <input id="quickProviderModel" placeholder="paste key first, then List Models">
             </div>
             <div class="quest-field">
               <label for="quickProviderCapability">Pool</label>
@@ -992,13 +1355,109 @@ Keep the output presentation-ready, bounded, and easy to explain to a mentor.</t
             <button id="refreshProviderModels" type="button">List Models</button>
             <button id="testProviderNow" type="button">Test Now</button>
           </div>
+          </div>
+          <div class="provider-pane" id="providerPaneCombos">
+            <div class="combo-editor">
+              <div class="provider-grid">
+                <div class="quest-field">
+                  <label for="comboName">Combo</label>
+                  <input id="comboName" placeholder="coding-stack">
+                </div>
+                <div class="quest-field">
+                  <label for="comboCapability">Capability</label>
+                  <select id="comboCapability"></select>
+                </div>
+                <div class="quest-field wide">
+                  <label for="comboItems">Cartridges</label>
+                  <input id="comboItems" placeholder="gemini:gemini-2.5-flash, groq:gpt-oss-20b">
+                </div>
+              </div>
+              <div class="provider-actions">
+                <button id="saveCombo" type="button">Save Combo</button>
+              </div>
+            </div>
+            <div class="combo-list" id="comboList"></div>
+          </div>
+          <div class="provider-pane" id="providerPaneCapabilities">
+            <div class="capability-list" id="capabilityList"></div>
+          </div>
+          <div class="provider-pane" id="providerPaneFlags">
+            <div class="flag-list" id="flagList"></div>
+          </div>
           <div class="provider-status" id="providerStatus">Loading providers...</div>
         </section>
     </section>
 
-    <section class="board" aria-label="Task board">
+    <section class="board dashboard-section" aria-label="Task board">
       <div class="columns" id="columns"></div>
     </section>
+
+    <section class="provider-page page-hidden" id="providerPage" aria-label="Provider catalog">
+      <div class="provider-page-shell" id="providerPageShell">
+        <div class="provider-page-head">
+          <div class="provider-page-title">
+            <strong>Providers</strong>
+            <span>9Router-style catalog with Guild-native key storage and runtime routes.</span>
+          </div>
+          <div class="count-strip" id="providerCatalogCount">0 providers</div>
+        </div>
+      </div>
+    </section>
+
+    <div class="provider-modal-backdrop" id="providerModalBackdrop" aria-hidden="true">
+      <section class="provider-modal" id="providerModal" role="dialog" aria-modal="true" aria-labelledby="providerModalName">
+        <div class="provider-modal-head">
+          <img class="provider-modal-icon" id="providerModalIcon" src="assets/provider-icons/local-device.png" alt="">
+          <div class="provider-modal-title">
+            <strong id="providerModalName">Provider</strong>
+            <span id="providerModalSub">Connect provider</span>
+          </div>
+          <button id="closeProviderModal" type="button">Close</button>
+        </div>
+        <div class="provider-pill-row" id="providerModalPills"></div>
+        <div class="provider-modal-note" id="providerModalNotice">Select a provider.</div>
+        <div class="provider-actions">
+          <button id="providerModalApiKeyLink" type="button">Get API Key</button>
+          <button id="providerModalWebsiteLink" type="button">Website</button>
+        </div>
+        <div class="provider-grid">
+          <div class="quest-field" style="display:none"><label for="modalProviderName">Connection Name</label>
+            <input id="modalProviderName" placeholder="provider name">
+          </div>
+          <div class="quest-field" style="display:none"><label for="modalProviderAuth">Auth</label>
+            <select id="modalProviderAuth"></select>
+          </div>
+          <div class="quest-field" style="display:none"><label for="modalProviderTransport">Transport</label>
+            <select id="modalProviderTransport"></select>
+          </div>
+          <div class="quest-field" style="display:none"><label for="modalProviderEnvKey">Env Key</label>
+            <input id="modalProviderEnvKey" placeholder="PROVIDER_API_KEY">
+          </div>
+          <div class="quest-field" id="modalProviderPoolField">
+            <label for="modalProviderCapability">Pool</label>
+            <select id="modalProviderCapability"></select>
+          </div>
+          <div class="quest-field wide" style="display:none"><label for="modalProviderBaseUrl">Base URL</label>
+            <input id="modalProviderBaseUrl" placeholder="https://api.provider.com/v1">
+          </div>
+          <div class="quest-field wide" id="modalProviderModelField">
+            <label for="modalProviderModel">Model</label>
+            <select id="modalProviderModel"><option value="">-- paste key, then List Models --</option></select>
+          </div>
+          <div class="quest-field wide" id="modalProviderSecretField">
+            <label for="modalProviderSecret">API Key / Token</label>
+            <input id="modalProviderSecret" type="password" autocomplete="off" placeholder="paste key">
+          </div>
+        </div>
+        <div class="provider-modal-note" id="providerModalAuthMessage" hidden></div>
+        <div class="provider-actions">
+          <button id="modalConnectProvider" type="button">Connect</button>
+          <button id="modalConnectAndTestProvider" type="button">Connect + Test</button>
+          <button id="modalListModels" type="button">List Models</button>
+        </div>
+        <div class="provider-modal-note" id="providerModalStatus" hidden></div>
+      </section>
+    </div>
   </main>
 
   <section class="drawer" id="jsonDrawer" aria-label="Dashboard JSON">
@@ -1057,6 +1516,9 @@ Keep the output presentation-ready, bounded, and easy to explain to a mentor.</t
     let activeQuestChainId = null;
     let finalizeInFlight = false;
     let providerLabConfig = null;
+    let activeMainView = "dashboard";
+    let activeProviderPane = "providers";
+    let selectedCatalogProviderId = "";
     let pendingPlanPreview = null;
     let previewInFlight = false;
     let confirmInFlight = false;
@@ -1348,6 +1810,405 @@ Keep the output presentation-ready, bounded, and easy to explain to a mentor.</t
       return el("providerTransport").value;
     }
 
+    function setMainView(name) {
+      activeMainView = name;
+      document.querySelectorAll("[data-main-view]").forEach((button) => {
+        const active = button.dataset.mainView === name;
+        button.classList.toggle("active", active);
+        button.setAttribute("aria-pressed", active ? "true" : "false");
+      });
+      document.querySelectorAll(".dashboard-section").forEach((node) => {
+        node.classList.toggle("page-hidden", name !== "dashboard");
+      });
+      el("providerPage").classList.toggle("page-hidden", name !== "providers");
+    }
+
+    function mountProviderLabPage() {
+      const lab = document.querySelector(".provider-lab");
+      const shell = el("providerPageShell");
+      if (lab && shell && lab.parentElement !== shell) {
+        shell.appendChild(lab);
+      }
+    }
+
+    function providerPaneElementId(name) {
+      return `providerPane${name.charAt(0).toUpperCase()}${name.slice(1)}`;
+    }
+
+    function setProviderPane(name) {
+      activeProviderPane = name;
+      document.querySelectorAll(".provider-tab").forEach((button) => {
+        const active = button.dataset.providerPane === name;
+        button.classList.toggle("active", active);
+        button.setAttribute("aria-pressed", active ? "true" : "false");
+      });
+      ["providers", "combos", "capabilities", "flags"].forEach((pane) => {
+        const node = el(providerPaneElementId(pane));
+        if (node) node.classList.toggle("active", pane === name);
+      });
+    }
+
+    function providerPill(value, tone = "") {
+      const className = tone ? `provider-pill ${tone}` : "provider-pill";
+      return `<span class="${className}">${escapeHtml(value)}</span>`;
+    }
+
+    function providerIconFor(name) {
+      const text = String(name || "").toLowerCase();
+      if (text === "9router" || text === "9router-local") return "assets/provider-icons/9router-logo.png";
+      return `assets/provider-icons/${text}.png`;
+    }
+
+    function catalogProviders() {
+      const catalog = providerLabConfig?.provider_catalog || {};
+      return Object.values(catalog.providers || {});
+    }
+
+    function findTransportForProvider(provider) {
+      if (!providerLabConfig || !provider) return null;
+      const transports = providerLabConfig.transports || {};
+      const providerId = String(provider.id || "").toLowerCase();
+      const providerName = String(provider.name || "").toLowerCase();
+      const exactMatch = Object.entries(transports).find(([, t]) => t.provider_id === providerId);
+        if (exactMatch) return { name: exactMatch[0], transport: exactMatch[1] };
+        // fallback to fuzzy match cũ
+      const match = Object.entries(transports).find(([name, transport]) => {
+        const haystack = [name, transport.label, transport.backend_adapter].join(" ").toLowerCase();
+        return haystack.includes(providerId) || (providerName && haystack.includes(providerName));
+      });
+      return match ? { name: match[0], transport: match[1] } : null;
+    }
+
+    function providerDefaultBaseUrl(provider) {
+      const id = String(provider?.id || "").toLowerCase();
+      const known = {
+        openrouter: "https://openrouter.ai/api/v1",
+        openai: "https://api.openai.com/v1",
+        groq: "https://api.groq.com/openai/v1",
+        deepseek: "https://api.deepseek.com/v1",
+        anthropic: "https://api.anthropic.com/v1",
+        mistral: "https://api.mistral.ai/v1",
+        xai: "https://api.x.ai/v1",
+        together: "https://api.together.xyz/v1",
+        fireworks: "https://api.fireworks.ai/inference/v1",
+        cerebras: "https://api.cerebras.ai/v1",
+        chutes: "https://llm.chutes.ai/v1",
+        nebius: "https://api.studio.nebius.com/v1",
+        hyperbolic: "https://api.hyperbolic.xyz/v1",
+        "siliconflow": "https://api.siliconflow.cn/v1",
+        "vercel-ai-gateway": "https://ai-gateway.vercel.sh/v1",
+        gemini: "https://generativelanguage.googleapis.com/v1beta/openai",
+      };
+      if (known[id]) return known[id];
+      const bases = provider?.base_urls || {};
+      return bases.search || bases.fetch || bases.embedding || bases.image || bases.tts || bases.stt || "";
+    }
+
+    function providerDefaultModel(provider) {
+      if (provider?.default_model) return provider.default_model;
+      const id = String(provider?.id || "").toLowerCase();
+      const known = {
+        openrouter: "openai/gpt-oss-20b:free",
+        gemini: "gemini-2.5-flash",
+        groq: "openai/gpt-oss-20b",
+        openai: "gpt-4o-mini",
+        deepseek: "deepseek-chat",
+        anthropic: "claude-3-5-haiku-latest",
+        mistral: "mistral-small-latest",
+        xai: "grok-3-mini",
+        together: "meta-llama/Llama-3.3-70B-Instruct-Turbo-Free"
+      };
+      return known[id] || "";
+    }
+
+    function providerModalBaseUrlProfile(provider, match = null) {
+      const defaultBaseUrl = providerDefaultBaseUrl(provider);
+      const transportBaseUrl = match?.transport?.chat_completions_url || match?.transport?.base_url || "";
+      const value = transportBaseUrl || defaultBaseUrl;
+      return {
+        value,
+        locked: Boolean(value),
+        source: transportBaseUrl ? "transport" : (defaultBaseUrl ? "catalog" : ""),
+      };
+    }
+
+    function providerEnvKey(provider) {
+      const id = String(provider?.id || "provider").toUpperCase().replace(/[^A-Z0-9]+/g, "_").replace(/^_+|_+$/g, "");
+      return `${id || "PROVIDER"}_API_KEY`;
+    }
+
+    function providerTransportOptions(provider, match) {
+      const kinds = provider?.service_kinds || ["llm"];
+      const options = [];
+      if (match) options.push({ id: "guild-wired", label: `Guild wired: ${match.name}` });
+      if (provider?.no_auth) options.push({ id: "no-auth", label: "No-auth route" });
+      if ((provider?.auth_modes || []).includes("oauth") || provider?.group === "oauth") {
+        options.push({ id: "oauth-session", label: "OAuth session" });
+      }
+      if (provider?.auth_type === "cookie" || provider?.group === "cookie") {
+        options.push({ id: "browser-cookie", label: "Browser cookie" });
+      }
+      if (kinds.includes("llm")) options.push({ id: "openai-compatible", label: "OpenAI-compatible HTTP" });
+      if (kinds.includes("embedding")) options.push({ id: "embedding", label: "Embedding endpoint" });
+      if (kinds.includes("tts")) options.push({ id: "tts", label: "Text-to-speech endpoint" });
+      if (kinds.includes("stt")) options.push({ id: "stt", label: "Speech-to-text endpoint" });
+      if (kinds.includes("image")) options.push({ id: "image", label: "Image endpoint" });
+      if (kinds.includes("webSearch")) options.push({ id: "web-search", label: "Web search endpoint" });
+      if (kinds.includes("webFetch")) options.push({ id: "web-fetch", label: "Web fetch endpoint" });
+      if (!options.length) options.push({ id: "custom", label: "Custom route" });
+      const seen = new Set();
+      return options.filter((option) => {
+        if (seen.has(option.id)) return false;
+        seen.add(option.id);
+        return true;
+      });
+    }
+
+    function providerAuthType(provider) {
+      if (provider.no_auth) return "noauth";
+      const authModes = provider.auth_modes || [];
+      const authType = provider.auth_type || "";
+      if (authModes.includes("oauth") || authType === "oauth") return "oauth";
+      if (provider.group === "free" || authModes.includes("freetier")) return "freetier";
+      if (authType === "cli" || (provider.service_kinds || []).includes("cli")) return "cli";
+      return "apikey";
+    }
+
+    function setModalProviderModels(models, placeholder = "-- paste key, then List Models --") {
+      const select = el("modalProviderModel");
+      const validModels = (models || [])
+        .map((model) => typeof model === "string" ? { id: model } : model)
+        .filter((model) => model && model.id);
+      select.innerHTML = validModels.length
+        ? validModels.map((model) => `<option value="${escapeHtml(model.id)}">${escapeHtml(model.name || model.id)}</option>`).join("")
+        : `<option value="">${escapeHtml(placeholder)}</option>`;
+      select.value = validModels[0]?.id || "";
+    }
+
+    function selectCatalogProvider(providerId) {
+      const provider = catalogProviders().find((item) => item.id === providerId);
+      if (!provider) return;
+      selectedCatalogProviderId = provider.id;
+      const match = findTransportForProvider(provider);
+      const authType = providerAuthType(provider);
+      el("modalProviderName").value = provider.name || provider.id;
+      el("modalProviderEnvKey").value = providerEnvKey(provider);
+      const baseProfile = providerModalBaseUrlProfile(provider, match);
+      el("modalProviderBaseUrl").value = baseProfile.value;
+      el("modalProviderBaseUrl").disabled = baseProfile.locked;
+      setModalProviderModels([], "-- paste key, then List Models --");
+      el("modalProviderSecret").value = "";
+      el("providerModalStatus").hidden = true;
+      el("providerModalStatus").textContent = "";
+      if (match) {
+        el("providerTransport").value = match.name;
+        updateProviderChoices();
+      }
+      renderProviderModal(provider, match, authType);
+      openProviderModal();
+      renderProviderInventory();
+    }
+
+    function renderProviderModal(provider, match = null, authType = "apikey") {
+      const apiUrl = provider.api_key_url || provider.signup_url || provider.website || "";
+      const kinds = provider.service_kinds || ["llm"];
+      const auth = provider.no_auth ? ["no auth"] : (provider.auth_modes || [provider.auth_type || "apikey"]);
+      el("providerModalIcon").src = providerIconFor(provider.id);
+      el("providerModalName").textContent = provider.name || provider.id;
+      el("providerModalSub").textContent = `${provider.group || "provider"} / ${provider.id}${match ? " / wired" : " / catalog"}`;
+      el("providerModalPills").innerHTML = [
+        providerPill(match ? "wired" : "custom route", match ? "good" : "warn"),
+        ...auth.map((item) => providerPill(item)),
+        ...kinds.map((item) => providerPill(item)),
+        provider.deprecated ? providerPill("risk", "warn") : ""
+      ].filter(Boolean).join("");
+      const baseProfile = providerModalBaseUrlProfile(provider, match);
+      el("providerModalNotice").textContent = provider.notice_text || provider.deprecation_notice || (baseProfile.locked
+        ? `Base URL is auto-derived from ${baseProfile.source === "transport" ? "the wired transport" : "9Router catalog metadata"}.`
+        : "Base URL is optional because no catalog default was found.");
+      el("providerModalApiKeyLink").dataset.url = apiUrl;
+      el("providerModalApiKeyLink").disabled = !apiUrl;
+      el("providerModalWebsiteLink").dataset.url = provider.website || "";
+      el("providerModalWebsiteLink").disabled = !provider.website;
+      el("modalProviderAuth").innerHTML = auth
+        .map((item) => `<option value="${escapeHtml(item)}">${escapeHtml(item)}</option>`)
+        .join("");
+      el("modalProviderTransport").innerHTML = providerTransportOptions(provider, match)
+        .map((item) => `<option value="${escapeHtml(item.id)}">${escapeHtml(item.label)}</option>`)
+        .join("");
+      el("modalProviderTransport").value = match
+        ? "guild-wired"
+        : (provider.no_auth ? "no-auth" : (provider.auth_type === "cookie" ? "browser-cookie" : (baseProfile.locked ? "openai-compatible" : "custom")));
+      el("modalProviderPoolField").hidden = false;
+      el("modalProviderSecretField").hidden = authType !== "apikey";
+      el("modalProviderModelField").hidden = authType !== "apikey";
+      el("modalListModels").hidden = authType !== "apikey";
+      el("modalConnectProvider").hidden = authType === "oauth";
+      el("modalConnectAndTestProvider").hidden = true;
+      const authMessage = el("providerModalAuthMessage");
+      authMessage.hidden = authType === "apikey";
+      if (authType === "oauth") {
+        authMessage.textContent = "OAuth not yet supported in Guild.";
+      } else if (authType === "freetier") {
+        authMessage.textContent = "Free tier - no key needed.";
+      } else if (authType === "noauth" || authType === "cli") {
+        authMessage.textContent = "Uses local CLI or no-auth route.";
+      } else {
+        authMessage.textContent = "";
+      }
+    }
+
+    function openProviderModal() {
+      el("providerModalBackdrop").classList.add("open");
+      el("providerModalBackdrop").setAttribute("aria-hidden", "false");
+    }
+
+    function closeProviderModal() {
+      el("providerModalBackdrop").classList.remove("open");
+      el("providerModalBackdrop").setAttribute("aria-hidden", "true");
+    }
+
+    function renderProviderInventory() {
+      if (!providerLabConfig || !el("providerList")) return;
+      const transports = providerLabConfig.transports || {};
+      const cartridges = providerLabConfig.cartridges || {};
+      const secretStatus = providerLabConfig.secret_status || {};
+      const query = String(el("providerSearch")?.value || "").toLowerCase().trim();
+      const catalog = catalogProviders();
+      const cards = catalog.length ? catalog
+        .filter((provider) => {
+          const haystack = [provider.id, provider.name, provider.group, ...(provider.service_kinds || []), ...(provider.auth_modes || [])].join(" ").toLowerCase();
+          return !query || haystack.includes(query);
+        })
+        .map((provider) => {
+          const match = findTransportForProvider(provider);
+          const name = provider.id;
+          const transport = match?.transport || {};
+          const transportKind = transport.kind || "";
+          const kindPill = transportKind ? providerPill(transportKind) : "";
+          const selected = selectedCatalogProviderId === provider.id ? " selected" : "";
+          const deprecated = provider.deprecated ? " deprecated" : "";
+          const envKeys = transport.env_keys || [];
+          const models = match
+            ? Object.entries(cartridges)
+                .filter(([, cartridge]) => String(cartridge.transport || "") === match.name)
+                .map(([cartridgeName, cartridge]) => cartridge.model ? `${cartridgeName}: ${cartridge.model}` : cartridgeName)
+            : [];
+          const keyPills = envKeys.length
+            ? envKeys.map((key) => {
+                const status = secretStatus[key];
+                return providerPill(`${key}:${status && status.has_key ? status.source : "missing"}`, status && status.has_key ? "good" : "warn");
+              }).join("")
+            : providerPill(provider.no_auth ? "no key" : "not wired", provider.no_auth ? "good" : "warn");
+          return `
+            <article class="provider-card${selected}${deprecated}" data-provider-id="${escapeHtml(provider.id)}">
+              <div class="provider-card-head">
+                <img class="provider-icon" src="${escapeHtml(providerIconFor(name))}" alt="" onerror="this.style.display='none'">
+                <div>
+                  <div class="provider-name">${escapeHtml(provider.name || name)}</div>
+                  <div class="task-id">${escapeHtml(provider.group || "provider")} / ${escapeHtml(name)}</div>
+                </div>
+                ${providerPill(match ? "wired" : "add")}
+              </div>
+              <div class="provider-pill-row">${keyPills}${kindPill}${(provider.service_kinds || ["llm"]).slice(0, 4).map((kind) => providerPill(kind)).join("")}</div>
+              <div class="task-id">${escapeHtml(models.slice(0, 3).join(" / ") || provider.notice_text || provider.api_key_url || provider.website || "click to configure")}${models.length > 3 ? ` / +${models.length - 3}` : ""}</div>
+            </article>
+          `;
+        }) : Object.entries(transports).map(([name, transport]) => `<article class="provider-card"><div class="provider-name">${escapeHtml(transport.label || name)}</div></article>`);
+      el("providerList").innerHTML = cards.length ? cards.join("") : `<div class="empty">No provider matched.</div>`;
+      el("providerCatalogCount").textContent = catalog.length ? `${catalog.length} providers` : `${Object.keys(transports).length} transports`;
+    }
+
+    function renderComboInventory() {
+      if (!providerLabConfig || !el("comboList")) return;
+      const combos = providerLabConfig.combos || {};
+      const capabilities = providerLabConfig.capabilities || {};
+      el("comboCapability").innerHTML = Object.keys(capabilities)
+        .map((name) => `<option value="${escapeHtml(name)}" ${name === "code-edit-worker" ? "selected" : ""}>${escapeHtml(name)}</option>`)
+        .join("");
+      const cards = Object.entries(combos).map(([name, combo]) => {
+        const items = combo.items || [];
+        return `
+          <article class="combo-card">
+            <div class="combo-card-head">
+              <div>
+                <div class="combo-name">${escapeHtml(combo.label || name)}</div>
+                <div class="task-id">${escapeHtml(name)}</div>
+              </div>
+              ${providerPill(combo.capability || "capability")}
+            </div>
+            <div class="provider-pill-row">
+              ${providerPill(combo.kind || "combo")}
+              ${providerPill(`${items.length} route${items.length === 1 ? "" : "s"}`)}
+            </div>
+            <div class="task-id">${escapeHtml(items.map((item) => item.cartridge || item).join(" -> ") || "empty combo")}</div>
+          </article>
+        `;
+      });
+      el("comboList").innerHTML = cards.length ? cards.join("") : `<div class="empty">No combos configured.</div>`;
+    }
+
+    function renderCapabilityInventory() {
+      if (!providerLabConfig || !el("capabilityList")) return;
+      const providerCaps = providerLabConfig.provider_capabilities || {};
+      const runtimeCaps = providerLabConfig.capabilities || {};
+      const cards = Object.entries(providerCaps).map(([name, capability]) => {
+        const runtime = runtimeCaps[name] || {};
+        const ladder = runtime.ladder || runtime.adapters || [];
+        const providers = capability.providers || capability.transports || [];
+        return `
+          <article class="capability-card">
+            <div class="capability-card-head">
+              <div>
+                <div class="capability-name">${escapeHtml(capability.label || name)}</div>
+                <div class="task-id">${escapeHtml(name)}</div>
+              </div>
+              ${providerPill(capability.kind || "capability")}
+            </div>
+            <div class="provider-pill-row">
+              ${providerPill(`${providers.length} provider${providers.length === 1 ? "" : "s"}`)}
+              ${providerPill(`${ladder.length} ladder item${ladder.length === 1 ? "" : "s"}`)}
+            </div>
+            <div class="task-id">${escapeHtml((capability.notes || capability.description || "").slice(0, 180))}</div>
+          </article>
+        `;
+      });
+      el("capabilityList").innerHTML = cards.length ? cards.join("") : `<div class="empty">No capability catalog configured.</div>`;
+    }
+
+    function renderFlagInventory() {
+      if (!providerLabConfig || !el("flagList")) return;
+      const flags = providerLabConfig.failure_flags || {};
+      const cards = Object.entries(flags).map(([name, flag]) => {
+        const retryable = flag.retryable ? "good" : "warn";
+        return `
+          <article class="flag-card">
+            <div class="flag-card-head">
+              <div>
+                <div class="flag-name">${escapeHtml(flag.label || name)}</div>
+                <div class="task-id">${escapeHtml(name)}</div>
+              </div>
+              ${providerPill(flag.retryable ? "retryable" : "terminal", retryable)}
+            </div>
+            <div class="provider-pill-row">
+              ${providerPill(flag.layer || "runtime")}
+              ${providerPill(flag.owner || "guild")}
+            </div>
+            <div class="task-id">${escapeHtml(flag.description || "")}</div>
+          </article>
+        `;
+      });
+      el("flagList").innerHTML = cards.length ? cards.join("") : `<div class="empty">No failure flags configured.</div>`;
+    }
+
+    function renderProviderPanels() {
+      setProviderPane(activeProviderPane);
+      renderProviderInventory();
+      renderComboInventory();
+      renderCapabilityInventory();
+      renderFlagInventory();
+    }
+
     function renderProviderLab() {
       if (!providerLabConfig) return;
       const transports = providerLabConfig.transports || {};
@@ -1363,8 +2224,12 @@ Keep the output presentation-ready, bounded, and easy to explain to a mentor.</t
       el("quickProviderCapability").innerHTML = capabilityNames
         .map((name) => `<option value="${escapeHtml(name)}" ${name === "code-edit-worker" ? "selected" : ""}>${escapeHtml(name)}</option>`)
         .join("");
+      el("modalProviderCapability").innerHTML = capabilityNames
+        .map((name) => `<option value="${escapeHtml(name)}" ${name === "code-edit-worker" ? "selected" : ""}>${escapeHtml(name)}</option>`)
+        .join("");
       if (transports["openrouter-http"]) el("providerTransport").value = "openrouter-http";
       updateProviderChoices();
+      renderProviderPanels();
     }
 
     function updateProviderChoices() {
@@ -1399,6 +2264,7 @@ Keep the output presentation-ready, bounded, and easy to explain to a mentor.</t
           }).join(" / ")
         : "no key";
       setProviderStatus(`${transportName} ready. ${keyLine}`);
+      renderProviderInventory();
     }
 
     async function loadProviderLab() {
@@ -1412,6 +2278,35 @@ Keep the output presentation-ready, bounded, and easy to explain to a mentor.</t
         setProviderStatus(`Provider Lab unavailable: ${error.message}`);
       }
     }
+
+    async function saveCombo() {
+      const name = el("comboName").value;
+      const capability = el("comboCapability").value;
+      const items = el("comboItems").value
+        .split(",")
+        .map((item) => item.trim())
+        .filter(Boolean);
+      if (!name || !items.length) {
+        setProviderStatus("Combo needs a name and at least one cartridge.");
+        return;
+      }
+      setProviderStatus(`Saving combo ${name}...`);
+      try {
+        const response = await fetch("/api/provider-lab/save-combo", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name, capability, items })
+        });
+        const result = await response.json();
+        if (!result.ok) throw new Error((result.errors || [result.error || "save combo failed"]).join("; "));
+        providerLabConfig.combos = result.combos || {};
+        renderProviderPanels();
+        setProviderStatus(`Saved combo ${result.combo}.`);
+      } catch (error) {
+        setProviderStatus(`Combo save failed: ${error.message}`);
+      }
+    }
+
 
     function initials(value) {
       const text = String(value || "guild").replace(/[^a-zA-Z0-9]+/g, " ").trim();
@@ -1858,7 +2753,40 @@ Keep the output presentation-ready, bounded, and easy to explain to a mentor.</t
       }
     });
 
+    mountProviderLabPage();
+    setMainView(activeMainView);
+    document.querySelectorAll("[data-main-view]").forEach((button) => {
+      button.addEventListener("click", () => setMainView(button.dataset.mainView || "dashboard"));
+    });
+
     el("providerTransport").addEventListener("change", updateProviderChoices);
+
+    document.querySelectorAll(".provider-tab").forEach((button) => {
+      button.addEventListener("click", () => setProviderPane(button.dataset.providerPane || "providers"));
+    });
+
+    el("providerSearch").addEventListener("input", renderProviderInventory);
+
+    el("refreshProviderLab").addEventListener("click", loadProviderLab);
+
+    el("providerList").addEventListener("click", (event) => {
+      const card = event.target.closest(".provider-card[data-provider-id]");
+      if (!card) return;
+      selectCatalogProvider(card.dataset.providerId);
+    });
+
+    el("providerModalBackdrop").addEventListener("click", (event) => {
+      if (event.target === el("providerModalBackdrop")) closeProviderModal();
+    });
+
+    el("closeProviderModal").addEventListener("click", closeProviderModal);
+
+    ["providerModalApiKeyLink", "providerModalWebsiteLink"].forEach((buttonId) => {
+      el(buttonId).addEventListener("click", () => {
+        const url = el(buttonId).dataset.url;
+        if (url) window.open(url, "_blank", "noopener");
+      });
+    });
 
     el("providerCartridge").addEventListener("change", () => {
       const selected = el("providerCartridge").selectedOptions[0];
@@ -1947,19 +2875,67 @@ Keep the output presentation-ready, bounded, and easy to explain to a mentor.</t
 
     function quickProviderPayload() {
       return {
-        label: el("quickProviderName").value,
-        base_url: el("quickProviderBaseUrl").value,
-        model: el("quickProviderModel").value,
-        env_key: el("quickProviderEnvKey").value,
-        secret: el("quickProviderSecret").value,
-        capability: el("quickProviderCapability").value,
+        provider_id: selectedCatalogProviderId,
+        label: el("modalProviderName").value,
+        base_url: el("modalProviderBaseUrl").value,
+        model: el("modalProviderModel").value,
+        env_key: el("modalProviderEnvKey").value,
+        secret: el("modalProviderSecret").value,
+        capability: el("modalProviderCapability").value,
         add_to_ladder: true
       };
     }
 
-    async function saveQuickProvider({ testAfter = false } = {}) {
+    function setProviderModalStatus(message, kind = "") {
+      const status = el("providerModalStatus");
+      status.hidden = false;
+      status.textContent = message;
+      status.dataset.kind = kind;
+    }
+
+    async function listModalProviderModels() {
+      const transport = selectedTransport();
+      setProviderModalStatus(`Listing models for ${transport}...`);
+      setProviderStatus(`Listing models for ${transport}...`);
+      try {
+        const envKey = el("modalProviderEnvKey").value;
+        const secret = el("modalProviderSecret").value;
+        if (envKey && secret) {
+          const secretResponse = await fetch("/api/provider-lab/save-secret", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ env_key: envKey, value: secret })
+          });
+          const secretResult = await secretResponse.json();
+          if (!secretResult.ok) throw new Error(secretResult.error || "save secret failed");
+          providerLabConfig.secret_status = secretResult.secret_status;
+          updateProviderChoices();
+          el("providerTransport").value = transport;
+        }
+        const response = await fetch("/api/provider-lab/list-models", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ transport })
+        });
+        const result = await response.json();
+        if (!result.ok) throw new Error(result.error || "list failed");
+        setModalProviderModels(result.models || [], "-- no models returned --");
+        const firstModel = el("modalProviderModel").value;
+        const note = result.dynamic && result.dynamic.ok
+          ? `${result.models.length} model(s) available.`
+          : `Static cartridges loaded; live list blocked: ${result.dynamic?.reason || "unknown"}.`;
+        setProviderModalStatus(firstModel ? `${note} Selected ${firstModel}.` : note, result.dynamic?.ok ? "good" : "warn");
+        setProviderStatus(note);
+      } catch (error) {
+        setProviderModalStatus(`List failed: ${error.message}`, "bad");
+        setProviderStatus(`List failed: ${error.message}`);
+      }
+    }
+
+    async function saveQuickProvider({ testAfter = false, listAfter = false } = {}) {
       const payload = quickProviderPayload();
       setProviderStatus(`Saving ${payload.label || "provider"}...`);
+      setProviderModalStatus(`Saving ${payload.label || "provider"}...`);
       try {
         const response = await fetch("/api/provider-lab/quick-add", {
           method: "POST",
@@ -1968,30 +2944,31 @@ Keep the output presentation-ready, bounded, and easy to explain to a mentor.</t
         });
         const result = await response.json();
         if (!result.ok) throw new Error((result.errors || [result.error || "save failed"]).join("; "));
-        providerLabConfig = {
-          ok: true,
-          transports: result.config.transports,
-          cartridges: result.config.cartridges,
-          capabilities: result.config.capabilities,
-          secret_status: result.config.secret_status
-        };
-        renderProviderLab();
+        await loadProviderLab();
         el("providerTransport").value = result.transport;
         updateProviderChoices();
         el("providerCartridge").value = result.cartridge;
         el("providerCapability").value = result.capability;
         el("providerModel").value = payload.model;
-        el("quickProviderSecret").value = "";
+        el("modalProviderSecret").value = "";
         const repaired = result.repairs && result.repairs.length ? ` repaired: ${result.repairs.join(", ")}` : "";
-        setProviderStatus(`Saved ${result.cartridge}; added to ${result.capability}.${repaired}`);
+        setProviderStatus(`Connected ${result.cartridge}; added to ${result.capability}.${repaired}`);
+        setProviderModalStatus("Connected ✓", "good");
         if (testAfter) await testSelectedProvider();
+        if (listAfter) el("modalListModels").click();
       } catch (error) {
         setProviderStatus(`Quick save failed: ${error.message}`);
+        setProviderModalStatus(`Connect failed: ${error.message}`, "bad");
       }
     }
 
-    el("quickAddProvider").addEventListener("click", () => saveQuickProvider({ testAfter: false }));
+    el("saveCombo").addEventListener("click", saveCombo);
+
+    el("quickAddProvider").addEventListener("click", () => saveQuickProvider({ testAfter: false, listAfter: true }));
     el("quickAddAndTestProvider").addEventListener("click", () => saveQuickProvider({ testAfter: true }));
+    el("modalConnectProvider").addEventListener("click", () => saveQuickProvider({ testAfter: false }));
+    el("modalConnectAndTestProvider").addEventListener("click", () => saveQuickProvider({ testAfter: true }));
+    el("modalListModels").addEventListener("click", listModalProviderModels);
 
     el("questForm").addEventListener("submit", async (event) => {
       event.preventDefault();
@@ -2117,6 +3094,19 @@ Keep the output presentation-ready, bounded, and easy to explain to a mentor.</t
 
     loadProviderLab();
     loadDefaultDashboard();
+  </script>
+  <script>
+    (function () {
+      let lastMtime = null;
+      setInterval(async () => {
+        try {
+          const r = await fetch("/api/dev/mtime", { cache: "no-store" });
+          const { mtime } = await r.json();
+          if (lastMtime === null) { lastMtime = mtime; return; }
+          if (mtime !== lastMtime) location.reload();
+        } catch (_) {}
+      }, 1500);
+    })();
   </script>
 </body>
 </html>

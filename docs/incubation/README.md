@@ -1,4 +1,4 @@
-# Incubation
+![alt text](assets/provider-icons/vercel-ai-gateway.png)# Incubation
 
 This folder is for workflows and ideas that are not stable package surface yet.
 

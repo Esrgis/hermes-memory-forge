@@ -29,7 +29,30 @@ def resolve_capability(
     return name, config
 
 
-def resolve_ammo_ladder(capability_config: dict[str, Any]) -> list[str]:
+def resolve_ammo_ladder(capability_config: dict[str, Any], combo_config: dict[str, Any] | None = None) -> list[str]:
     ladder = capability_config.get("ammo_ladder") or []
-    return [str(item) for item in ladder if str(item).strip()]
+    combos = combo_config or {}
+    resolved: list[str] = []
+    seen_combos: set[str] = set()
 
+    def add_item(value: Any) -> None:
+        item = str(value).strip()
+        if not item:
+            return
+        combo_name = item[6:] if item.startswith("combo:") else item
+        combo = combos.get(combo_name)
+        if combo:
+            if combo_name in seen_combos:
+                return
+            seen_combos.add(combo_name)
+            for child in combo.get("items") or []:
+                if isinstance(child, dict):
+                    add_item(child.get("cartridge") or child.get("combo") or "")
+                else:
+                    add_item(child)
+            return
+        resolved.append(item)
+
+    for entry in ladder:
+        add_item(entry)
+    return resolved

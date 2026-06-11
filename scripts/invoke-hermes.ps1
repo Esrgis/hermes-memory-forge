@@ -9,7 +9,9 @@ param(
 
     [switch]$NoSessionMemory,
 
-    [switch]$DryRun
+    [switch]$DryRun,
+
+    [switch]$LightMode # Skip heavy prompt injection for faster cold‑start
 )
 
 $ErrorActionPreference = "Stop"

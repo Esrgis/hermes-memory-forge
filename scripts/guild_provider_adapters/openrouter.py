@@ -5,7 +5,7 @@ import os
 import urllib.error
 import urllib.request
 
-from .base import AdapterContext, AdapterResult, ProviderAdapter, agent_id
+from .base import AdapterContext, AdapterResult, ProviderAdapter, agent_id, GUILD_WORKER_SYSTEM_PROMPT
 from .groq import normalize_json_text, retry_delay_seconds
 
 
@@ -37,8 +37,7 @@ class OpenRouterAdapter(ProviderAdapter):
                 {
                     "role": "system",
                     "content": (
-                        "Return only compact JSON matching the worker artifact schema. "
-                        "Do not include markdown fences."
+                        GUILD_WORKER_SYSTEM_PROMPT
                     ),
                 },
                 {"role": "user", "content": context.message},
@@ -144,3 +143,4 @@ class OpenRouterAdapter(ProviderAdapter):
 
 def safe_error(value: str) -> str:
     return value.replace(os.environ.get("OPENROUTER_API_KEY", ""), "[REDACTED]")[:2000]
+

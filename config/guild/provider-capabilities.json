@@ -1,0 +1,95 @@
+{
+  "schema_version": "guild_provider_capabilities_v0",
+  "source_inspiration": {
+    "project": "9Router",
+    "license": "MIT",
+    "notes": "Guild-native capability catalog inspired by 9Router's skill and service-kind split. This file does not copy 9Router source code."
+  },
+  "default_capability": "llm-chat",
+  "capabilities": {
+    "llm-chat": {
+      "label": "Chat / code generation",
+      "endpoint_shape": "openai_chat_completions",
+      "default_route": "/v1/chat/completions",
+      "request_model_field": "model",
+      "provider_service_kind": "llm",
+      "guild_worker_use": ["code-edit-worker", "join-review-worker", "requirements", "verification"],
+      "required_inputs": ["messages"],
+      "optional_inputs": ["temperature", "max_tokens", "stream"],
+      "usage_fields": ["prompt_tokens", "completion_tokens", "total_tokens"],
+      "notes": "Main Guild worker path. Combos should expose this as provider/model or combo name."
+    },
+    "embeddings": {
+      "label": "Embeddings",
+      "endpoint_shape": "openai_embeddings",
+      "default_route": "/v1/embeddings",
+      "request_model_field": "model",
+      "provider_service_kind": "embedding",
+      "guild_worker_use": ["rag-indexing", "semantic-search", "memory-retrieval"],
+      "required_inputs": ["input"],
+      "optional_inputs": ["dimensions", "encoding_format"],
+      "usage_fields": ["prompt_tokens", "total_tokens"],
+      "notes": "Useful for future Obsidian/RAG acceleration. Keep separate from chat model ladders."
+    },
+    "image-generation": {
+      "label": "Image generation",
+      "endpoint_shape": "openai_images",
+      "default_route": "/v1/images/generations",
+      "request_model_field": "model",
+      "provider_service_kind": "image",
+      "guild_worker_use": ["asset-generation", "mockup-generation"],
+      "required_inputs": ["prompt"],
+      "optional_inputs": ["size", "quality", "style", "n", "response_format"],
+      "usage_fields": ["image_count", "estimated_cost_usd"],
+      "notes": "Keep asset generation separate from code workers so provider keys and costs are explicit."
+    },
+    "text-to-speech": {
+      "label": "Text to speech",
+      "endpoint_shape": "openai_audio_speech",
+      "default_route": "/v1/audio/speech",
+      "request_model_field": "model",
+      "provider_service_kind": "tts",
+      "guild_worker_use": ["voice-output", "briefing-audio"],
+      "required_inputs": ["input"],
+      "optional_inputs": ["voice", "format", "speed"],
+      "usage_fields": ["character_count", "estimated_cost_usd"],
+      "notes": "Voice model IDs may include provider/model/voice depending on provider."
+    },
+    "speech-to-text": {
+      "label": "Speech to text",
+      "endpoint_shape": "openai_audio_transcriptions",
+      "default_route": "/v1/audio/transcriptions",
+      "request_model_field": "model",
+      "provider_service_kind": "stt",
+      "guild_worker_use": ["transcription", "meeting-ingest"],
+      "required_inputs": ["file"],
+      "optional_inputs": ["language", "prompt", "response_format", "temperature"],
+      "usage_fields": ["audio_seconds", "estimated_cost_usd"],
+      "notes": "Useful for future voice/multimodal Guild inputs."
+    },
+    "web-search": {
+      "label": "Web search",
+      "endpoint_shape": "search",
+      "default_route": "/v1/search",
+      "request_model_field": "model",
+      "provider_service_kind": "webSearch",
+      "guild_worker_use": ["research", "source-discovery"],
+      "required_inputs": ["query"],
+      "optional_inputs": ["max_results", "country", "language", "time_range", "domain_filter"],
+      "usage_fields": ["queries_used", "search_cost_usd"],
+      "notes": "Provider is effectively the model. Results must include citations/retrieval metadata."
+    },
+    "web-fetch": {
+      "label": "Web fetch",
+      "endpoint_shape": "fetch",
+      "default_route": "/v1/web/fetch",
+      "request_model_field": "model",
+      "provider_service_kind": "webFetch",
+      "guild_worker_use": ["source-reading", "url-to-markdown"],
+      "required_inputs": ["url"],
+      "optional_inputs": ["format", "max_characters"],
+      "usage_fields": ["fetch_cost_usd"],
+      "notes": "Fetch should return bounded markdown/text and preserve source URL metadata."
+    }
+  }
+}

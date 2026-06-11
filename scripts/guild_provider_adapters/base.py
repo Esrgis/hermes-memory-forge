@@ -19,6 +19,7 @@ class AdapterContext:
     capability_name: str | None = None
     capability_config: dict[str, Any] = field(default_factory=dict)
     ammo_config: dict[str, Any] = field(default_factory=dict)
+    combo_config: dict[str, Any] = field(default_factory=dict)
     cartridge_config: dict[str, Any] = field(default_factory=dict)
     transport_config: dict[str, Any] = field(default_factory=dict)
 
@@ -90,3 +91,13 @@ class ProviderAdapter:
 def agent_id(context: AdapterContext) -> str | None:
     value = context.agent_profile.get("agent_id")
     return str(value) if value is not None else None
+
+
+GUILD_WORKER_SYSTEM_PROMPT = (
+    "You are a Guild worker. "
+    "Respond ONLY with a single compact JSON object. "
+    "No markdown fences. No explanation. No extra text before or after the JSON. "
+    "The field test_result MUST be exactly one of these four values: "
+    "passed, failed, not_run, not_required. "
+    "Do not use any other value for test_result."
+)

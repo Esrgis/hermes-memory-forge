@@ -197,7 +197,8 @@ Write-Host 'Press Ctrl+C to stop this server.' -ForegroundColor Yellow
     Start-Sleep -Milliseconds 800
 }
 
-$url = "http://127.0.0.1:$Port/docs/incubation/guild-dashboard.html"
+$ts = [DateTimeOffset]::UtcNow.ToUnixTimeSeconds()
+$url = "http://127.0.0.1:$Port/docs/incubation/guild-dashboard.html?v=$ts"
 if (-not $NoOpen) {
     Start-Process $url
 }
